@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: "Fredoka";
+  src: url("/fonts/Fredoka.ttf") format("truetype");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme {
+  --color-sky: #7ec8e3;
+  --color-sky-deep: #4ea8c9;
+  --color-ocean: #2eb8c4;
+  --color-sand: #f6d7a0;
+  --color-sand-deep: #e8c07a;
+  --color-cream: #fff6e8;
+  --color-cream-soft: #ffe9c8;
+  --color-coral: #e85d4c;
+  --color-coral-deep: #c94a3b;
+  --color-mint: #5dbb63;
+  --color-mint-deep: #3f9a46;
+  --color-ink: #3a2a22;
+  --color-ink-soft: #6b5348;
+  --color-foam: #ffffff;
+  --radius-card: 1.75rem;
+  --radius-pill: 999px;
+  --font-display: "Fredoka", "Nunito", ui-rounded, system-ui, sans-serif;
+}
+
+@layer base {
+  html,
+  body,
+  #app {
+    min-height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--color-sky);
+    color: var(--color-ink);
+    font-family: var(--font-display);
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

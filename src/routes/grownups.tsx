@@ -1,5 +1,15 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, FileText, FolderArchive, Smartphone, Package } from "lucide-react";
+import { ArrowLeft, FileText, FolderArchive, Package, Smartphone } from "lucide-react";
+import {
+  loadSettings,
+  saveSettings,
+  type CrabColor,
+  type CrabHat,
+  type FindCount,
+  type GrownupSettings,
+  type TimerMinutes,
+} from "@/lib/settings";
 import { APP_NAME, APP_VERSION, DOWNLOADS } from "@/lib/version";
 
 export const Route = createFileRoute("/grownups")({ component: Grownups });
@@ -47,7 +57,43 @@ const PACKS: Pack[] = [
   },
 ];
 
+function Choice<T extends string | number>({
+  label,
+  value,
+  current,
+  onPick,
+  swatch,
+}: {
+  label: string;
+  value: T;
+  current: T;
+  onPick: (v: T) => void;
+  swatch?: string;
+}) {
+  const on = value === current;
+  return (
+    <button
+      type="button"
+      onClick={() => onPick(value)}
+      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-pill px-4 text-sm font-bold ${
+        on ? "bg-coral text-cream" : "bg-sand text-ink"
+      }`}
+    >
+      {swatch && <span className={`size-4 rounded-pill ${swatch} ring-2 ring-cream`} />}
+      {label}
+    </button>
+  );
+}
+
 function Grownups() {
+  const [settings, setSettings] = useState<GrownupSettings>(() => loadSettings());
+
+  function update(patch: Partial<GrownupSettings>) {
+    const next = { ...settings, ...patch };
+    setSettings(next);
+    saveSettings(next);
+  }
+
   return (
     <main className="min-h-dvh bg-sand text-ink">
       <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-12">
@@ -63,21 +109,133 @@ function Grownups() {
           <p className="text-sky-deep text-sm font-semibold tracking-wide uppercase">Grown-ups</p>
           <h1 className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">{APP_NAME}</h1>
           <p className="mt-2 text-ink-soft">
-            Downloads and version notes. Kids stay on the beach — this page is just for you.
+            Pick how Crabby looks and how play feels. Kids just tap — they never see this page.
           </p>
           <p className="mt-3 inline-flex rounded-pill bg-cream px-3 py-1 text-sm font-semibold">
             Current version {APP_VERSION}
           </p>
         </header>
 
-        <section className="mt-8" aria-labelledby="downloads-heading">
+        <section className="mt-8" aria-labelledby="looks-heading">
+          <h2 id="looks-heading" className="text-xl font-bold">
+            Crabby’s look
+          </h2>
+          <p className="mt-1 text-sm text-ink-soft">Saved on this device. Kids just play.</p>
+          <p className="mt-4 text-sm font-semibold">Color</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Choice
+              label="Red"
+              value={"red" as CrabColor}
+              current={settings.color}
+              onPick={(color) => update({ color })}
+              swatch="bg-coral"
+            />
+            <Choice
+              label="Blue"
+              value={"blue" as CrabColor}
+              current={settings.color}
+              onPick={(color) => update({ color })}
+              swatch="bg-sky-deep"
+            />
+            <Choice
+              label="Yellow"
+              value={"yellow" as CrabColor}
+              current={settings.color}
+              onPick={(color) => update({ color })}
+              swatch="bg-sand-deep"
+            />
+          </div>
+          <p className="mt-4 text-sm font-semibold">Hat</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Choice label="None" value={"none" as CrabHat} current={settings.hat} onPick={(hat) => update({ hat })} />
+            <Choice label="Bow" value={"bow" as CrabHat} current={settings.hat} onPick={(hat) => update({ hat })} />
+            <Choice
+              label="Bucket"
+              value={"bucket" as CrabHat}
+              current={settings.hat}
+              onPick={(hat) => update({ hat })}
+            />
+            <Choice
+              label="Sailor"
+              value={"sailor" as CrabHat}
+              current={settings.hat}
+              onPick={(hat) => update({ hat })}
+            />
+          </div>
+        </section>
+
+        <section className="mt-8" aria-labelledby="play-heading">
+          <h2 id="play-heading" className="text-xl font-bold">
+            Play
+          </h2>
+          <p className="mt-4 text-sm font-semibold">How many to find</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {([3, 6, 9] as FindCount[]).map((n) => (
+              <Choice
+                key={n}
+                label={String(n)}
+                value={n}
+                current={settings.findCount}
+                onPick={(findCount) => update({ findCount })}
+              />
+            ))}
+          </div>
+          <p className="mt-4 text-sm font-semibold">Voice counts</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Choice
+              label="On"
+              value={"on"}
+              current={settings.voiceCounts ? "on" : "off"}
+              onPick={() => update({ voiceCounts: true })}
+            />
+            <Choice
+              label="Off"
+              value={"off"}
+              current={settings.voiceCounts ? "on" : "off"}
+              onPick={() => update({ voiceCounts: false })}
+            />
+          </div>
+          <p className="mt-4 text-sm font-semibold">Ocean music</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Choice
+              label="On"
+              value={"on"}
+              current={settings.music ? "on" : "off"}
+              onPick={() => update({ music: true })}
+            />
+            <Choice
+              label="Off"
+              value={"off"}
+              current={settings.music ? "on" : "off"}
+              onPick={() => update({ music: false })}
+            />
+          </div>
+          <p className="mt-4 text-sm font-semibold">Play timer</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {([
+              [0, "Off"],
+              [3, "3 min"],
+              [5, "5 min"],
+              [10, "10 min"],
+            ] as Array<[TimerMinutes, string]>).map(([mins, label]) => (
+              <Choice
+                key={mins}
+                label={label}
+                value={mins}
+                current={settings.timerMinutes}
+                onPick={(timerMinutes) => update({ timerMinutes })}
+              />
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-10" aria-labelledby="downloads-heading">
           <h2 id="downloads-heading" className="text-xl font-bold">
             Downloads
           </h2>
           <p className="mt-1 text-sm text-ink-soft">
             Ready files save to your device. Right-click still works. Zip packages are built only when you ask.
           </p>
-
           <ul className="mt-4 grid gap-3">
             {PACKS.map((pack) => (
               <li key={pack.filename} className="rounded-card bg-cream p-4 shadow-md shadow-ink/10 sm:p-5">
@@ -104,17 +262,6 @@ function Grownups() {
                 </div>
               </li>
             ))}
-          </ul>
-        </section>
-
-        <section className="mt-10" aria-labelledby="offline-heading">
-          <h2 id="offline-heading" className="text-xl font-bold">
-            Offline
-          </h2>
-          <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-ink-soft">
-            <li>Play works without the internet — pictures, sounds, and progress stay on the device.</li>
-            <li>If spoken praise is not available, the words still appear on screen.</li>
-            <li>Snapshots do not update themselves. Ask when you want a new export.</li>
           </ul>
         </section>
       </div>

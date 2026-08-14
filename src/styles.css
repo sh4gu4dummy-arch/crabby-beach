@@ -48,6 +48,29 @@
   }
 }
 
+@keyframes count-pop {
+  0% {
+    transform: translateX(-50%) scale(0.45);
+    opacity: 0;
+  }
+  18% {
+    transform: translateX(-50%) scale(1.12);
+    opacity: 1;
+  }
+  70% {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) scale(1.05);
+    opacity: 0;
+  }
+}
+
+.count-pop {
+  animation: count-pop 0.7s ease-out both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

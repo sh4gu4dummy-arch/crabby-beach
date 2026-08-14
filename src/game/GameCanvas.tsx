@@ -1,39 +1,67 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { RotateCcw, UserRound, Volume2, VolumeX } from "lucide-react";
+import { RotateCcw, Sunset, Timer, UserRound, Volume2, VolumeX } from "lucide-react";
 import { SignedIn, SignedOut, UserButton } from "@/lib/auth/gates";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
+import { loadSettings } from "@/lib/settings";
 import { APP_VERSION } from "@/lib/version";
-import { isMuted, setMuted, unlockAudio } from "./audio";
+import { isMuted, setMuted, setMusicEnabled, unlockAudio } from "./audio";
 import { createGame, type GameApi, type GameHud } from "./engine";
 
-const EMPTY: GameHud = { phase: "loading", painted: 0, total: 6 };
+const EMPTY: GameHud = {
+  phase: "loading",
+  painted: 0,
+  total: 6,
+  theme: "sunny",
+  countPop: null,
+  countKey: 0,
+  secondsLeft: null,
+};
 
 export function GameCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const apiRef = useRef<GameApi | null>(null);
   const [hud, setHud] = useState<GameHud>(EMPTY);
   const [muted, setMutedUi] = useState(false);
+  const [popOn, setPopOn] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const api = createGame(canvas, { onHud: setHud });
+    const api = createGame(canvas, {
+      onHud: setHud,
+      getSettings: loadSettings,
+    });
     apiRef.current = api;
+    setMusicEnabled(loadSettings().music);
     return () => {
       api.destroy();
       apiRef.current = null;
     };
   }, []);
 
+  useEffect(() => {
+    if (hud.countPop == null) return;
+    setPopOn(true);
+    const t = window.setTimeout(() => setPopOn(false), 700);
+    return () => window.clearTimeout(t);
+  }, [hud.countKey, hud.countPop]);
+
   function play() {
     unlockAudio();
+    setMusicEnabled(loadSettings().music);
     apiRef.current?.start();
   }
 
-  function replay() {
+  function replay(theme: "sunny" | "sunset" = "sunny") {
     unlockAudio();
-    apiRef.current?.replay();
+    setMusicEnabled(loadSettings().music);
+    apiRef.current?.replay(theme);
+  }
+
+  function moreTime() {
+    unlockAudio();
+    apiRef.current?.addTime(60);
   }
 
   function toggleMute() {
@@ -41,11 +69,15 @@ export function GameCanvas() {
     setMutedUi(next);
     setMuted(next);
     if (!next) unlockAudio();
-    else if (isMuted() !== next) setMuted(next);
   }
 
+  const timerLabel =
+    hud.secondsLeft == null
+      ? null
+      : `${Math.floor(hud.secondsLeft / 60)}:${String(hud.secondsLeft % 60).padStart(2, "0")}`;
+
   return (
-    <div className="relative h-dvh w-full overflow-hidden bg-sky text-ink">
+    <div className={`relative h-dvh w-full overflow-hidden text-ink ${hud.theme === "sunset" ? "bg-coral" : "bg-sky"}`}>
       <canvas
         ref={canvasRef}
         className="absolute inset-0 h-full w-full touch-none select-none"
@@ -56,13 +88,19 @@ export function GameCanvas() {
         <div className="pointer-events-auto flex items-center gap-2">
           <div className="rounded-pill bg-cream/90 px-4 py-2 shadow-md shadow-ink/10 ring-2 ring-cream-soft">
             <p className="text-xs font-semibold tracking-wide text-ink-soft uppercase whitespace-nowrap">
-              Happy shells
+              In the bucket
             </p>
             <p className="text-lg leading-none font-bold tabular-nums sm:text-xl">
               {hud.painted}
               <span className="text-ink-soft"> / {hud.total}</span>
             </p>
           </div>
+          {timerLabel && (
+            <div className="flex items-center gap-1 rounded-pill bg-cream/90 px-3 py-2 text-sm font-bold shadow-md shadow-ink/10 ring-2 ring-cream-soft">
+              <Timer className="size-4" />
+              {timerLabel}
+            </div>
+          )}
         </div>
         <div className="pointer-events-auto flex items-center gap-2">
           <button
@@ -77,9 +115,18 @@ export function GameCanvas() {
         </div>
       </header>
 
+      {popOn && hud.countPop != null && (
+        <div
+          key={hud.countKey}
+          className="count-pop pointer-events-none absolute top-1/3 left-1/2 z-30 -translate-x-1/2 text-7xl font-bold text-cream drop-shadow-md sm:text-8xl"
+        >
+          {hud.countPop}
+        </div>
+      )}
+
       {hud.phase === "playing" && hud.painted === 0 && (
-        <p className="pointer-events-none absolute bottom-6 left-1/2 z-10 w-max -translate-x-1/2 rounded-pill bg-cream/90 px-4 py-2 text-sm font-semibold text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft">
-          Tap a white shell
+        <p className="pointer-events-none absolute bottom-6 left-1/2 z-10 w-max max-w-[90%] -translate-x-1/2 rounded-pill bg-cream/90 px-4 py-2 text-center text-sm font-semibold text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft">
+          Tap a shell or a sea friend
         </p>
       )}
 
@@ -101,7 +148,7 @@ export function GameCanvas() {
             <p className="text-sky-deep text-sm font-semibold tracking-wide uppercase">A sunny little game</p>
             <h1 className="mt-1 text-4xl font-bold tracking-tight text-coral sm:text-5xl">Crabby Beach</h1>
             <p className="mt-3 text-base leading-relaxed text-ink-soft">
-              Tap a white shell. Crabby scuttles over and paints it happy green.
+              Tap a shell or a sea friend. Crabby scuttles over and pops it in the bucket.
             </p>
             <button
               type="button"
@@ -124,24 +171,79 @@ export function GameCanvas() {
       {hud.phase === "won" && (
         <div className="absolute inset-0 z-20 grid place-items-end bg-ink/25 p-4 pb-10 sm:place-items-center sm:pb-4">
           <div className="w-full max-w-md rounded-card bg-cream px-6 py-7 text-center shadow-xl shadow-ink/20 ring-4 ring-mint sm:px-8">
-            <p className="text-mint-deep text-sm font-semibold tracking-wide uppercase">All done</p>
+            <p className="text-mint-deep text-sm font-semibold tracking-wide uppercase">
+              {hud.theme === "sunset" ? "Sunset" : "All done"}
+            </p>
             <h2 className="mt-1 text-3xl font-bold tracking-tight text-mint-deep sm:text-4xl">
-              Yay! Every shell is happy
+              {hud.theme === "sunset" ? "What a glow!" : "Yay! The bucket is full"}
             </h2>
-            <p className="mt-3 text-base text-ink-soft">Crabby did a great job. Want to paint them again?</p>
-            <button
-              type="button"
-              onClick={replay}
-              className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-pill bg-mint px-6 py-3 text-lg font-bold text-cream shadow-md hover:bg-mint-deep"
-            >
-              <RotateCcw className="size-5" />
-              Play again
-            </button>
+            <p className="mt-3 text-base text-ink-soft">
+              {hud.theme === "sunset"
+                ? "Crabby loved the pink sky. Play the sunny beach again?"
+                : "A shy hermit said hello. Want a sunset beach next?"}
+            </p>
+            {hud.theme === "sunny" ? (
+              <div className="mt-6 grid gap-3">
+                <button
+                  type="button"
+                  onClick={() => replay("sunset")}
+                  className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-pill bg-coral px-6 py-3 text-lg font-bold text-cream shadow-md hover:bg-coral-deep"
+                >
+                  <Sunset className="size-5" />
+                  Sunset beach
+                </button>
+                <button
+                  type="button"
+                  onClick={() => replay("sunny")}
+                  className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-pill bg-mint px-6 py-3 text-lg font-bold text-cream shadow-md hover:bg-mint-deep"
+                >
+                  <RotateCcw className="size-5" />
+                  Play again
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => replay("sunny")}
+                className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-pill bg-mint px-6 py-3 text-lg font-bold text-cream shadow-md hover:bg-mint-deep"
+              >
+                <RotateCcw className="size-5" />
+                Sunny beach again
+              </button>
+            )}
           </div>
         </div>
       )}
 
-      <p className="pointer-events-none absolute right-3 bottom-3 z-10 text-[11px] font-semibold tracking-wide text-ink/40 uppercase">
+      {hud.phase === "timesup" && (
+        <div className="absolute inset-0 z-20 grid place-items-end bg-ink/25 p-4 pb-10 sm:place-items-center sm:pb-4">
+          <div className="w-full max-w-md rounded-card bg-cream px-6 py-7 text-center shadow-xl shadow-ink/20 ring-4 ring-cream-soft sm:px-8">
+            <p className="text-sky-deep text-sm font-semibold tracking-wide uppercase">All done for now</p>
+            <h2 className="mt-1 text-3xl font-bold tracking-tight text-ink">That was a lovely play</h2>
+            <p className="mt-3 text-base text-ink-soft">Need one more minute, or start a new beach?</p>
+            <div className="mt-6 grid gap-3">
+              <button
+                type="button"
+                onClick={moreTime}
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-pill bg-coral px-6 py-3 text-lg font-bold text-cream shadow-md hover:bg-coral-deep"
+              >
+                <Timer className="size-5" />
+                One more minute
+              </button>
+              <button
+                type="button"
+                onClick={() => replay("sunny")}
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-pill bg-mint px-6 py-3 text-lg font-bold text-cream shadow-md hover:bg-mint-deep"
+              >
+                <RotateCcw className="size-5" />
+                New beach
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <p className="pointer-events-none absolute right-3 bottom-3 z-10 text-xs font-semibold tracking-wide text-ink/40 uppercase">
         {APP_VERSION}
       </p>
     </div>

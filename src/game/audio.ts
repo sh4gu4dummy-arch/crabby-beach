@@ -3,6 +3,7 @@ let master: GainNode | null = null;
 let sfxBus: GainNode | null = null;
 let musicBus: GainNode | null = null;
 let muted = false;
+let musicOn = true;
 let ambientStarted = false;
 let noiseBuffer: AudioBuffer | null = null;
 
@@ -15,7 +16,7 @@ function ensureGraph() {
   sfxBus = ctx.createGain();
   musicBus = ctx.createGain();
   sfxBus.gain.value = 0.85;
-  musicBus.gain.value = 0.18;
+  musicBus.gain.value = musicOn ? 0.18 : 0;
   master.gain.value = muted ? 0 : 1;
   sfxBus.connect(master);
   musicBus.connect(master);
@@ -48,19 +49,32 @@ export function isMuted() {
   return muted;
 }
 
+export function setMusicEnabled(on: boolean) {
+  musicOn = on;
+  if (musicBus && ctx) {
+    musicBus.gain.setTargetAtTime(on ? 0.18 : 0, ctx.currentTime, 0.05);
+  }
+}
+
 export function speak(text: string) {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || muted) return;
   const synth = window.speechSynthesis;
   if (!synth) return;
   try {
     synth.cancel();
     const utter = new SpeechSynthesisUtterance(text);
     utter.rate = 0.95;
-    utter.pitch = 1.1;
+    utter.pitch = 1.15;
     synth.speak(utter);
   } catch {
     // Visual cues on screen are the fallback.
   }
+}
+
+export function speakCount(n: number) {
+  const words = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
+  const word = words[n - 1];
+  if (word) speak(word);
 }
 
 function tNow() {

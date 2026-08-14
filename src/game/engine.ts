@@ -1,16 +1,32 @@
-import { playScuttle, playSparkle, playTap, playWin, speak, unlockAudio } from "./audio";
+import type { BeachTheme, CrabColor, CrabHat, GrownupSettings } from "@/lib/settings";
+import { DEFAULT_SETTINGS } from "@/lib/settings";
+import {
+  playScuttle,
+  playSparkle,
+  playTap,
+  playWin,
+  setMusicEnabled,
+  speak,
+  speakCount,
+  unlockAudio,
+} from "./audio";
 
-export type GamePhase = "loading" | "ready" | "playing" | "won";
+export type GamePhase = "loading" | "ready" | "playing" | "won" | "timesup";
 
 export type GameHud = {
   phase: GamePhase;
   painted: number;
   total: number;
+  theme: BeachTheme;
+  countPop: number | null;
+  countKey: number;
+  secondsLeft: number | null;
 };
 
 export type GameApi = {
   start: () => void;
-  replay: () => void;
+  replay: (theme?: BeachTheme) => void;
+  addTime: (seconds: number) => void;
   destroy: () => void;
 };
 
@@ -21,36 +37,23 @@ const SAND_TOP = 270;
 const SAND_BOT = 840;
 const SAND_LEFT = 130;
 const SAND_RIGHT = 1470;
-const SHELL_COUNT = 6;
 const CRAB_SPEED = 300;
-const SHELL_HIT = 70;
+const HIT = 72;
 const CRAB_SIZE = 92;
-const SHELL_SIZE = 58;
-
-const SHELL_SPOTS: Array<[number, number]> = [
-  [420, 360],
-  [800, 330],
-  [1180, 360],
-  [360, 620],
-  [800, 700],
-  [1240, 620],
-];
-
-const DECOR: Array<{ kind: "starfish" | "bucket" | "pebble"; x: number; y: number; w: number; h: number }> = [
-  { kind: "starfish", x: 560, y: 500, w: 64, h: 64 },
-  { kind: "pebble", x: 1040, y: 480, w: 52, h: 52 },
-  { kind: "bucket", x: 1320, y: 760, w: 78, h: 78 },
-];
+const FIND_SIZE = 56;
 
 type Vec = { x: number; y: number };
+type Kind = "shell" | "starfish" | "sanddollar" | "snail";
 
-type Shell = {
+type Find = {
   id: number;
+  kind: Kind;
+  variant: number;
   x: number;
   y: number;
-  variant: number;
   painted: boolean;
   pop: number;
+  fly: number;
 };
 
 type Particle = {
@@ -62,7 +65,7 @@ type Particle = {
   max: number;
   size: number;
   color: string;
-  kind: "spark" | "confetti";
+  kind: "spark" | "confetti" | "sand";
   rot: number;
   spin: number;
 };
@@ -75,7 +78,10 @@ type Crab = {
   frame: number;
   frameT: number;
   target: Vec | null;
-  targetShell: number | null;
+  targetId: number | null;
+  blink: number;
+  blinkWait: number;
+  wave: number;
 };
 
 type Assets = {
@@ -84,8 +90,12 @@ type Assets = {
   idle: HTMLImageElement[];
   white: HTMLImageElement[];
   green: HTMLImageElement[];
-  props: Record<"starfish" | "bucket" | "pebble", HTMLImageElement>;
+  starfish: HTMLImageElement;
+  bucket: HTMLImageElement;
+  pebble: HTMLImageElement;
 };
+
+type TintCache = WeakMap<CanvasImageSource, HTMLCanvasElement>;
 
 function loadImage(src: string) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
@@ -114,11 +124,9 @@ async function loadAssets(): Promise<Assets> {
     idle: rest.slice(4, 8),
     white: rest.slice(8, 12),
     green: rest.slice(12, 16),
-    props: {
-      starfish: rest[16] as HTMLImageElement,
-      bucket: rest[17] as HTMLImageElement,
-      pebble: rest[18] as HTMLImageElement,
-    },
+    starfish: rest[16] as HTMLImageElement,
+    bucket: rest[17] as HTMLImageElement,
+    pebble: rest[18] as HTMLImageElement,
   };
 }
 
@@ -132,60 +140,71 @@ function easeOutBack(t: number) {
   return 1 + c3 * (t - 1) ** 3 + c1 * (t - 1) ** 2;
 }
 
+function easeInOut(t: number) {
+  return t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+}
+
 function dist(a: Vec, b: Vec) {
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
 
-function onSand(p: Vec) {
-  return p.x >= SAND_LEFT && p.x <= SAND_RIGHT && p.y >= SAND_TOP && p.y <= SAND_BOT;
-}
-
-function clampToSand(p: Vec, vis?: { x0: number; x1: number; y0: number; y1: number }): Vec {
-  const box = vis ?? { x0: SAND_LEFT, x1: SAND_RIGHT, y0: SAND_TOP, y1: SAND_BOT };
-  return {
-    x: clamp(p.x, box.x0, box.x1),
-    y: clamp(p.y, box.y0, box.y1),
-  };
-}
-
-function makeShells(bounds?: { x0: number; x1: number; y0: number; y1: number }): Shell[] {
-  if (!bounds) {
-    return SHELL_SPOTS.slice(0, SHELL_COUNT).map(([x, y], i) => ({
-      id: i,
-      x,
-      y,
-      variant: i % 4,
-      painted: false,
-      pop: 1,
-    }));
+function shuffle<T>(list: T[]) {
+  const a = list.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = a[i]!;
+    a[i] = a[j]!;
+    a[j] = tmp;
   }
-  const left = bounds.x0;
-  const right = bounds.x1;
-  const top = bounds.y0;
-  const bot = bounds.y1;
-  const xs = [0.2, 0.5, 0.8].map((t) => left + t * (right - left));
-  const ys = [0.28, 0.72].map((t) => top + t * (bot - top));
-  const spots: Array<[number, number]> = [
-    [xs[0]!, ys[0]!],
-    [xs[1]!, ys[0]!],
-    [xs[2]!, ys[0]!],
-    [xs[0]!, ys[1]!],
-    [xs[1]!, ys[1]!],
-    [xs[2]!, ys[1]!],
-  ];
-  return spots.map(([x, y], i) => ({
-    id: i,
-    x,
-    y,
-    variant: i % 4,
-    painted: false,
-    pop: 1,
-  }));
+  return a;
+}
+
+function planKinds(n: number): Kind[] {
+  const three: Kind[] = ["shell", "shell", "shell"];
+  const six: Kind[] = ["shell", "shell", "shell", "shell", "starfish", "sanddollar"];
+  const nine: Kind[] = ["shell", "shell", "shell", "shell", "shell", "shell", "starfish", "sanddollar", "snail"];
+  if (n <= 3) return three.slice(0, n);
+  if (n <= 6) return six;
+  return nine;
+}
+
+function tintImage(src: CanvasImageSource, color: CrabColor, cache: TintCache) {
+  if (color === "red") return src;
+  const hit = cache.get(src);
+  if (hit) return hit;
+  const w = "width" in src ? Number(src.width) : 128;
+  const h = "height" in src ? Number(src.height) : 128;
+  const c = document.createElement("canvas");
+  c.width = Math.max(1, w);
+  c.height = Math.max(1, h);
+  const x = c.getContext("2d");
+  if (!x) return src;
+  x.drawImage(src, 0, 0);
+  const img = x.getImageData(0, 0, c.width, c.height);
+  const d = img.data;
+  for (let i = 0; i < d.length; i += 4) {
+    if ((d[i + 3] ?? 0) < 12) continue;
+    const r = d[i] ?? 0;
+    const g = d[i + 1] ?? 0;
+    const b = d[i + 2] ?? 0;
+    if (color === "blue") {
+      d[i] = Math.min(255, g * 0.45 + b * 0.35 + 20);
+      d[i + 1] = Math.min(255, g * 0.7 + 50);
+      d[i + 2] = Math.min(255, r * 0.82 + 40);
+    } else {
+      d[i] = Math.min(255, r * 1.05 + 10);
+      d[i + 1] = Math.min(255, Math.max(g, r * 0.88) + 8);
+      d[i + 2] = Math.min(255, b * 0.42);
+    }
+  }
+  x.putImageData(img, 0, 0);
+  cache.set(src, c);
+  return c;
 }
 
 export function createGame(
   canvas: HTMLCanvasElement,
-  hooks: { onHud: (hud: GameHud) => void },
+  hooks: { onHud: (hud: GameHud) => void; getSettings: () => GrownupSettings },
 ): GameApi {
   const maybeCtx = canvas.getContext("2d");
   if (!maybeCtx) throw new Error("Canvas is not available");
@@ -196,10 +215,21 @@ export function createGame(
   let last = 0;
   let phase: GamePhase = "loading";
   let assets: Assets | null = null;
-  let shells = makeShells();
+  let finds: Find[] = [];
   let particles: Particle[] = [];
   let time = 0;
   let stepAcc = 0;
+  let puffAcc = 0;
+  let theme: BeachTheme = "sunny";
+  let countPop: number | null = null;
+  let countKey = 0;
+  let playElapsed = 0;
+  let extraTime = 0;
+  let hermit: { x: number; y: number; life: number } | null = null;
+  let lastTick = -1;
+  const bucket = { x: 800, y: 780 };
+  const tintCache: TintCache = new WeakMap();
+  let settings: GrownupSettings = DEFAULT_SETTINGS;
 
   const crab: Crab = {
     x: 800,
@@ -209,18 +239,40 @@ export function createGame(
     frame: 0,
     frameT: 0,
     target: null,
-    targetShell: null,
+    targetId: null,
+    blink: 0,
+    blinkWait: 2.6,
+    wave: 0,
   };
 
   const css = { w: 1, h: 1 };
   const view = { x: 0, y: 0, scale: 1 };
 
+  function paintedCount() {
+    return finds.filter((f) => f.painted).length;
+  }
+
+  function secondsLeft() {
+    if (!settings.timerMinutes || phase !== "playing") return null;
+    const limit = settings.timerMinutes * 60 + extraTime;
+    return Math.max(0, Math.ceil(limit - playElapsed));
+  }
+
   function emitHud() {
     hooks.onHud({
       phase,
-      painted: shells.filter((s) => s.painted).length,
-      total: shells.length,
+      painted: paintedCount(),
+      total: finds.length,
+      theme,
+      countPop,
+      countKey,
+      secondsLeft: secondsLeft(),
     });
+  }
+
+  function refreshSettings() {
+    settings = hooks.getSettings();
+    setMusicEnabled(settings.music);
   }
 
   function resize() {
@@ -251,18 +303,60 @@ export function createGame(
     };
   }
 
-  function resetWorld() {
+  function placeFinds(bounds: { x0: number; x1: number; y0: number; y1: number }) {
+    const n = settings.findCount;
+    const kinds = shuffle(planKinds(n));
+    bucket.x = bounds.x1 - 36;
+    bucket.y = bounds.y1 - 24;
+    const right = Math.max(bounds.x0 + 160, bucket.x - 120);
+    const cols = n <= 3 ? n : 3;
+    const rows = Math.ceil(n / cols);
+    const spots: Vec[] = [];
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (spots.length >= n) break;
+        const jitterX = (Math.random() - 0.5) * 40;
+        const jitterY = (Math.random() - 0.5) * 30;
+        spots.push({
+          x: bounds.x0 + ((c + 0.5) / cols) * (right - bounds.x0) + jitterX,
+          y: bounds.y0 + ((r + 0.5) / rows) * (bounds.y1 - bounds.y0) + jitterY,
+        });
+      }
+    }
+    return spots.map((p, i) => ({
+      id: i,
+      kind: kinds[i] ?? "shell",
+      variant: i % 4,
+      x: p.x,
+      y: p.y,
+      painted: false,
+      pop: 1,
+      fly: 0,
+    }));
+  }
+
+  function resetWorld(nextTheme: BeachTheme) {
+    refreshSettings();
+    theme = nextTheme;
     const vis = sandView();
-    shells = makeShells(vis);
+    finds = placeFinds(vis);
     particles = [];
-    crab.x = (vis.x0 + vis.x1) / 2;
+    hermit = null;
+    countPop = null;
+    playElapsed = 0;
+    extraTime = 0;
+    lastTick = -1;
+    crab.x = (vis.x0 + vis.x1) / 2 - 40;
     crab.y = (vis.y0 + vis.y1) / 2;
     crab.target = null;
-    crab.targetShell = null;
+    crab.targetId = null;
     crab.state = "idle";
     crab.frame = 0;
     crab.frameT = 0;
     crab.facing = 1;
+    crab.wave = 0;
+    crab.blink = 0;
+    crab.blinkWait = 2.4;
   }
 
   function worldFromEvent(ev: PointerEvent): Vec {
@@ -273,19 +367,30 @@ export function createGame(
     };
   }
 
-  function spawnSparkles(x: number, y: number) {
-    const colors = ["#fff6e8", "#5dbb63", "#ffe27a", "#7ec8e3"];
-    for (let i = 0; i < 12; i++) {
-      const a = (Math.PI * 2 * i) / 12 + Math.random() * 0.2;
-      const sp = 70 + Math.random() * 90;
+  function clampToSand(p: Vec): Vec {
+    const vis = sandView();
+    return {
+      x: clamp(p.x, vis.x0, vis.x1),
+      y: clamp(p.y, vis.y0, vis.y1),
+    };
+  }
+
+  function spawnSparkles(x: number, y: number, extra = false) {
+    const colors = theme === "sunset"
+      ? ["#ffe27a", "#ff8f7a", "#fff6e8", "#f4a06a"]
+      : ["#fff6e8", "#5dbb63", "#ffe27a", "#7ec8e3"];
+    const n = extra ? 22 : 12;
+    for (let i = 0; i < n; i++) {
+      const a = (Math.PI * 2 * i) / n + Math.random() * 0.2;
+      const sp = 70 + Math.random() * (extra ? 140 : 90);
       particles.push({
         x,
         y,
         vx: Math.cos(a) * sp,
         vy: Math.sin(a) * sp,
-        life: 0.45 + Math.random() * 0.2,
-        max: 0.65,
-        size: 4 + Math.random() * 4,
+        life: 0.45 + Math.random() * 0.25,
+        max: 0.7,
+        size: 4 + Math.random() * 5,
         color: colors[i % colors.length]!,
         kind: "spark",
         rot: a,
@@ -295,8 +400,8 @@ export function createGame(
   }
 
   function spawnConfetti() {
-    const colors = ["#e85d4c", "#5dbb63", "#ffe27a", "#7ec8e3", "#fff6e8"];
-    for (let i = 0; i < 40; i++) {
+    const colors = ["#e85d4c", "#5dbb63", "#ffe27a", "#7ec8e3", "#fff6e8", "#f4a06a"];
+    for (let i = 0; i < 44; i++) {
       particles.push({
         x: 200 + Math.random() * 1200,
         y: 240 + Math.random() * 80,
@@ -313,49 +418,75 @@ export function createGame(
     }
   }
 
-  function paintShell(shell: Shell) {
-    if (shell.painted) return;
-    shell.painted = true;
-    shell.pop = 0;
-    spawnSparkles(shell.x, shell.y);
+  function spawnSand(x: number, y: number) {
+    particles.push({
+      x: x - crab.facing * 10,
+      y: y + 16,
+      vx: -crab.facing * (12 + Math.random() * 18),
+      vy: -8 - Math.random() * 16,
+      life: 0.28 + Math.random() * 0.12,
+      max: 0.4,
+      size: 3 + Math.random() * 3,
+      color: "#e8c07a",
+      kind: "sand",
+      rot: 0,
+      spin: 0,
+    });
+  }
+
+  function paintFind(item: Find) {
+    if (item.painted) return;
+    item.painted = true;
+    item.pop = 0;
+    item.fly = 0.001;
+    const n = paintedCount();
+    countPop = n;
+    countKey += 1;
+    const last = n >= finds.length;
+    spawnSparkles(item.x, item.y, last);
     playSparkle();
-    if (shells.every((s) => s.painted)) {
+    crab.wave = 0.55;
+    if (settings.voiceCounts) speakCount(n);
+    if (last) {
+      hermit = { x: item.x, y: item.y - 8, life: 2.4 };
       phase = "won";
       spawnConfetti();
       playWin();
-      speak("Yay! Every shell is happy.");
+      if (settings.voiceCounts) {
+        speak(theme === "sunset" ? "What a glow! Every friend is happy." : "Yay! Every shell is happy.");
+      }
     }
     emitHud();
   }
 
-  function goTo(world: Vec, shellId: number | null) {
-    const dest = clampToSand(world, sandView());
+  function goTo(world: Vec, id: number | null) {
+    const dest = clampToSand(world);
     crab.target = dest;
-    crab.targetShell = shellId;
+    crab.targetId = id;
     crab.state = "walk";
     if (Math.abs(dest.x - crab.x) > 4) crab.facing = dest.x >= crab.x ? 1 : -1;
   }
 
   function handlePointer(ev: PointerEvent) {
-    if (phase === "loading") return;
+    if (phase === "loading" || phase === "won" || phase === "timesup") return;
     if (phase === "ready") {
       unlockAudio();
+      refreshSettings();
       phase = "playing";
       emitHud();
     }
-    if (phase === "won") return;
 
     playTap();
     const world = worldFromEvent(ev);
     if (world.y < WATER_MAX) return;
 
-    let best: Shell | null = null;
-    let bestD = SHELL_HIT;
-    for (const shell of shells) {
-      if (shell.painted) continue;
-      const d = dist(world, shell);
+    let best: Find | null = null;
+    let bestD = HIT;
+    for (const item of finds) {
+      if (item.painted) continue;
+      const d = dist(world, item);
       if (d < bestD) {
-        best = shell;
+        best = item;
         bestD = d;
       }
     }
@@ -363,24 +494,55 @@ export function createGame(
       goTo({ x: best.x, y: best.y }, best.id);
       return;
     }
-    if (onSand(world) && world.x >= sandView().x0 && world.x <= sandView().x1) goTo(world, null);
+    const vis = sandView();
+    if (world.x >= vis.x0 && world.x <= vis.x1 && world.y >= vis.y0 && world.y <= vis.y1) {
+      goTo(world, null);
+    }
   }
 
   function updateHover(ev: PointerEvent) {
-    if (phase === "won" || phase === "loading") {
+    if (phase !== "playing" && phase !== "ready") {
       canvas.style.cursor = "default";
       return;
     }
     const world = worldFromEvent(ev);
-    const over = shells.some((s) => !s.painted && dist(world, s) < SHELL_HIT);
+    const over = finds.some((s) => !s.painted && dist(world, s) < HIT);
     canvas.style.cursor = over ? "pointer" : "default";
   }
 
   function update(dt: number) {
     time += dt;
+    if (phase === "playing") {
+      playElapsed += dt;
+      const left = secondsLeft();
+      if (left !== lastTick) {
+        lastTick = left ?? -1;
+        emitHud();
+      }
+      if (left === 0) {
+        phase = "timesup";
+        emitHud();
+      }
+    }
 
-    for (const shell of shells) {
-      if (shell.pop < 1) shell.pop = Math.min(1, shell.pop + dt * 3.2);
+    for (const item of finds) {
+      if (item.pop < 1) item.pop = Math.min(1, item.pop + dt * 3.2);
+      if (item.painted && item.fly < 1) item.fly = Math.min(1, item.fly + dt * 1.7);
+    }
+
+    if (hermit) {
+      hermit.life -= dt;
+      if (hermit.life <= 0) hermit = null;
+    }
+
+    crab.wave = Math.max(0, crab.wave - dt);
+    if (crab.blink > 0) crab.blink = Math.max(0, crab.blink - dt);
+    else {
+      crab.blinkWait -= dt;
+      if (crab.blinkWait <= 0) {
+        crab.blink = 0.12;
+        crab.blinkWait = 2.4 + Math.random() * 2.2;
+      }
     }
 
     if (crab.target) {
@@ -390,12 +552,12 @@ export function createGame(
       if (d < 14) {
         crab.x = crab.target.x;
         crab.y = crab.target.y;
-        if (crab.targetShell != null) {
-          const shell = shells.find((s) => s.id === crab.targetShell);
-          if (shell) paintShell(shell);
+        if (crab.targetId != null) {
+          const item = finds.find((s) => s.id === crab.targetId);
+          if (item) paintFind(item);
         }
         crab.target = null;
-        crab.targetShell = null;
+        crab.targetId = null;
         crab.state = "idle";
         crab.frame = 0;
         crab.frameT = 0;
@@ -406,9 +568,14 @@ export function createGame(
         crab.y += (dy / d) * step;
         if (Math.abs(dx) > 3) crab.facing = dx >= 0 ? 1 : -1;
         stepAcc += step;
+        puffAcc += dt;
         if (stepAcc > 28) {
           stepAcc = 0;
           if (phase === "playing") playScuttle();
+        }
+        if (puffAcc > 0.09) {
+          puffAcc = 0;
+          spawnSand(crab.x, crab.y);
         }
       }
     }
@@ -425,6 +592,7 @@ export function createGame(
       p.x += p.vx * dt;
       p.y += p.vy * dt;
       if (p.kind === "confetti") p.vy += 180 * dt;
+      else if (p.kind === "sand") p.vy += 80 * dt;
       else {
         p.vx *= 0.98;
         p.vy *= 0.98;
@@ -435,16 +603,18 @@ export function createGame(
   }
 
   function drawCentered(
-    img: HTMLImageElement,
+    img: CanvasImageSource,
     x: number,
     y: number,
     w: number,
     h: number,
     flip = false,
+    rot = 0,
   ) {
     ctx.save();
     ctx.translate(x, y);
     if (flip) ctx.scale(-1, 1);
+    if (rot) ctx.rotate(rot);
     ctx.drawImage(img, -w / 2, -h / 2, w, h);
     ctx.restore();
   }
@@ -475,9 +645,146 @@ export function createGame(
     ctx.restore();
   }
 
+  function drawSandDollar(x: number, y: number, s: number, happy: boolean) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.fillStyle = happy ? "#d8f0a8" : "#fff4dc";
+    ctx.beginPath();
+    ctx.ellipse(0, 0, s * 0.46, s * 0.42, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = happy ? "#6aa84f" : "#d8b48a";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.strokeStyle = happy ? "#7eb86a" : "#e0c49a";
+    ctx.beginPath();
+    for (let i = 0; i < 5; i++) {
+      const a = -Math.PI / 2 + (i * Math.PI * 2) / 5;
+      ctx.moveTo(0, 0);
+      ctx.lineTo(Math.cos(a) * s * 0.28, Math.sin(a) * s * 0.28);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawSnail(x: number, y: number, s: number, happy: boolean) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.fillStyle = happy ? "#8fd18a" : "#f0c98a";
+    ctx.beginPath();
+    ctx.ellipse(s * 0.16, s * 0.16, s * 0.28, s * 0.16, 0.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = happy ? "#5dbb63" : "#e8a060";
+    ctx.beginPath();
+    ctx.arc(-s * 0.06, -s * 0.04, s * 0.28, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = happy ? "#3f9a46" : "#c47a3a";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(-s * 0.06, -s * 0.04, s * 0.16, 0.4, Math.PI * 2.2);
+    ctx.stroke();
+    ctx.fillStyle = "#3a2a22";
+    ctx.beginPath();
+    ctx.arc(s * 0.28, s * 0.08, 2.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawHermit(x: number, y: number, life: number) {
+    const peek = Math.sin((1 - Math.min(1, life / 2.4)) * Math.PI) * 14;
+    ctx.save();
+    ctx.translate(x, y - peek);
+    ctx.fillStyle = "#e8a060";
+    ctx.beginPath();
+    ctx.ellipse(0, 8, 16, 12, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#e85d4c";
+    ctx.beginPath();
+    ctx.arc(-8, -2, 6, 0, Math.PI * 2);
+    ctx.arc(8, -2, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#fff6e8";
+    ctx.beginPath();
+    ctx.arc(-8, -3, 2.6, 0, Math.PI * 2);
+    ctx.arc(8, -3, 2.6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#3a2a22";
+    ctx.beginPath();
+    ctx.arc(-8, -3, 1.2, 0, Math.PI * 2);
+    ctx.arc(8, -3, 1.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawHat(x: number, y: number, size: number, hat: CrabHat, flip: boolean) {
+    if (hat === "none") return;
+    ctx.save();
+    ctx.translate(x, y - size * 0.4);
+    if (flip) ctx.scale(-1, 1);
+    if (hat === "bow") {
+      ctx.fillStyle = "#f4a4c8";
+      ctx.beginPath();
+      ctx.moveTo(-16, 0);
+      ctx.lineTo(-2, -8);
+      ctx.lineTo(-2, 8);
+      ctx.closePath();
+      ctx.moveTo(16, 0);
+      ctx.lineTo(2, -8);
+      ctx.lineTo(2, 8);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(0, 0, 4, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (hat === "bucket") {
+      ctx.fillStyle = "#ffe27a";
+      ctx.beginPath();
+      ctx.moveTo(-14, -2);
+      ctx.lineTo(-10, 12);
+      ctx.lineTo(10, 12);
+      ctx.lineTo(14, -2);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#7ec8e3";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(0, -2, 11, Math.PI, 0);
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = "#fff6e8";
+      ctx.beginPath();
+      ctx.ellipse(0, 6, 20, 5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillRect(-10, -8, 20, 14);
+      ctx.fillStyle = "#4ea8c9";
+      ctx.fillRect(-10, 0, 20, 4);
+    }
+    ctx.restore();
+  }
+
+  function drawFind(item: Find) {
+    if (item.fly >= 1) return;
+    const fly = item.fly > 0 ? easeInOut(item.fly) : 0;
+    const x = item.x + (bucket.x - item.x) * fly;
+    const y = item.y + (bucket.y - 18 - item.y) * fly;
+    const pulse = item.painted ? 1 : 1 + Math.sin(time * 2.4 + item.id) * 0.03;
+    const pop = item.pop < 1 ? easeOutBack(item.pop) : 1;
+    const s = FIND_SIZE * pulse * (0.88 + 0.12 * pop) * (1 - fly * 0.55);
+    drawShadow(x, y, s * 0.32, s * 0.12);
+    if (item.kind === "shell" && assets) {
+      const img = (item.painted ? assets.green : assets.white)[item.variant]!;
+      drawCentered(img, x, y, s, s);
+    } else if (item.kind === "starfish" && assets) {
+      drawCentered(assets.starfish, x, y, s * 1.05, s * 1.05, false, item.painted ? 0.2 : 0);
+    } else if (item.kind === "sanddollar") {
+      drawSandDollar(x, y, s, item.painted);
+    } else {
+      drawSnail(x, y, s, item.painted);
+    }
+  }
+
   function draw() {
     ctx.clearRect(0, 0, css.w, css.h);
-    ctx.fillStyle = "#5aa9c8";
+    ctx.fillStyle = theme === "sunset" ? "#e07a4a" : "#5aa9c8";
     ctx.fillRect(0, 0, css.w, css.h);
 
     ctx.save();
@@ -485,57 +792,85 @@ export function createGame(
     ctx.scale(view.scale, view.scale);
 
     if (assets) ctx.drawImage(assets.beach, 0, 0, WORLD_W, WORLD_H);
+    if (theme === "sunset") {
+      ctx.save();
+      ctx.globalCompositeOperation = "multiply";
+      ctx.globalAlpha = 0.42;
+      ctx.fillStyle = "#f4a06a";
+      ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+      ctx.restore();
+    }
 
-    type Item = { y: number; z: number; draw: () => void };
-    const items: Item[] = [];
+    type Layer = { y: number; z: number; draw: () => void };
+    const layers: Layer[] = [];
 
     if (assets) {
-      for (const prop of DECOR) {
-        const img = assets.props[prop.kind];
-        items.push({
-          y: prop.y,
-          z: 0,
-          draw: () => {
-            drawShadow(prop.x, prop.y, prop.w * 0.28, prop.h * 0.1);
-            drawCentered(img, prop.x, prop.y, prop.w, prop.h);
-          },
-        });
+      const bucketImg = assets.bucket;
+      layers.push({
+        y: bucket.y,
+        z: 0,
+        draw: () => {
+          drawShadow(bucket.x, bucket.y, 26, 10);
+          drawCentered(bucketImg, bucket.x, bucket.y, 86, 86);
+          const filled = finds.filter((f) => f.fly >= 1).length;
+          for (let i = 0; i < filled; i++) {
+            ctx.fillStyle = i % 2 ? "#5dbb63" : "#fff6e8";
+            ctx.beginPath();
+            ctx.arc(bucket.x - 10 + (i % 3) * 10, bucket.y - 6 - Math.floor(i / 3) * 7, 5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        },
+      });
+
+      for (const item of finds) {
+        layers.push({ y: item.fly > 0 ? bucket.y - 4 : item.y, z: 1, draw: () => drawFind(item) });
       }
-      for (const shell of shells) {
-        const img = (shell.painted ? assets.green : assets.white)[shell.variant]!;
-        const pulse = shell.painted ? 1 : 1 + Math.sin(time * 2.4 + shell.id) * 0.03;
-        const pop = shell.pop < 1 ? easeOutBack(shell.pop) : 1;
-        const s = SHELL_SIZE * pulse * (0.88 + 0.12 * pop);
-        items.push({
-          y: shell.y,
-          z: 1,
-          draw: () => {
-            drawShadow(shell.x, shell.y, s * 0.32, s * 0.12);
-            drawCentered(img, shell.x, shell.y, s, s);
-          },
+
+      if (hermit) {
+        layers.push({
+          y: hermit.y,
+          z: 3,
+          draw: () => drawHermit(hermit!.x, hermit!.y, hermit!.life),
         });
       }
 
       const frames = crab.state === "walk" ? assets.walk : assets.idle;
-      const img = frames[crab.frame]!;
-      items.push({
+      const raw = frames[crab.frame]!;
+      const img = tintImage(raw, settings.color, tintCache);
+      const waveRot = crab.wave > 0 ? Math.sin(crab.wave * 22) * 0.18 : 0;
+      layers.push({
         y: crab.y + 8,
         z: 2,
         draw: () => {
           drawShadow(crab.x, crab.y, 28, 10);
-          drawCentered(img, crab.x, crab.y, CRAB_SIZE, CRAB_SIZE, crab.facing < 0);
+          drawCentered(img, crab.x, crab.y, CRAB_SIZE, CRAB_SIZE, crab.facing < 0, waveRot);
+          if (crab.blink > 0) {
+            ctx.save();
+            ctx.globalAlpha = 0.85;
+            ctx.fillStyle = settings.color === "blue" ? "#4ea8c9" : settings.color === "yellow" ? "#e8c07a" : "#e85d4c";
+            ctx.beginPath();
+            ctx.ellipse(crab.x + crab.facing * 8, crab.y - 10, 10, 3, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          }
+          drawHat(crab.x, crab.y, CRAB_SIZE, settings.hat, crab.facing < 0);
         },
       });
     }
 
-    items.sort((a, b) => a.y - b.y || a.z - b.z);
-    for (const item of items) item.draw();
+    layers.sort((a, b) => a.y - b.y || a.z - b.z);
+    for (const layer of layers) layer.draw();
 
     for (const p of particles) {
       const a = Math.max(0, p.life / p.max);
       ctx.globalAlpha = a;
       if (p.kind === "spark") drawStar(p.x, p.y, p.size, p.color, p.rot);
-      else {
+      else if (p.kind === "sand") {
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.ellipse(p.x, p.y, p.size, p.size * 0.55, 0, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
         ctx.save();
         ctx.translate(p.x, p.y);
         ctx.rotate(p.rot);
@@ -562,8 +897,9 @@ export function createGame(
   canvas.addEventListener("pointerdown", handlePointer);
   canvas.addEventListener("pointermove", updateHover);
   window.addEventListener("resize", resize);
+  refreshSettings();
   resize();
-  resetWorld();
+  resetWorld("sunny");
   raf = requestAnimationFrame(frame);
   emitHud();
 
@@ -575,7 +911,7 @@ export function createGame(
   (window as unknown as { __gameTest?: TestHook }).__gameTest = {
     phase: () => phase,
     shells: () =>
-      shells.map((s) => ({
+      finds.map((s) => ({
         x: s.x,
         y: s.y,
         painted: s.painted,
@@ -605,15 +941,21 @@ export function createGame(
   return {
     start() {
       unlockAudio();
+      refreshSettings();
       if (phase === "ready") {
         phase = "playing";
         emitHud();
       }
     },
-    replay() {
-      resetWorld();
+    replay(nextTheme = "sunny") {
+      resetWorld(nextTheme);
       phase = "playing";
       unlockAudio();
+      emitHud();
+    },
+    addTime(seconds: number) {
+      extraTime += seconds;
+      if (phase === "timesup") phase = "playing";
       emitHud();
     },
     destroy() {

@@ -65,9 +65,13 @@ type Particle = {
   max: number;
   size: number;
   color: string;
-  kind: "spark" | "confetti" | "sand";
+  kind: "spark" | "confetti" | "sand" | "token";
   rot: number;
   spin: number;
+  ox?: number;
+  oy?: number;
+  tx?: number;
+  ty?: number;
 };
 
 type Crab = {
@@ -109,11 +113,11 @@ function loadImage(src: string) {
 
 async function loadAssets(): Promise<Assets> {
   const [beach, ...rest] = await Promise.all([
-    loadImage("/game/beach.jpg?v=topdown2"),
+    loadImage("/game/beach.jpg?v=v003"),
     ...[1, 2, 3, 4].map((i) => loadImage(`/game/crab-walk-${i}.png?v=topdown2`)),
     ...[1, 2, 3, 4].map((i) => loadImage(`/game/crab-idle-${i}.png?v=topdown2`)),
     ...[1, 2, 3, 4].map((i) => loadImage(`/game/shell-white-${i}.png?v=topdown2`)),
-    ...[1, 2, 3, 4].map((i) => loadImage(`/game/shell-green-${i}.png?v=topdown2`)),
+    ...[1, 2, 3, 4].map((i) => loadImage(`/game/shell-green-${i}.png?v=v003`)),
     loadImage("/game/prop-starfish.png?v=topdown2"),
     loadImage("/game/prop-bucket.png?v=topdown2"),
     loadImage("/game/prop-pebble.png?v=topdown2"),
@@ -388,8 +392,8 @@ export function createGame(
         y,
         vx: Math.cos(a) * sp,
         vy: Math.sin(a) * sp,
-        life: 0.45 + Math.random() * 0.25,
-        max: 0.7,
+        life: 0.65 + Math.random() * 0.3,
+        max: 0.95,
         size: 4 + Math.random() * 5,
         color: colors[i % colors.length]!,
         kind: "spark",
@@ -418,6 +422,26 @@ export function createGame(
     }
   }
 
+  function spawnToken(from: Vec) {
+    particles.push({
+      x: from.x,
+      y: from.y,
+      vx: 0,
+      vy: 0,
+      life: 0.75,
+      max: 0.75,
+      size: 16,
+      color: "#5dbb63",
+      kind: "token",
+      rot: 0,
+      spin: 10,
+      ox: from.x,
+      oy: from.y,
+      tx: bucket.x,
+      ty: bucket.y - 16,
+    });
+  }
+
   function spawnSand(x: number, y: number) {
     particles.push({
       x: x - crab.facing * 10,
@@ -443,6 +467,7 @@ export function createGame(
     countPop = n;
     countKey += 1;
     const last = n >= finds.length;
+    spawnToken({ x: item.x, y: item.y });
     spawnSparkles(item.x, item.y, last);
     playSparkle();
     crab.wave = 0.55;
@@ -526,8 +551,8 @@ export function createGame(
     }
 
     for (const item of finds) {
-      if (item.pop < 1) item.pop = Math.min(1, item.pop + dt * 3.2);
-      if (item.painted && item.fly < 1) item.fly = Math.min(1, item.fly + dt * 1.7);
+      if (item.pop < 1) item.pop = Math.min(1, item.pop + dt * 2.6);
+      if (item.painted && item.fly < 1) item.fly = Math.min(1, item.fly + dt * 1.4);
     }
 
     if (hermit) {
@@ -589,15 +614,23 @@ export function createGame(
 
     for (const p of particles) {
       p.life -= dt;
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
-      if (p.kind === "confetti") p.vy += 180 * dt;
-      else if (p.kind === "sand") p.vy += 80 * dt;
-      else {
-        p.vx *= 0.98;
-        p.vy *= 0.98;
+      if (p.kind === "token" && p.ox != null && p.oy != null && p.tx != null && p.ty != null) {
+        const t = 1 - Math.max(0, p.life) / p.max;
+        const e = easeInOut(Math.min(1, t));
+        p.x = p.ox + (p.tx - p.ox) * e;
+        p.y = p.oy + (p.ty - p.oy) * e - Math.sin(e * Math.PI) * 90;
+        p.rot += p.spin * dt;
+      } else {
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        if (p.kind === "confetti") p.vy += 180 * dt;
+        else if (p.kind === "sand") p.vy += 80 * dt;
+        else {
+          p.vx *= 0.98;
+          p.vy *= 0.98;
+        }
+        p.rot += p.spin * dt;
       }
-      p.rot += p.spin * dt;
     }
     particles = particles.filter((p) => p.life > 0);
   }
@@ -761,15 +794,53 @@ export function createGame(
     ctx.restore();
   }
 
+  function drawWaterShimmer() {
+    ctx.save();
+    for (let i = 0; i < 5; i++) {
+      const y = 36 + i * 28 + Math.sin(time * 1.2 + i * 0.9) * 5;
+      ctx.globalAlpha = 0.12;
+      ctx.strokeStyle = "#e8fbff";
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      for (let x = 0; x <= WORLD_W; x += 40) {
+        ctx.lineTo(x, y + Math.sin(time * 1.6 + x * 0.012 + i) * 7);
+      }
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 0.55;
+    ctx.fillStyle = "#f7fdff";
+    const foamY = 188 + Math.sin(time * 1.4) * 2;
+    ctx.beginPath();
+    ctx.moveTo(0, foamY);
+    for (let x = 0; x <= WORLD_W; x += 24) {
+      ctx.lineTo(x, foamY + Math.sin(time * 2 + x * 0.03) * 4);
+    }
+    ctx.lineTo(WORLD_W, foamY + 16);
+    ctx.lineTo(0, foamY + 16);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
   function drawFind(item: Find) {
-    if (item.fly >= 1) return;
-    const fly = item.fly > 0 ? easeInOut(item.fly) : 0;
-    const x = item.x + (bucket.x - item.x) * fly;
-    const y = item.y + (bucket.y - 18 - item.y) * fly;
-    const pulse = item.painted ? 1 : 1 + Math.sin(time * 2.4 + item.id) * 0.03;
+    const x = item.x;
+    const y = item.y;
+    const pulse = item.painted
+      ? 1.18 + Math.sin(time * 3.2 + item.id) * 0.05
+      : 1 + Math.sin(time * 2.4 + item.id) * 0.03;
     const pop = item.pop < 1 ? easeOutBack(item.pop) : 1;
-    const s = FIND_SIZE * pulse * (0.88 + 0.12 * pop) * (1 - fly * 0.55);
-    drawShadow(x, y, s * 0.32, s * 0.12);
+    const s = FIND_SIZE * pulse * (0.86 + 0.28 * pop);
+    drawShadow(x, y, s * 0.34, s * 0.13);
+    if (item.painted) {
+      ctx.save();
+      ctx.globalAlpha = 0.42;
+      ctx.fillStyle = "#7dff7a";
+      ctx.beginPath();
+      ctx.ellipse(x, y, s * 0.62, s * 0.48, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
     if (item.kind === "shell" && assets) {
       const img = (item.painted ? assets.green : assets.white)[item.variant]!;
       drawCentered(img, x, y, s, s);
@@ -779,6 +850,12 @@ export function createGame(
       drawSandDollar(x, y, s, item.painted);
     } else {
       drawSnail(x, y, s, item.painted);
+    }
+    if (item.painted) {
+      ctx.save();
+      ctx.globalAlpha = 0.9;
+      drawStar(x - s * 0.18, y - s * 0.22, 7 + Math.sin(time * 5 + item.id) * 1.5, "#fffce6", time);
+      ctx.restore();
     }
   }
 
@@ -792,6 +869,7 @@ export function createGame(
     ctx.scale(view.scale, view.scale);
 
     if (assets) ctx.drawImage(assets.beach, 0, 0, WORLD_W, WORLD_H);
+    drawWaterShimmer();
     if (theme === "sunset") {
       ctx.save();
       ctx.globalCompositeOperation = "multiply";
@@ -823,7 +901,7 @@ export function createGame(
       });
 
       for (const item of finds) {
-        layers.push({ y: item.fly > 0 ? bucket.y - 4 : item.y, z: 1, draw: () => drawFind(item) });
+        layers.push({ y: item.y, z: 1, draw: () => drawFind(item) });
       }
 
       if (hermit) {
@@ -865,6 +943,10 @@ export function createGame(
       const a = Math.max(0, p.life / p.max);
       ctx.globalAlpha = a;
       if (p.kind === "spark") drawStar(p.x, p.y, p.size, p.color, p.rot);
+      else if (p.kind === "token") {
+        drawStar(p.x, p.y, p.size, "#7dff7a", p.rot);
+        drawStar(p.x, p.y, p.size * 0.45, "#fffce6", p.rot + 0.4);
+      }
       else if (p.kind === "sand") {
         ctx.fillStyle = p.color;
         ctx.beginPath();

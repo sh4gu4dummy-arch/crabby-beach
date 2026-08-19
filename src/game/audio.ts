@@ -20,6 +20,7 @@ const VOICE_FILES: Record<string, string> = {
   seven: "/voice/seven.mp3",
   eight: "/voice/eight.mp3",
   nine: "/voice/nine.mp3",
+  ten: "/voice/ten.mp3",
   "win-sunny": "/voice/win-sunny.mp3",
   "win-sunset": "/voice/win-sunset.mp3",
 };
@@ -136,7 +137,7 @@ export function speak(text: string) {
 }
 
 export function speakCount(n: number) {
-  const words = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
+  const words = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
   const word = words[n - 1];
   if (word) playVoice(word);
 }

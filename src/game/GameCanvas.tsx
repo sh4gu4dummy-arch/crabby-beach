@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { RotateCcw, Sunset, Timer, UserRound, Volume2, VolumeX } from "lucide-react";
+import { RotateCcw, Timer, UserRound, Volume2, VolumeX } from "lucide-react";
 import { SignedIn, SignedOut, UserButton } from "@/lib/auth/gates";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { loadSettings } from "@/lib/settings";
@@ -16,6 +16,8 @@ const EMPTY: GameHud = {
   countPop: null,
   countKey: 0,
   secondsLeft: null,
+  level: 1,
+  maxLevel: 5,
 };
 
 export function GameCanvas() {
@@ -53,10 +55,10 @@ export function GameCanvas() {
     apiRef.current?.start();
   }
 
-  function replay(theme: "sunny" | "sunset" = "sunny") {
+  function replay(opts?: { theme?: "sunny" | "sunset"; advance?: boolean; restart?: boolean }) {
     unlockAudio();
     setMusicEnabled(loadSettings().music);
-    apiRef.current?.replay(theme);
+    apiRef.current?.replay(opts);
   }
 
   function moreTime() {
@@ -84,7 +86,14 @@ export function GameCanvas() {
         aria-label="Crabby walking on the beach"
       />
 
-      <header className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-end gap-3 p-3 sm:p-4">
+      <header className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-3 p-3 sm:p-4">
+        <div className="rounded-pill bg-cream/90 px-4 py-2 shadow-md shadow-ink/10 ring-2 ring-cream-soft">
+          <p className="text-xs font-semibold tracking-wide text-ink-soft uppercase">Beach</p>
+          <p className="text-lg leading-none font-bold tabular-nums">
+            {hud.level}
+            <span className="text-ink-soft"> / {hud.maxLevel}</span>
+          </p>
+        </div>
         <div className="pointer-events-auto flex items-center gap-2">
           {timerLabel && (
             <div className="flex items-center gap-1 rounded-pill bg-cream/90 px-3 py-2 text-sm font-bold shadow-md shadow-ink/10 ring-2 ring-cream-soft">
@@ -134,10 +143,10 @@ export function GameCanvas() {
           onClick={play}
         >
           <div className="w-full max-w-md rounded-card bg-cream px-6 py-7 text-center shadow-xl shadow-ink/20 ring-4 ring-cream-soft sm:px-8">
-            <p className="text-sky-deep text-sm font-semibold tracking-wide uppercase">A sunny little game</p>
+            <p className="text-sky-deep text-sm font-semibold tracking-wide uppercase">Five little beaches</p>
             <h1 className="mt-1 text-4xl font-bold tracking-tight text-coral sm:text-5xl">Crabby Beach</h1>
             <p className="mt-3 text-base leading-relaxed text-ink-soft">
-              Tap a white shell. Crabby walks over, it turns happy green, and it hops into your tray.
+              Tap a white shell. Each new beach hides one more. The last beach has ten.
             </p>
             <button
               type="button"
@@ -161,45 +170,43 @@ export function GameCanvas() {
         <div className="absolute inset-0 z-20 grid place-items-end bg-ink/25 p-4 pb-10 sm:place-items-center sm:pb-4">
           <div className="w-full max-w-md rounded-card bg-cream px-6 py-7 text-center shadow-xl shadow-ink/20 ring-4 ring-mint sm:px-8">
             <p className="text-mint-deep text-sm font-semibold tracking-wide uppercase">
-              {hud.theme === "sunset" ? "Sunset" : "All done"}
+              {hud.level >= hud.maxLevel ? "Every beach" : `Beach ${hud.level} of ${hud.maxLevel}`}
             </p>
             <h2 className="mt-1 text-3xl font-bold tracking-tight text-mint-deep sm:text-4xl">
-              {hud.theme === "sunset" ? "What a glow!" : "Yay! You found them all"}
+              {hud.level >= hud.maxLevel ? "You found them all!" : "Yay! You found them all"}
             </h2>
             <p className="mt-3 text-base text-ink-soft">
-              {hud.theme === "sunset"
-                ? "Crabby loved the pink sky. Play the sunny beach again?"
-                : "A shy hermit said hello. Want a sunset beach next?"}
+              {hud.level >= hud.maxLevel
+                ? "Five beaches, and a full tray. Want to start over?"
+                : `Next beach has ${hud.total + 1} finds.`}
             </p>
-            {hud.theme === "sunny" ? (
-              <div className="mt-6 grid gap-3">
+            <div className="mt-6 grid gap-3">
+              {hud.level < hud.maxLevel ? (
                 <button
                   type="button"
-                  onClick={() => replay("sunset")}
+                  onClick={() => replay({ theme: hud.theme === "sunset" ? "sunny" : "sunset", advance: true })}
                   className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-pill bg-coral px-6 py-3 text-lg font-bold text-cream shadow-md hover:bg-coral-deep"
                 >
-                  <Sunset className="size-5" />
-                  Sunset beach
+                  Next beach
                 </button>
+              ) : (
                 <button
                   type="button"
-                  onClick={() => replay("sunny")}
-                  className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-pill bg-mint px-6 py-3 text-lg font-bold text-cream shadow-md hover:bg-mint-deep"
+                  onClick={() => replay({ theme: "sunny", restart: true })}
+                  className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-pill bg-coral px-6 py-3 text-lg font-bold text-cream shadow-md hover:bg-coral-deep"
                 >
-                  <RotateCcw className="size-5" />
-                  Play again
+                  Start over
                 </button>
-              </div>
-            ) : (
+              )}
               <button
                 type="button"
-                onClick={() => replay("sunny")}
-                className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-pill bg-mint px-6 py-3 text-lg font-bold text-cream shadow-md hover:bg-mint-deep"
+                onClick={() => replay({ theme: hud.theme, restart: hud.level >= hud.maxLevel })}
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-pill bg-mint px-6 py-3 text-lg font-bold text-cream shadow-md hover:bg-mint-deep"
               >
                 <RotateCcw className="size-5" />
-                Sunny beach again
+                This beach again
               </button>
-            )}
+            </div>
           </div>
         </div>
       )}
@@ -221,7 +228,7 @@ export function GameCanvas() {
               </button>
               <button
                 type="button"
-                onClick={() => replay("sunny")}
+                onClick={() => replay({ theme: "sunny", restart: true })}
                 className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-pill bg-mint px-6 py-3 text-lg font-bold text-cream shadow-md hover:bg-mint-deep"
               >
                 <RotateCcw className="size-5" />

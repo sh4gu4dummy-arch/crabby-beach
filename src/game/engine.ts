@@ -21,14 +21,19 @@ export type GameHud = {
   countPop: number | null;
   countKey: number;
   secondsLeft: number | null;
+  level: number;
+  maxLevel: number;
 };
 
 export type GameApi = {
   start: () => void;
-  replay: (theme?: BeachTheme) => void;
+  replay: (opts?: { theme?: BeachTheme; advance?: boolean; restart?: boolean }) => void;
   addTime: (seconds: number) => void;
   destroy: () => void;
 };
+
+const MAX_FINDS = 10;
+const EXTRA_LEVELS = 4;
 
 const WORLD_W = 1600;
 const WORLD_H = 900;
@@ -165,12 +170,15 @@ function shuffle<T>(list: T[]) {
 }
 
 function planKinds(n: number): Kind[] {
-  const three: Kind[] = ["shell", "shell", "shell"];
-  const six: Kind[] = ["shell", "shell", "shell", "shell", "starfish", "sanddollar"];
-  const nine: Kind[] = ["shell", "shell", "shell", "shell", "shell", "shell", "starfish", "sanddollar", "snail"];
-  if (n <= 3) return three.slice(0, n);
-  if (n <= 6) return six;
-  return nine;
+  const extras: Kind[] = [];
+  if (n >= 4) extras.push("starfish");
+  if (n >= 5) extras.push("sanddollar");
+  if (n >= 8) extras.push("snail");
+  const shells = Math.max(0, n - extras.length);
+  const kinds: Kind[] = [];
+  for (let i = 0; i < shells; i++) kinds.push("shell");
+  kinds.push(...extras);
+  return kinds;
 }
 
 function tintImage(src: CanvasImageSource, color: CrabColor, cache: TintCache) {
@@ -233,6 +241,7 @@ export function createGame(
   let hermit: { x: number; y: number; life: number } | null = null;
   let lastTick = -1;
   let pendingWin = false;
+  let level = 1;
   const tintCache: TintCache = new WeakMap();
   let settings: GrownupSettings = DEFAULT_SETTINGS;
 
@@ -274,6 +283,14 @@ export function createGame(
     return { x: view.x + p.x * view.scale, y: view.y + p.y * view.scale };
   }
 
+  function maxLevel() {
+    return 1 + Math.min(EXTRA_LEVELS, MAX_FINDS - settings.findCount);
+  }
+
+  function findsForLevel() {
+    return Math.min(MAX_FINDS, settings.findCount + (level - 1));
+  }
+
   function paintedCount() {
     return finds.filter((f) => f.painted).length;
   }
@@ -293,6 +310,8 @@ export function createGame(
       countPop,
       countKey,
       secondsLeft: secondsLeft(),
+      level,
+      maxLevel: maxLevel(),
     });
   }
 
@@ -331,9 +350,9 @@ export function createGame(
   }
 
   function placeFinds(bounds: { x0: number; x1: number; y0: number; y1: number }) {
-    const n = settings.findCount;
+    const n = findsForLevel();
     const kinds = shuffle(planKinds(n));
-    const cols = n <= 3 ? n : 3;
+    const cols = n <= 3 ? n : n >= 10 ? 5 : n >= 8 ? 4 : 3;
     const rows = Math.ceil(n / cols);
     const spots: Vec[] = [];
     for (let r = 0; r < rows; r++) {
@@ -849,7 +868,9 @@ export function createGame(
   function drawFind(item: Find) {
     if (item.painted) return;
     const pulse = 1 + Math.sin(time * 2.4 + item.id) * 0.03;
-    const s = FIND_SIZE * pulse;
+    const n = Math.max(finds.length, 1);
+    const base = n >= 10 ? 48 : n >= 8 ? 52 : FIND_SIZE;
+    const s = base * pulse;
     drawFindSprite(item, item.x, item.y, s, false);
   }
 
@@ -1075,8 +1096,10 @@ export function createGame(
         emitHud();
       }
     },
-    replay(nextTheme = "sunny") {
-      resetWorld(nextTheme);
+    replay(opts?: { theme?: BeachTheme; advance?: boolean; restart?: boolean }) {
+      if (opts?.restart) level = 1;
+      else if (opts?.advance) level = Math.min(maxLevel(), level + 1);
+      resetWorld(opts?.theme ?? "sunny");
       phase = "playing";
       unlockAudio();
       emitHud();

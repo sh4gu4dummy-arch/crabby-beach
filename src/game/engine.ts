@@ -5,6 +5,7 @@ import {
   playSparkle,
   playTap,
   playWin,
+  playDip,
   setMusicEnabled,
   speak,
   speakCount,
@@ -46,6 +47,24 @@ const CRAB_SPEED = 300;
 const HIT = 72;
 const CRAB_SIZE = 92;
 const FIND_SIZE = 56;
+const CAN_HIT = 56;
+const WATER_WALK = 118;
+
+type PaintId = "red" | "orange" | "yellow" | "green" | "blue" | "purple" | "pink";
+
+const PAINTS: Array<{ id: PaintId; hex: string }> = [
+  { id: "red", hex: "#e85d4c" },
+  { id: "orange", hex: "#f08a3a" },
+  { id: "yellow", hex: "#ffe27a" },
+  { id: "green", hex: "#5dbb63" },
+  { id: "blue", hex: "#4ea8c9" },
+  { id: "purple", hex: "#9b6dca" },
+  { id: "pink", hex: "#f4a4c8" },
+];
+
+function paintHex(id: PaintId) {
+  return PAINTS.find((p) => p.id === id)?.hex ?? "#5dbb63";
+}
 
 type Vec = { x: number; y: number };
 type Kind = "shell" | "starfish" | "sanddollar" | "snail";
@@ -60,6 +79,7 @@ type Find = {
   pop: number;
   fly: number;
   slot: number;
+  color: PaintId;
 };
 
 type Particle = {
@@ -89,6 +109,8 @@ type Crab = {
   frameT: number;
   target: Vec | null;
   targetId: number | null;
+  targetCan: PaintId | null;
+  paint: PaintId;
   blink: number;
   blinkWait: number;
   wave: number;
@@ -241,6 +263,8 @@ export function createGame(
   let lastTick = -1;
   let pendingWin = false;
   let level = 1;
+  let cans: Array<{ id: PaintId; hex: string; x: number; y: number }> = [];
+  const paintCache = new Map<string, HTMLCanvasElement>();
   const tintCache: TintCache = new WeakMap();
   let settings: GrownupSettings = DEFAULT_SETTINGS;
 
@@ -253,6 +277,8 @@ export function createGame(
     frameT: 0,
     target: null,
     targetId: null,
+    targetCan: null,
+    paint: "green",
     blink: 0,
     blinkWait: 2.6,
     wave: 0,
@@ -330,6 +356,7 @@ export function createGame(
     view.scale = scale;
     view.x = (css.w - WORLD_W * scale) / 2;
     view.y = Math.min(0, css.h - WORLD_H * scale);
+    placeCans();
   }
 
   function sandView() {
@@ -375,6 +402,21 @@ export function createGame(
       pop: 1,
       fly: 0,
       slot: -1,
+      color: "green" as PaintId,
+    }));
+  }
+
+  function placeCans() {
+    const x0 = -view.x / view.scale + 70;
+    const x1 = (css.w - view.x) / view.scale - 70;
+    const left = Math.max(SAND_LEFT, x0);
+    const right = Math.min(SAND_RIGHT, x1);
+    const n = PAINTS.length;
+    cans = PAINTS.map((p, i) => ({
+      id: p.id,
+      hex: p.hex,
+      x: left + ((i + 0.5) / n) * (right - left),
+      y: 148,
     }));
   }
 
@@ -383,6 +425,7 @@ export function createGame(
     theme = nextTheme;
     const vis = sandView();
     finds = placeFinds(vis);
+    placeCans();
     particles = [];
     hermit = null;
     pendingWin = false;
@@ -394,6 +437,8 @@ export function createGame(
     crab.y = (vis.y0 + vis.y1) / 2;
     crab.target = null;
     crab.targetId = null;
+    crab.targetCan = null;
+    crab.paint = "green";
     crab.state = "idle";
     crab.frame = 0;
     crab.frameT = 0;
@@ -411,18 +456,18 @@ export function createGame(
     };
   }
 
-  function clampToSand(p: Vec): Vec {
+  function clampToPlay(p: Vec, allowWater: boolean): Vec {
     const vis = sandView();
     return {
       x: clamp(p.x, vis.x0, vis.x1),
-      y: clamp(p.y, vis.y0, vis.y1),
+      y: clamp(p.y, allowWater ? WATER_WALK : vis.y0, vis.y1),
     };
   }
 
   function spawnSparkles(x: number, y: number, extra = false) {
-    const colors = theme === "sunset"
-      ? ["#ffe27a", "#ff8f7a", "#fff6e8", "#f4a06a"]
-      : ["#fff6e8", "#5dbb63", "#ffe27a", "#7ec8e3"];
+    const colors = extra
+      ? ["#fff6e8", paintHex(crab.paint), "#ffe27a", "#7ec8e3"]
+      : ["#fff6e8", paintHex(crab.paint), "#ffe27a"];
     const n = extra ? 22 : 12;
     for (let i = 0; i < n; i++) {
       const a = (Math.PI * 2 * i) / n + Math.random() * 0.2;
@@ -483,6 +528,7 @@ export function createGame(
     item.painted = true;
     item.pop = 0;
     item.fly = 0.001;
+    item.color = crab.paint;
     item.slot = paintedCount() - 1;
     const n = paintedCount();
     countPop = n;
@@ -499,10 +545,19 @@ export function createGame(
     emitHud();
   }
 
-  function goTo(world: Vec, id: number | null) {
-    const dest = clampToSand(world);
+  function dipPaint(id: PaintId) {
+    crab.paint = id;
+    const can = cans.find((c) => c.id === id);
+    if (can) spawnSparkles(can.x, can.y, false);
+    playDip();
+    crab.wave = 0.4;
+  }
+
+  function goTo(world: Vec, id: number | null, canId: PaintId | null = null) {
+    const dest = clampToPlay(world, canId != null || world.y < SAND_TOP);
     crab.target = dest;
     crab.targetId = id;
+    crab.targetCan = canId;
     crab.state = "walk";
     if (Math.abs(dest.x - crab.x) > 4) crab.facing = dest.x >= crab.x ? 1 : -1;
   }
@@ -520,6 +575,21 @@ export function createGame(
     const rect = canvas.getBoundingClientRect();
     if (ev.clientY - rect.top > css.h - bannerH()) return;
     const world = worldFromEvent(ev);
+
+    let bestCan: (typeof cans)[number] | null = null;
+    let canD = CAN_HIT;
+    for (const can of cans) {
+      const d = dist(world, can);
+      if (d < canD) {
+        bestCan = can;
+        canD = d;
+      }
+    }
+    if (bestCan) {
+      goTo({ x: bestCan.x, y: bestCan.y }, null, bestCan.id);
+      return;
+    }
+
     if (world.y < WATER_MAX) return;
 
     let best: Find | null = null;
@@ -548,7 +618,8 @@ export function createGame(
       return;
     }
     const world = worldFromEvent(ev);
-    const over = finds.some((s) => !s.painted && dist(world, s) < HIT);
+    const overCan = cans.some((c) => dist(world, c) < CAN_HIT);
+    const over = overCan || finds.some((s) => !s.painted && dist(world, s) < HIT);
     canvas.style.cursor = over ? "pointer" : "default";
   }
 
@@ -607,9 +678,12 @@ export function createGame(
         if (crab.targetId != null) {
           const item = finds.find((s) => s.id === crab.targetId);
           if (item) paintFind(item);
+        } else if (crab.targetCan) {
+          dipPaint(crab.targetCan);
         }
         crab.target = null;
         crab.targetId = null;
+        crab.targetCan = null;
         crab.state = "idle";
         crab.frame = 0;
         crab.frameT = 0;
@@ -627,7 +701,7 @@ export function createGame(
         }
         if (puffAcc > 0.09) {
           puffAcc = 0;
-          spawnSand(crab.x, crab.y);
+          if (crab.y > SAND_TOP) spawnSand(crab.x, crab.y);
         }
       }
     }
@@ -689,6 +763,81 @@ export function createGame(
     ctx.restore();
   }
 
+  function colorizeSprite(src: CanvasImageSource, hex: string) {
+    if (hex === "#5dbb63") return src;
+    const key = `${hex}-${src instanceof HTMLImageElement ? src.src : "img"}`;
+    const hit = paintCache.get(key);
+    if (hit) return hit;
+    const w = src instanceof HTMLImageElement || src instanceof HTMLCanvasElement ? src.width : 128;
+    const h = src instanceof HTMLImageElement || src instanceof HTMLCanvasElement ? src.height : 128;
+    const c = document.createElement("canvas");
+    c.width = Math.max(1, w);
+    c.height = Math.max(1, h);
+    const x = c.getContext("2d");
+    if (!x) return src;
+    x.drawImage(src, 0, 0);
+    x.globalCompositeOperation = "source-atop";
+    x.fillStyle = hex;
+    x.globalAlpha = 0.72;
+    x.fillRect(0, 0, c.width, c.height);
+    paintCache.set(key, c);
+    return c;
+  }
+
+  function drawPaintCan(can: { hex: string; x: number; y: number; id: PaintId }) {
+    const bob = Math.sin(time * 2.1 + can.x * 0.02) * 3;
+    const y = can.y + bob;
+    ctx.save();
+    ctx.globalAlpha = 0.22;
+    ctx.fillStyle = "#2a6a88";
+    ctx.beginPath();
+    ctx.ellipse(can.x, can.y + 22, 16, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    ctx.fillStyle = "#fff6e8";
+    ctx.beginPath();
+    ctx.roundRect(can.x - 14, y - 10, 28, 26, 5);
+    ctx.fill();
+    ctx.fillStyle = can.hex;
+    ctx.beginPath();
+    ctx.roundRect(can.x - 12, y - 6, 24, 20, 4);
+    ctx.fill();
+    ctx.fillStyle = "#fff6e8";
+    ctx.beginPath();
+    ctx.ellipse(can.x, y - 10, 15, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = can.hex;
+    ctx.beginPath();
+    ctx.ellipse(can.x, y - 10, 10, 3.2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    if (crab.paint === can.id) {
+      ctx.strokeStyle = "#fffce6";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.ellipse(can.x, y + 2, 20, 22, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  }
+
+  function drawBrush(x: number, y: number, facing: 1 | -1, hex: string, rot: number) {
+    ctx.save();
+    ctx.translate(x + facing * 30, y + 6);
+    ctx.rotate(rot + (facing < 0 ? -0.55 : 0.55));
+    ctx.fillStyle = "#c47a3a";
+    ctx.fillRect(-3, -22, 6, 20);
+    ctx.fillStyle = "#fff6e8";
+    ctx.fillRect(-6, -4, 12, 7);
+    ctx.fillStyle = hex;
+    ctx.beginPath();
+    ctx.moveTo(-7, 3);
+    ctx.lineTo(7, 3);
+    ctx.lineTo(5, 14);
+    ctx.lineTo(-5, 14);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
   function drawStar(x: number, y: number, r: number, color: string, rot: number) {
     ctx.save();
     ctx.translate(x, y);
@@ -705,17 +854,19 @@ export function createGame(
     ctx.restore();
   }
 
-  function drawSandDollar(x: number, y: number, s: number, happy: boolean) {
+  function drawSandDollar(x: number, y: number, s: number, happy: boolean, hex = "#5dbb63") {
     ctx.save();
     ctx.translate(x, y);
-    ctx.fillStyle = happy ? "#d8f0a8" : "#fff4dc";
+    ctx.fillStyle = happy ? hex : "#fff4dc";
     ctx.beginPath();
     ctx.ellipse(0, 0, s * 0.46, s * 0.42, 0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = happy ? "#6aa84f" : "#d8b48a";
+    ctx.strokeStyle = happy ? "#3a2a22" : "#d8b48a";
+    ctx.globalAlpha = happy ? 0.35 : 1;
     ctx.lineWidth = 2;
     ctx.stroke();
-    ctx.strokeStyle = happy ? "#7eb86a" : "#e0c49a";
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = happy ? "#fff6e8" : "#e0c49a";
     ctx.beginPath();
     for (let i = 0; i < 5; i++) {
       const a = -Math.PI / 2 + (i * Math.PI * 2) / 5;
@@ -726,14 +877,14 @@ export function createGame(
     ctx.restore();
   }
 
-  function drawSnail(x: number, y: number, s: number, happy: boolean) {
+  function drawSnail(x: number, y: number, s: number, happy: boolean, hex = "#5dbb63") {
     ctx.save();
     ctx.translate(x, y);
-    ctx.fillStyle = happy ? "#8fd18a" : "#f0c98a";
+    ctx.fillStyle = happy ? hex : "#f0c98a";
     ctx.beginPath();
     ctx.ellipse(s * 0.16, s * 0.16, s * 0.28, s * 0.16, 0.2, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = happy ? "#5dbb63" : "#e8a060";
+    ctx.fillStyle = happy ? hex : "#e8a060";
     ctx.beginPath();
     ctx.arc(-s * 0.06, -s * 0.04, s * 0.28, 0, Math.PI * 2);
     ctx.fill();
@@ -852,15 +1003,17 @@ export function createGame(
 
   function drawFindSprite(item: Find, x: number, y: number, s: number, happy: boolean) {
     drawShadow(x, y, s * 0.34, s * 0.13);
+    const hex = paintHex(item.color);
     if (item.kind === "shell" && assets) {
-      const img = (happy ? assets.green : assets.white)[item.variant]!;
+      const base = happy ? assets.green[item.variant]! : assets.white[item.variant]!;
+      const img = happy ? colorizeSprite(base, hex) : base;
       drawCentered(img, x, y, s, s);
     } else if (item.kind === "starfish" && assets) {
       drawCentered(assets.starfish, x, y, s * 1.05, s * 1.05, false, happy ? 0.2 : 0);
     } else if (item.kind === "sanddollar") {
-      drawSandDollar(x, y, s, happy);
+      drawSandDollar(x, y, s, happy, hex);
     } else {
-      drawSnail(x, y, s, happy);
+      drawSnail(x, y, s, happy, hex);
     }
   }
 
@@ -964,6 +1117,13 @@ export function createGame(
     const layers: Layer[] = [];
 
     if (assets) {
+      for (const can of cans) {
+        layers.push({
+          y: can.y,
+          z: 0,
+          draw: () => drawPaintCan(can),
+        });
+      }
       for (const item of finds) {
         layers.push({ y: item.y, z: 1, draw: () => drawFind(item) });
       }
@@ -996,6 +1156,7 @@ export function createGame(
             ctx.restore();
           }
           drawHat(crab.x, crab.y, CRAB_SIZE, settings.hat, crab.facing < 0);
+          drawBrush(crab.x, crab.y, crab.facing, paintHex(crab.paint), waveRot);
         },
       });
     }

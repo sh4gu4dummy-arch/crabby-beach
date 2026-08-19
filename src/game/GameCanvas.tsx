@@ -124,7 +124,7 @@ export function GameCanvas() {
 
       {hud.phase === "playing" && hud.painted === 0 && (
         <p className="pointer-events-none absolute bottom-28 left-1/2 z-10 w-max max-w-[90%] -translate-x-1/2 rounded-pill bg-cream/90 px-4 py-2 text-center text-sm font-semibold text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft">
-          Tap a white shell
+          Tap a paint can or a white shell
         </p>
       )}
 
@@ -146,7 +146,7 @@ export function GameCanvas() {
             <p className="text-sky-deep text-sm font-semibold tracking-wide uppercase">Five little beaches</p>
             <h1 className="mt-1 text-4xl font-bold tracking-tight text-coral sm:text-5xl">Crabby Beach</h1>
             <p className="mt-3 text-base leading-relaxed text-ink-soft">
-              Tap a white shell. Each new beach hides one more. The last beach has ten.
+              Tap a white shell to paint it. Walk to a can in the water to change colors.
             </p>
             <button
               type="button"

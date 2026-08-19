@@ -201,6 +201,13 @@ export function playScuttle() {
   beep(210 + Math.random() * 40, 0.045, "triangle", 0.05, at);
 }
 
+export function playDip() {
+  if (!ctx || muted) return;
+  const at = tNow();
+  beep(280, 0.09, "sine", 0.12, at, 180);
+  beep(520, 0.16, "triangle", 0.1, at + 0.04, 740);
+}
+
 export function playSparkle() {
   if (!ctx || muted) return;
   const at = tNow();

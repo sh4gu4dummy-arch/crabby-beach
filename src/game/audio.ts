@@ -6,6 +6,28 @@ let muted = false;
 let musicOn = true;
 let ambientStarted = false;
 let noiseBuffer: AudioBuffer | null = null;
+let voiceSrc: AudioBufferSourceNode | null = null;
+const voiceBufs = new Map<string, AudioBuffer>();
+let voicesLoading: Promise<void> | null = null;
+
+const VOICE_FILES: Record<string, string> = {
+  one: "/voice/one.mp3",
+  two: "/voice/two.mp3",
+  three: "/voice/three.mp3",
+  four: "/voice/four.mp3",
+  five: "/voice/five.mp3",
+  six: "/voice/six.mp3",
+  seven: "/voice/seven.mp3",
+  eight: "/voice/eight.mp3",
+  nine: "/voice/nine.mp3",
+  "win-sunny": "/voice/win-sunny.mp3",
+  "win-sunset": "/voice/win-sunset.mp3",
+};
+
+const LINE_TO_CLIP: Record<string, string> = {
+  "Yay! You found them all.": "win-sunny",
+  "What a glow! Every friend is happy.": "win-sunset",
+};
 
 function ensureGraph() {
   if (ctx) return;
@@ -36,6 +58,54 @@ export function unlockAudio() {
   ensureGraph();
   resume();
   startAmbient();
+  void loadVoices();
+}
+
+async function loadVoices() {
+  if (!ctx) return;
+  if (voicesLoading) return voicesLoading;
+  voicesLoading = (async () => {
+    const audio = ctx;
+    if (!audio) return;
+    await Promise.all(
+      Object.entries(VOICE_FILES).map(async ([key, src]) => {
+        if (voiceBufs.has(key)) return;
+        const res = await fetch(src);
+        if (!res.ok) return;
+        const raw = await res.arrayBuffer();
+        const buf = await audio.decodeAudioData(raw.slice(0));
+        voiceBufs.set(key, buf);
+      }),
+    );
+  })();
+  return voicesLoading;
+}
+
+function playVoice(key: string) {
+  if (muted || !ctx || !sfxBus) return;
+  const buf = voiceBufs.get(key);
+  if (!buf) {
+    void loadVoices().then(() => {
+      if (voiceBufs.has(key)) playVoice(key);
+    });
+    return;
+  }
+  if (voiceSrc) {
+    try {
+      voiceSrc.stop();
+    } catch {
+      /* already ended */
+    }
+    voiceSrc = null;
+  }
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const g = ctx.createGain();
+  g.gain.value = 1.15;
+  src.connect(g);
+  g.connect(sfxBus);
+  src.start();
+  voiceSrc = src;
 }
 
 export function setMuted(next: boolean) {
@@ -58,23 +128,17 @@ export function setMusicEnabled(on: boolean) {
 
 export function speak(text: string) {
   if (typeof window === "undefined" || muted) return;
-  const synth = window.speechSynthesis;
-  if (!synth) return;
-  try {
-    synth.cancel();
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.rate = 0.95;
-    utter.pitch = 1.15;
-    synth.speak(utter);
-  } catch {
-    // Visual cues on screen are the fallback.
+  const key = LINE_TO_CLIP[text];
+  if (key) {
+    playVoice(key);
+    return;
   }
 }
 
 export function speakCount(n: number) {
   const words = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
   const word = words[n - 1];
-  if (word) speak(word);
+  if (word) playVoice(word);
 }
 
 function tNow() {

@@ -821,19 +821,27 @@ export function createGame(
 
   function drawBrush(x: number, y: number, facing: 1 | -1, hex: string, rot: number) {
     ctx.save();
-    ctx.translate(x + facing * 30, y + 6);
-    ctx.rotate(rot + (facing < 0 ? -0.55 : 0.55));
+    ctx.translate(x + facing * 24, y - 2);
+    ctx.rotate(facing * (-Math.PI / 2) + rot * 0.25);
     ctx.fillStyle = "#c47a3a";
-    ctx.fillRect(-3, -22, 6, 20);
+    ctx.beginPath();
+    ctx.roundRect(-2.2, -18, 4.4, 16, 1.5);
+    ctx.fill();
     ctx.fillStyle = "#fff6e8";
-    ctx.fillRect(-6, -4, 12, 7);
+    ctx.beginPath();
+    ctx.roundRect(-4.5, -4, 9, 5, 1.5);
+    ctx.fill();
     ctx.fillStyle = hex;
     ctx.beginPath();
-    ctx.moveTo(-7, 3);
-    ctx.lineTo(7, 3);
-    ctx.lineTo(5, 14);
-    ctx.lineTo(-5, 14);
+    ctx.moveTo(-5, 1);
+    ctx.lineTo(5, 1);
+    ctx.lineTo(3.5, 11);
+    ctx.lineTo(-3.5, 11);
     ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "rgba(255,246,232,0.45)";
+    ctx.beginPath();
+    ctx.ellipse(-1.5, 5, 1.4, 3, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }

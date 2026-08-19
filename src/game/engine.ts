@@ -171,7 +171,6 @@ function shuffle<T>(list: T[]) {
 
 function planKinds(n: number): Kind[] {
   const extras: Kind[] = [];
-  if (n >= 4) extras.push("starfish");
   if (n >= 5) extras.push("sanddollar");
   if (n >= 8) extras.push("snail");
   const shells = Math.max(0, n - extras.length);

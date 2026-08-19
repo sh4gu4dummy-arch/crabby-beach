@@ -819,43 +819,59 @@ export function createGame(
     }
   }
 
-  function drawBrush(x: number, y: number, facing: 1 | -1, hex: string, rot: number) {
+  function drawBrush(
+    x: number,
+    y: number,
+    facing: 1 | -1,
+    hex: string,
+    rot: number,
+    part: "handle" | "head" | "all" = "all",
+  ) {
     ctx.save();
-    ctx.translate(x + facing * 20, y - 30);
-    ctx.rotate(facing * -0.55 + rot * 0.15);
+    ctx.translate(x + facing * 26, y - 34);
+    ctx.rotate(facing * -0.22 + rot * 0.1);
 
-    ctx.fillStyle = "#8a4b28";
-    ctx.beginPath();
-    ctx.roundRect(-3.5, 4, 7, 28, 2.5);
-    ctx.fill();
-    ctx.fillStyle = "#c47a3a";
-    ctx.beginPath();
-    ctx.roundRect(-2.4, 6, 3, 24, 1.5);
-    ctx.fill();
+    if (part !== "head") {
+      ctx.fillStyle = "#7a4020";
+      ctx.beginPath();
+      ctx.roundRect(-2.2, 2, 4.4, 28, 2);
+      ctx.fill();
+      ctx.fillStyle = "#c47a3a";
+      ctx.beginPath();
+      ctx.roundRect(-1.2, 4, 1.8, 24, 1);
+      ctx.fill();
+      ctx.fillStyle = "#efe6d4";
+      ctx.beginPath();
+      ctx.roundRect(-4.5, -2, 9, 7, 1.8);
+      ctx.fill();
+      ctx.fillStyle = "#d4c4a4";
+      ctx.fillRect(-4.5, 1, 9, 1.4);
+    }
 
-    ctx.fillStyle = "#efe6d4";
-    ctx.beginPath();
-    ctx.roundRect(-7, -2, 14, 9, 2);
-    ctx.fill();
-    ctx.fillStyle = "#d8cbb0";
-    ctx.fillRect(-7, 1, 14, 2);
-
-    ctx.fillStyle = hex;
-    ctx.beginPath();
-    ctx.moveTo(-9, -2);
-    ctx.quadraticCurveTo(-12, -18, -4, -26);
-    ctx.lineTo(0, -22);
-    ctx.lineTo(4, -26);
-    ctx.quadraticCurveTo(12, -18, 9, -2);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = "rgba(255,246,232,0.4)";
-    ctx.beginPath();
-    ctx.moveTo(-3, -4);
-    ctx.quadraticCurveTo(-5, -14, -1, -20);
-    ctx.lineTo(1, -12);
-    ctx.closePath();
-    ctx.fill();
+    if (part !== "handle") {
+      ctx.fillStyle = hex;
+      ctx.beginPath();
+      ctx.moveTo(-5, -2);
+      ctx.lineTo(-6, -16);
+      ctx.lineTo(-2, -20);
+      ctx.lineTo(0, -17);
+      ctx.lineTo(2, -20);
+      ctx.lineTo(6, -16);
+      ctx.lineTo(5, -2);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = hex;
+      ctx.lineWidth = 1.1;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(-4, -4);
+      ctx.lineTo(-5, -17);
+      ctx.moveTo(0, -4);
+      ctx.lineTo(0, -19);
+      ctx.moveTo(4, -4);
+      ctx.lineTo(5, -17);
+      ctx.stroke();
+    }
 
     ctx.restore();
   }
@@ -1167,6 +1183,7 @@ export function createGame(
         z: 2,
         draw: () => {
           drawShadow(crab.x, crab.y, 28, 10);
+          drawBrush(crab.x, crab.y, crab.facing, paintHex(crab.paint), waveRot, "handle");
           drawCentered(img, crab.x, crab.y, CRAB_SIZE, CRAB_SIZE, crab.facing < 0, waveRot);
           if (crab.blink > 0) {
             ctx.save();
@@ -1178,7 +1195,7 @@ export function createGame(
             ctx.restore();
           }
           drawHat(crab.x, crab.y, CRAB_SIZE, settings.hat, crab.facing < 0);
-          drawBrush(crab.x, crab.y, crab.facing, paintHex(crab.paint), waveRot);
+          drawBrush(crab.x, crab.y, crab.facing, paintHex(crab.paint), waveRot, "head");
         },
       });
     }

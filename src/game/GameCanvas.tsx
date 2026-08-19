@@ -84,25 +84,14 @@ export function GameCanvas() {
         aria-label="Crabby walking on the beach"
       />
 
-      <header className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-3 p-3 sm:p-4">
+      <header className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-end gap-3 p-3 sm:p-4">
         <div className="pointer-events-auto flex items-center gap-2">
-          <div className="rounded-pill bg-cream/90 px-4 py-2 shadow-md shadow-ink/10 ring-2 ring-cream-soft">
-            <p className="text-xs font-semibold tracking-wide text-ink-soft uppercase whitespace-nowrap">
-              In the bucket
-            </p>
-            <p className="text-lg leading-none font-bold tabular-nums sm:text-xl">
-              {hud.painted}
-              <span className="text-ink-soft"> / {hud.total}</span>
-            </p>
-          </div>
           {timerLabel && (
             <div className="flex items-center gap-1 rounded-pill bg-cream/90 px-3 py-2 text-sm font-bold shadow-md shadow-ink/10 ring-2 ring-cream-soft">
               <Timer className="size-4" />
               {timerLabel}
             </div>
           )}
-        </div>
-        <div className="pointer-events-auto flex items-center gap-2">
           <button
             type="button"
             onClick={toggleMute}
@@ -125,8 +114,8 @@ export function GameCanvas() {
       )}
 
       {hud.phase === "playing" && hud.painted === 0 && (
-        <p className="pointer-events-none absolute bottom-6 left-1/2 z-10 w-max max-w-[90%] -translate-x-1/2 rounded-pill bg-cream/90 px-4 py-2 text-center text-sm font-semibold text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft">
-          Tap a shell or a sea friend
+        <p className="pointer-events-none absolute bottom-28 left-1/2 z-10 w-max max-w-[90%] -translate-x-1/2 rounded-pill bg-cream/90 px-4 py-2 text-center text-sm font-semibold text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft">
+          Tap a white shell
         </p>
       )}
 
@@ -148,7 +137,7 @@ export function GameCanvas() {
             <p className="text-sky-deep text-sm font-semibold tracking-wide uppercase">A sunny little game</p>
             <h1 className="mt-1 text-4xl font-bold tracking-tight text-coral sm:text-5xl">Crabby Beach</h1>
             <p className="mt-3 text-base leading-relaxed text-ink-soft">
-              Tap a shell or a sea friend. Crabby scuttles over and pops it in the bucket.
+              Tap a white shell. Crabby walks over, it turns happy green, and it hops into your tray.
             </p>
             <button
               type="button"
@@ -175,7 +164,7 @@ export function GameCanvas() {
               {hud.theme === "sunset" ? "Sunset" : "All done"}
             </p>
             <h2 className="mt-1 text-3xl font-bold tracking-tight text-mint-deep sm:text-4xl">
-              {hud.theme === "sunset" ? "What a glow!" : "Yay! The bucket is full"}
+              {hud.theme === "sunset" ? "What a glow!" : "Yay! You found them all"}
             </h2>
             <p className="mt-3 text-base text-ink-soft">
               {hud.theme === "sunset"
@@ -243,7 +232,7 @@ export function GameCanvas() {
         </div>
       )}
 
-      <p className="pointer-events-none absolute right-3 bottom-3 z-10 text-xs font-semibold tracking-wide text-ink/40 uppercase">
+      <p className="pointer-events-none absolute top-16 right-3 z-10 text-xs font-semibold tracking-wide text-ink/40 uppercase">
         {APP_VERSION}
       </p>
     </div>

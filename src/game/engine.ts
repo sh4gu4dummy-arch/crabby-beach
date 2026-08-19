@@ -54,6 +54,7 @@ type Find = {
   painted: boolean;
   pop: number;
   fly: number;
+  slot: number;
 };
 
 type Particle = {
@@ -231,7 +232,7 @@ export function createGame(
   let extraTime = 0;
   let hermit: { x: number; y: number; life: number } | null = null;
   let lastTick = -1;
-  const bucket = { x: 800, y: 780 };
+  let pendingWin = false;
   const tintCache: TintCache = new WeakMap();
   let settings: GrownupSettings = DEFAULT_SETTINGS;
 
@@ -251,6 +252,27 @@ export function createGame(
 
   const css = { w: 1, h: 1 };
   const view = { x: 0, y: 0, scale: 1 };
+
+  function bannerH() {
+    return Math.max(92, Math.min(112, css.h * 0.15));
+  }
+
+  function slotScreen(index: number, total: number) {
+    const h = bannerH();
+    const n = Math.max(total, 1);
+    const pad = 16;
+    const slot = Math.min(70, (css.w - pad * 2) / n);
+    const rowW = slot * n;
+    return {
+      x: (css.w - rowW) / 2 + slot * index + slot / 2,
+      y: css.h - h * 0.38,
+      size: Math.min(56, slot * 0.78),
+    };
+  }
+
+  function worldToScreen(p: Vec) {
+    return { x: view.x + p.x * view.scale, y: view.y + p.y * view.scale };
+  }
 
   function paintedCount() {
     return finds.filter((f) => f.painted).length;
@@ -299,20 +321,18 @@ export function createGame(
     const y1 = (css.h - view.y) / view.scale;
     const padX = Math.min(70, Math.max(36, (x1 - x0) * 0.08));
     const padY = 36;
+    const bannerWorld = bannerH() / view.scale + 12;
     return {
       x0: clamp(Math.max(x0 + padX, SAND_LEFT), SAND_LEFT, SAND_RIGHT - 200),
       x1: clamp(Math.min(x1 - padX, SAND_RIGHT), SAND_LEFT + 200, SAND_RIGHT),
       y0: clamp(Math.max(y0 + padY, SAND_TOP), SAND_TOP, SAND_BOT - 160),
-      y1: clamp(Math.min(y1 - padY, SAND_BOT), SAND_TOP + 160, SAND_BOT),
+      y1: clamp(Math.min(y1 - padY - bannerWorld, SAND_BOT), SAND_TOP + 160, SAND_BOT),
     };
   }
 
   function placeFinds(bounds: { x0: number; x1: number; y0: number; y1: number }) {
     const n = settings.findCount;
     const kinds = shuffle(planKinds(n));
-    bucket.x = bounds.x1 - 36;
-    bucket.y = bounds.y1 - 24;
-    const right = Math.max(bounds.x0 + 160, bucket.x - 120);
     const cols = n <= 3 ? n : 3;
     const rows = Math.ceil(n / cols);
     const spots: Vec[] = [];
@@ -322,7 +342,7 @@ export function createGame(
         const jitterX = (Math.random() - 0.5) * 40;
         const jitterY = (Math.random() - 0.5) * 30;
         spots.push({
-          x: bounds.x0 + ((c + 0.5) / cols) * (right - bounds.x0) + jitterX,
+          x: bounds.x0 + ((c + 0.5) / cols) * (bounds.x1 - bounds.x0) + jitterX,
           y: bounds.y0 + ((r + 0.5) / rows) * (bounds.y1 - bounds.y0) + jitterY,
         });
       }
@@ -336,6 +356,7 @@ export function createGame(
       painted: false,
       pop: 1,
       fly: 0,
+      slot: -1,
     }));
   }
 
@@ -346,6 +367,7 @@ export function createGame(
     finds = placeFinds(vis);
     particles = [];
     hermit = null;
+    pendingWin = false;
     countPop = null;
     playElapsed = 0;
     extraTime = 0;
@@ -422,26 +444,6 @@ export function createGame(
     }
   }
 
-  function spawnToken(from: Vec) {
-    particles.push({
-      x: from.x,
-      y: from.y,
-      vx: 0,
-      vy: 0,
-      life: 0.75,
-      max: 0.75,
-      size: 16,
-      color: "#5dbb63",
-      kind: "token",
-      rot: 0,
-      spin: 10,
-      ox: from.x,
-      oy: from.y,
-      tx: bucket.x,
-      ty: bucket.y - 16,
-    });
-  }
-
   function spawnSand(x: number, y: number) {
     particles.push({
       x: x - crab.facing * 10,
@@ -463,23 +465,18 @@ export function createGame(
     item.painted = true;
     item.pop = 0;
     item.fly = 0.001;
+    item.slot = paintedCount() - 1;
     const n = paintedCount();
     countPop = n;
     countKey += 1;
     const last = n >= finds.length;
-    spawnToken({ x: item.x, y: item.y });
     spawnSparkles(item.x, item.y, last);
     playSparkle();
     crab.wave = 0.55;
     if (settings.voiceCounts) speakCount(n);
     if (last) {
       hermit = { x: item.x, y: item.y - 8, life: 2.4 };
-      phase = "won";
-      spawnConfetti();
-      playWin();
-      if (settings.voiceCounts) {
-        speak(theme === "sunset" ? "What a glow! Every friend is happy." : "Yay! Every shell is happy.");
-      }
+      pendingWin = true;
     }
     emitHud();
   }
@@ -502,6 +499,8 @@ export function createGame(
     }
 
     playTap();
+    const rect = canvas.getBoundingClientRect();
+    if (ev.clientY - rect.top > css.h - bannerH()) return;
     const world = worldFromEvent(ev);
     if (world.y < WATER_MAX) return;
 
@@ -551,8 +550,18 @@ export function createGame(
     }
 
     for (const item of finds) {
-      if (item.pop < 1) item.pop = Math.min(1, item.pop + dt * 2.6);
-      if (item.painted && item.fly < 1) item.fly = Math.min(1, item.fly + dt * 1.4);
+      if (item.pop < 1) item.pop = Math.min(1, item.pop + dt * 3.4);
+      if (item.painted && item.fly < 1) item.fly = Math.min(1, item.fly + dt * 1.25);
+    }
+    if (pendingWin && finds.every((f) => f.fly >= 1)) {
+      pendingWin = false;
+      phase = "won";
+      spawnConfetti();
+      playWin();
+      if (settings.voiceCounts) {
+        speak(theme === "sunset" ? "What a glow! Every friend is happy." : "Yay! You found them all.");
+      }
+      emitHud();
     }
 
     if (hermit) {
@@ -823,40 +832,92 @@ export function createGame(
     ctx.restore();
   }
 
-  function drawFind(item: Find) {
-    const x = item.x;
-    const y = item.y;
-    const pulse = item.painted
-      ? 1.18 + Math.sin(time * 3.2 + item.id) * 0.05
-      : 1 + Math.sin(time * 2.4 + item.id) * 0.03;
-    const pop = item.pop < 1 ? easeOutBack(item.pop) : 1;
-    const s = FIND_SIZE * pulse * (0.86 + 0.28 * pop);
+  function drawFindSprite(item: Find, x: number, y: number, s: number, happy: boolean) {
     drawShadow(x, y, s * 0.34, s * 0.13);
-    if (item.painted) {
+    if (item.kind === "shell" && assets) {
+      const img = (happy ? assets.green : assets.white)[item.variant]!;
+      drawCentered(img, x, y, s, s);
+    } else if (item.kind === "starfish" && assets) {
+      drawCentered(assets.starfish, x, y, s * 1.05, s * 1.05, false, happy ? 0.2 : 0);
+    } else if (item.kind === "sanddollar") {
+      drawSandDollar(x, y, s, happy);
+    } else {
+      drawSnail(x, y, s, happy);
+    }
+  }
+
+  function drawFind(item: Find) {
+    if (item.painted) return;
+    const pulse = 1 + Math.sin(time * 2.4 + item.id) * 0.03;
+    const s = FIND_SIZE * pulse;
+    drawFindSprite(item, item.x, item.y, s, false);
+  }
+
+  function drawBanner() {
+    const h = bannerH();
+    const total = Math.max(finds.length, 1);
+    ctx.save();
+    ctx.fillStyle = "rgba(255, 246, 232, 0.94)";
+    ctx.strokeStyle = "rgba(255, 233, 200, 1)";
+    ctx.lineWidth = 3;
+    roundRect(10, css.h - h - 6, css.w - 20, h, 22);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "#6b5348";
+    ctx.font = "700 12px Fredoka, Nunito, ui-rounded, system-ui, sans-serif";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    ctx.fillText("My shells", 24, css.h - h + 10);
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#3a2a22";
+    ctx.font = "700 16px Fredoka, Nunito, ui-rounded, system-ui, sans-serif";
+    ctx.fillText(`${paintedCount()} / ${finds.length}`, css.w - 24, css.h - h + 8);
+    ctx.textAlign = "left";
+
+    for (let i = 0; i < total; i++) {
+      const slot = slotScreen(i, total);
       ctx.save();
-      ctx.globalAlpha = 0.42;
-      ctx.fillStyle = "#7dff7a";
+      ctx.globalAlpha = 0.55;
+      ctx.fillStyle = "#ffe9c8";
       ctx.beginPath();
-      ctx.ellipse(x, y, s * 0.62, s * 0.48, 0, 0, Math.PI * 2);
+      ctx.ellipse(slot.x, slot.y, slot.size * 0.42, slot.size * 0.32, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
-    if (item.kind === "shell" && assets) {
-      const img = (item.painted ? assets.green : assets.white)[item.variant]!;
-      drawCentered(img, x, y, s, s);
-    } else if (item.kind === "starfish" && assets) {
-      drawCentered(assets.starfish, x, y, s * 1.05, s * 1.05, false, item.painted ? 0.2 : 0);
-    } else if (item.kind === "sanddollar") {
-      drawSandDollar(x, y, s, item.painted);
-    } else {
-      drawSnail(x, y, s, item.painted);
-    }
-    if (item.painted) {
+    ctx.restore();
+  }
+
+  function drawCollected() {
+    const total = Math.max(finds.length, 1);
+    for (const item of finds) {
+      if (!item.painted) continue;
+      const from = worldToScreen(item);
+      const slot = slotScreen(Math.max(0, item.slot), total);
+      const pop = item.pop < 1 ? easeOutBack(item.pop) : 1;
+      const hold = Math.min(1, item.fly / 0.18);
+      const travel = item.fly < 0.18 ? 0 : easeInOut((item.fly - 0.18) / 0.82);
+      const x = from.x + (slot.x - from.x) * travel;
+      const y = from.y + (slot.y - from.y) * travel - Math.sin(travel * Math.PI) * 70;
+      const worldSize = FIND_SIZE * view.scale * (1.12 + 0.2 * pop);
+      const s = worldSize + (slot.size - worldSize) * travel;
       ctx.save();
-      ctx.globalAlpha = 0.9;
-      drawStar(x - s * 0.18, y - s * 0.22, 7 + Math.sin(time * 5 + item.id) * 1.5, "#fffce6", time);
+      if (hold < 1 && travel === 0) {
+        ctx.globalAlpha = 1;
+      }
+      drawFindSprite(item, x, y, s, true);
       ctx.restore();
     }
+  }
+
+  function roundRect(x: number, y: number, w: number, h: number, r: number) {
+    const rr = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + rr, y);
+    ctx.arcTo(x + w, y, x + w, y + h, rr);
+    ctx.arcTo(x + w, y + h, x, y + h, rr);
+    ctx.arcTo(x, y + h, x, y, rr);
+    ctx.arcTo(x, y, x + w, y, rr);
+    ctx.closePath();
   }
 
   function draw() {
@@ -883,23 +944,6 @@ export function createGame(
     const layers: Layer[] = [];
 
     if (assets) {
-      const bucketImg = assets.bucket;
-      layers.push({
-        y: bucket.y,
-        z: 0,
-        draw: () => {
-          drawShadow(bucket.x, bucket.y, 26, 10);
-          drawCentered(bucketImg, bucket.x, bucket.y, 86, 86);
-          const filled = finds.filter((f) => f.fly >= 1).length;
-          for (let i = 0; i < filled; i++) {
-            ctx.fillStyle = i % 2 ? "#5dbb63" : "#fff6e8";
-            ctx.beginPath();
-            ctx.arc(bucket.x - 10 + (i % 3) * 10, bucket.y - 6 - Math.floor(i / 3) * 7, 5, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        },
-      });
-
       for (const item of finds) {
         layers.push({ y: item.y, z: 1, draw: () => drawFind(item) });
       }
@@ -964,6 +1008,8 @@ export function createGame(
     }
 
     ctx.restore();
+    drawBanner();
+    drawCollected();
   }
 
   function frame(ts: number) {

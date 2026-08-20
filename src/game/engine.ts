@@ -919,16 +919,17 @@ export function createGame(
   function drawSnail(x: number, y: number, s: number, happy: boolean, hex = "#5dbb63") {
     ctx.save();
     ctx.translate(x, y);
-    ctx.fillStyle = happy ? hex : "#f0c98a";
+    ctx.fillStyle = happy ? hex : "#fff6e8";
     ctx.beginPath();
     ctx.ellipse(s * 0.16, s * 0.16, s * 0.28, s * 0.16, 0.2, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = happy ? hex : "#e8a060";
+    ctx.fillStyle = happy ? hex : "#fffce8";
     ctx.beginPath();
     ctx.arc(-s * 0.06, -s * 0.04, s * 0.28, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = happy ? "#3f9a46" : "#c47a3a";
+    ctx.strokeStyle = happy ? "rgba(58,42,34,0.35)" : "#c9b089";
     ctx.lineWidth = 2;
+    ctx.stroke();
     ctx.beginPath();
     ctx.arc(-s * 0.06, -s * 0.04, s * 0.16, 0.4, Math.PI * 2.2);
     ctx.stroke();

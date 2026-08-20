@@ -1,5 +1,6 @@
 import type { BeachTheme, CrabColor, CrabHat, GrownupSettings } from "@/lib/settings";
 import { DEFAULT_SETTINGS } from "@/lib/settings";
+import { assetUrl } from "@/lib/asset";
 import {
   playScuttle,
   playSparkle,
@@ -141,14 +142,14 @@ function loadImage(src: string) {
 
 async function loadAssets(): Promise<Assets> {
   const [beach, ...rest] = await Promise.all([
-    loadImage("/game/beach.jpg?v=v003"),
-    ...[1, 2, 3, 4].map((i) => loadImage(`/game/crab-walk-${i}.png?v=topdown2`)),
-    ...[1, 2, 3, 4].map((i) => loadImage(`/game/crab-idle-${i}.png?v=topdown2`)),
-    ...[1, 2, 3, 4].map((i) => loadImage(`/game/shell-white-${i}.png?v=topdown2`)),
-    ...[1, 2, 3, 4].map((i) => loadImage(`/game/shell-green-${i}.png?v=v003`)),
-    loadImage("/game/prop-starfish.png?v=topdown2"),
-    loadImage("/game/prop-bucket.png?v=topdown2"),
-    loadImage("/game/prop-pebble.png?v=topdown2"),
+    loadImage(assetUrl("game/beach.jpg?v=v003")),
+    ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crab-walk-${i}.png?v=topdown2`))),
+    ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crab-idle-${i}.png?v=topdown2`))),
+    ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/shell-white-${i}.png?v=topdown2`))),
+    ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/shell-green-${i}.png?v=v003`))),
+    loadImage(assetUrl("game/prop-starfish.png?v=topdown2")),
+    loadImage(assetUrl("game/prop-bucket.png?v=topdown2")),
+    loadImage(assetUrl("game/prop-pebble.png?v=topdown2")),
   ]);
   return {
     beach,

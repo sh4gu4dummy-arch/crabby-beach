@@ -1,3 +1,5 @@
+import { assetUrl } from "@/lib/asset";
+
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
 let sfxBus: GainNode | null = null;
@@ -11,18 +13,18 @@ const voiceBufs = new Map<string, AudioBuffer>();
 let voicesLoading: Promise<void> | null = null;
 
 const VOICE_FILES: Record<string, string> = {
-  one: "/voice/one.mp3",
-  two: "/voice/two.mp3",
-  three: "/voice/three.mp3",
-  four: "/voice/four.mp3",
-  five: "/voice/five.mp3",
-  six: "/voice/six.mp3",
-  seven: "/voice/seven.mp3",
-  eight: "/voice/eight.mp3",
-  nine: "/voice/nine.mp3",
-  ten: "/voice/ten.mp3",
-  "win-sunny": "/voice/win-sunny.mp3",
-  "win-sunset": "/voice/win-sunset.mp3",
+  one: assetUrl("voice/one.mp3"),
+  two: assetUrl("voice/two.mp3"),
+  three: assetUrl("voice/three.mp3"),
+  four: assetUrl("voice/four.mp3"),
+  five: assetUrl("voice/five.mp3"),
+  six: assetUrl("voice/six.mp3"),
+  seven: assetUrl("voice/seven.mp3"),
+  eight: assetUrl("voice/eight.mp3"),
+  nine: assetUrl("voice/nine.mp3"),
+  ten: assetUrl("voice/ten.mp3"),
+  "win-sunny": assetUrl("voice/win-sunny.mp3"),
+  "win-sunset": assetUrl("voice/win-sunset.mp3"),
 };
 
 const LINE_TO_CLIP: Record<string, string> = {

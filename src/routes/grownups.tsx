@@ -35,25 +35,22 @@ const PACKS: Pack[] = [
     title: "Code + assets",
     blurb: "Full project tree, including art and config, for an offline rebuild.",
     filename: DOWNLOADS.codebase,
-    ready: false,
+    ready: true,
     icon: FolderArchive,
-    note: "Ask me to export this zip when you want it.",
   },
   {
     title: "Portable app",
-    blurb: "Playable offline snapshot. Unzip and open — no install, no network.",
+    blurb: "Playable offline snapshot. Unzip and open index.html — no install, no network.",
     filename: DOWNLOADS.portable,
-    ready: false,
+    ready: true,
     icon: Package,
-    note: "Ask me to export this zip when you want it.",
   },
   {
     title: "Android project",
-    blurb: "Android project plus a build readme. A signed APK needs a local Android SDK.",
+    blurb: "Android Studio project with the game inside. Build a signed APK on a machine with the Android SDK — we do not ship a fake APK.",
     filename: DOWNLOADS.android,
-    ready: false,
+    ready: true,
     icon: Smartphone,
-    note: "No fake APK. Ask me for the android-project zip when you want to build one.",
   },
 ];
 
@@ -85,7 +82,7 @@ function Choice<T extends string | number>({
   );
 }
 
-function Grownups() {
+export function Grownups() {
   const [settings, setSettings] = useState<GrownupSettings>(() => loadSettings());
 
   function update(patch: Partial<GrownupSettings>) {
@@ -234,9 +231,8 @@ function Grownups() {
             Downloads
           </h2>
           <p className="mt-1 text-sm text-ink-soft">
-            Ready files save to your device. Right-click still works. Zip packages
-            are a point-in-time snapshot and are built only when you ask — never
-            automatically. Play does not need the network.
+            Ready files save to your device. Right-click still works. These packages
+            are a point-in-time snapshot. Play does not need the network.
           </p>
           <ul className="mt-4 grid gap-3">
             {PACKS.map((pack) => (

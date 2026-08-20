@@ -1,6 +1,6 @@
-# export-naming.md — v.013
+# export-naming.md — v.014
 
-Current product version: **v.012** (Crabby Beach)
+Current product version: **v.013** (Crabby Beach)
 
 ## How filenames work
 
@@ -9,10 +9,10 @@ so you can tell which version a file is just by looking at it.
 
 | Package | Filename | What it is |
 | --- | --- | --- |
-| Code only | `crabby-beach-v.012-code.md` | One Markdown document: table of contents + essential source in fenced code blocks. For read / search / share / archive. **Not runnable.** No voice, no art assets. |
-| Code + assets (full) | `crabby-beach-v.012-codebase.zip` | Complete project tree, including data, generated assets, and config, for offline rebuild. |
-| Portable app | `crabby-beach-v.012-portable.zip` | Playable, offline-ready. Unzip and open. |
-| Android project | `crabby-beach-v.012-android.zip` | Android project + build readme. A signed `.apk` needs a local Android SDK — we do not ship a fake APK. |
+| Code only | `crabby-beach-v.013-code.md` | One Markdown document: table of contents + essential source in fenced code blocks. For read / search / share / archive. **Not runnable.** No voice, no art assets. |
+| Code + assets (full) | `crabby-beach-v.013-codebase.zip` | Complete project tree, including data, generated assets, and config, for offline rebuild. |
+| Portable app | `crabby-beach-v.013-portable.zip` | Playable, offline-ready. Unzip and open. |
+| Android project | `crabby-beach-v.013-android.zip` | Android project + build readme. A signed `.apk` needs a local Android SDK — we do not ship a fake APK. |
 
 Older files keep their names (`v.001` stays `v.001`). New exports use the current number.
 
@@ -30,5 +30,5 @@ Older files keep their names (`v.001` stays `v.001`). New exports use the curren
 ## Version numbers
 
 - Product versions increment `v.001`, `v.002`, `v.003`, …
-- This naming document started at `v.001` and is now **v.013**.
+- This naming document started at `v.001` and is now **v.014**.
 - Never skip or reuse a number. A new version is a new number.

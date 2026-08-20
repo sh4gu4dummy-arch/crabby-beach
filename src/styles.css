@@ -35,6 +35,11 @@
     min-height: 100%;
   }
 
+  html,
+  body {
+    overscroll-behavior: none;
+  }
+
   body {
     margin: 0;
     background: var(--color-sky);
@@ -69,6 +74,12 @@
 
 .count-pop {
   animation: count-pop 0.7s ease-out both;
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .turn-phone {
+    display: grid;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -96,7 +96,7 @@ function Grownups() {
 
   return (
     <main className="min-h-dvh bg-sand text-ink">
-      <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-12">
+      <div className="mx-auto max-w-md px-4 pt-[max(1.25rem,env(safe-area-inset-top))] pb-[max(2rem,env(safe-area-inset-bottom))] sm:px-5">
         <Link
           to="/"
           className="inline-flex min-h-11 items-center gap-2 rounded-pill bg-cream px-4 text-sm font-semibold text-ink shadow-md shadow-ink/10"

@@ -79,14 +79,17 @@ export function GameCanvas() {
       : `${Math.floor(hud.secondsLeft / 60)}:${String(hud.secondsLeft % 60).padStart(2, "0")}`;
 
   return (
-    <div className={`relative h-dvh w-full overflow-hidden text-ink ${hud.theme === "sunset" ? "bg-coral" : "bg-sky"}`}>
+    <div className="flex h-dvh w-full justify-center overflow-hidden bg-sky">
+      <div
+        className={`relative h-dvh w-full max-w-[28rem] overflow-hidden text-ink ${hud.theme === "sunset" ? "bg-coral" : "bg-sky"}`}
+      >
       <canvas
         ref={canvasRef}
         className="absolute inset-0 h-full w-full touch-none select-none"
         aria-label="Crabby walking on the beach"
       />
 
-      <header className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-3 p-3 sm:p-4">
+      <header className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-2 px-3 pb-3 pt-[max(0.7rem,env(safe-area-inset-top))]">
         <div className="rounded-pill bg-cream/90 px-4 py-2 shadow-md shadow-ink/10 ring-2 ring-cream-soft">
           <p className="text-xs font-semibold tracking-wide text-ink-soft uppercase">Beach</p>
           <p className="text-lg leading-none font-bold tabular-nums">
@@ -104,7 +107,7 @@ export function GameCanvas() {
           <button
             type="button"
             onClick={toggleMute}
-            className="grid size-11 place-items-center rounded-pill bg-cream/90 text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft"
+            className="grid size-12 place-items-center rounded-pill bg-cream/90 text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft"
             aria-label={muted ? "Unmute sounds" : "Mute sounds"}
           >
             {muted ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
@@ -123,7 +126,7 @@ export function GameCanvas() {
       )}
 
       {hud.phase === "playing" && hud.painted === 0 && (
-        <p className="pointer-events-none absolute bottom-28 left-1/2 z-10 w-max max-w-[90%] -translate-x-1/2 rounded-pill bg-cream/90 px-4 py-2 text-center text-sm font-semibold text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft">
+        <p className="pointer-events-none absolute bottom-32 left-1/2 z-10 w-[min(92%,20rem)] -translate-x-1/2 rounded-pill bg-cream/90 px-4 py-2.5 text-center text-sm font-semibold text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft">
           Tap a paint can or a white shell
         </p>
       )}
@@ -139,19 +142,19 @@ export function GameCanvas() {
 
       {hud.phase === "ready" && (
         <div
-          className="absolute inset-0 z-20 grid place-items-end bg-ink/20 p-4 pb-10 sm:place-items-center sm:pb-4"
+          className="absolute inset-0 z-20 grid place-items-end bg-ink/20 px-3 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
           onClick={play}
         >
-          <div className="w-full max-w-md rounded-card bg-cream px-6 py-7 text-center shadow-xl shadow-ink/20 ring-4 ring-cream-soft sm:px-8">
+          <div className="w-full rounded-t-card rounded-b-3xl bg-cream px-5 py-6 text-center shadow-xl shadow-ink/20 ring-4 ring-cream-soft">
             <p className="text-sky-deep text-sm font-semibold tracking-wide uppercase">Five little beaches</p>
-            <h1 className="mt-1 text-4xl font-bold tracking-tight text-coral sm:text-5xl">Crabby Beach</h1>
+            <h1 className="mt-1 text-3xl font-bold tracking-tight text-coral">Crabby Beach</h1>
             <p className="mt-3 text-base leading-relaxed text-ink-soft">
               Tap a white shell to paint it. Walk to a can in the water to change colors.
             </p>
             <button
               type="button"
               onClick={play}
-              className="mt-6 min-h-12 w-full rounded-pill bg-coral px-6 py-3 text-lg font-bold text-cream shadow-md shadow-coral-deep/30 hover:bg-coral-deep"
+              className="mt-5 min-h-14 w-full rounded-pill bg-coral px-6 py-3 text-lg font-bold text-cream shadow-md shadow-coral-deep/30 hover:bg-coral-deep"
             >
               Let’s play!
             </button>
@@ -167,8 +170,8 @@ export function GameCanvas() {
       )}
 
       {hud.phase === "won" && (
-        <div className="absolute inset-0 z-20 grid place-items-end bg-ink/25 p-4 pb-10 sm:place-items-center sm:pb-4">
-          <div className="w-full max-w-md rounded-card bg-cream px-6 py-7 text-center shadow-xl shadow-ink/20 ring-4 ring-mint sm:px-8">
+        <div className="absolute inset-0 z-20 grid place-items-end bg-ink/25 px-3 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <div className="w-full rounded-t-card rounded-b-3xl bg-cream px-5 py-6 text-center shadow-xl shadow-ink/20 ring-4 ring-mint">
             <p className="text-mint-deep text-sm font-semibold tracking-wide uppercase">
               {hud.level >= hud.maxLevel ? "Every beach" : `Beach ${hud.level} of ${hud.maxLevel}`}
             </p>
@@ -185,7 +188,7 @@ export function GameCanvas() {
                 <button
                   type="button"
                   onClick={() => replay({ theme: hud.theme === "sunset" ? "sunny" : "sunset", advance: true })}
-                  className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-pill bg-coral px-6 py-3 text-lg font-bold text-cream shadow-md hover:bg-coral-deep"
+                  className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-pill bg-coral px-6 py-3 text-lg font-bold text-cream shadow-md hover:bg-coral-deep"
                 >
                   Next beach
                 </button>
@@ -193,7 +196,7 @@ export function GameCanvas() {
                 <button
                   type="button"
                   onClick={() => replay({ theme: "sunny", restart: true })}
-                  className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-pill bg-coral px-6 py-3 text-lg font-bold text-cream shadow-md hover:bg-coral-deep"
+                  className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-pill bg-coral px-6 py-3 text-lg font-bold text-cream shadow-md hover:bg-coral-deep"
                 >
                   Start over
                 </button>
@@ -201,7 +204,7 @@ export function GameCanvas() {
               <button
                 type="button"
                 onClick={() => replay({ theme: hud.theme, restart: hud.level >= hud.maxLevel })}
-                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-pill bg-mint px-6 py-3 text-lg font-bold text-cream shadow-md hover:bg-mint-deep"
+                className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-pill bg-mint px-6 py-3 text-lg font-bold text-cream shadow-md hover:bg-mint-deep"
               >
                 <RotateCcw className="size-5" />
                 This beach again
@@ -212,8 +215,8 @@ export function GameCanvas() {
       )}
 
       {hud.phase === "timesup" && (
-        <div className="absolute inset-0 z-20 grid place-items-end bg-ink/25 p-4 pb-10 sm:place-items-center sm:pb-4">
-          <div className="w-full max-w-md rounded-card bg-cream px-6 py-7 text-center shadow-xl shadow-ink/20 ring-4 ring-cream-soft sm:px-8">
+        <div className="absolute inset-0 z-20 grid place-items-end bg-ink/25 px-3 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <div className="w-full rounded-t-card rounded-b-3xl bg-cream px-5 py-6 text-center shadow-xl shadow-ink/20 ring-4 ring-cream-soft">
             <p className="text-sky-deep text-sm font-semibold tracking-wide uppercase">All done for now</p>
             <h2 className="mt-1 text-3xl font-bold tracking-tight text-ink">That was a lovely play</h2>
             <p className="mt-3 text-base text-ink-soft">Need one more minute, or start a new beach?</p>
@@ -221,7 +224,7 @@ export function GameCanvas() {
               <button
                 type="button"
                 onClick={moreTime}
-                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-pill bg-coral px-6 py-3 text-lg font-bold text-cream shadow-md hover:bg-coral-deep"
+                className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-pill bg-coral px-6 py-3 text-lg font-bold text-cream shadow-md hover:bg-coral-deep"
               >
                 <Timer className="size-5" />
                 One more minute
@@ -229,7 +232,7 @@ export function GameCanvas() {
               <button
                 type="button"
                 onClick={() => replay({ theme: "sunny", restart: true })}
-                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-pill bg-mint px-6 py-3 text-lg font-bold text-cream shadow-md hover:bg-mint-deep"
+                className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-pill bg-mint px-6 py-3 text-lg font-bold text-cream shadow-md hover:bg-mint-deep"
               >
                 <RotateCcw className="size-5" />
                 New beach
@@ -239,9 +242,17 @@ export function GameCanvas() {
         </div>
       )}
 
-      <p className="pointer-events-none absolute top-16 right-3 z-10 text-xs font-semibold tracking-wide text-ink/40 uppercase">
+      <p className="pointer-events-none absolute top-[4.6rem] right-3 z-10 text-[10px] font-semibold tracking-wide text-ink/35 uppercase">
         {APP_VERSION}
       </p>
+
+      <div className="turn-phone pointer-events-none absolute inset-0 z-40 hidden place-items-center bg-sky px-8 text-center">
+        <div>
+          <p className="text-2xl font-bold text-coral">Tip the phone up</p>
+          <p className="mt-2 text-base text-ink-soft">Crabby Beach is made for portrait.</p>
+        </div>
+      </div>
+    </div>
     </div>
   );
 }

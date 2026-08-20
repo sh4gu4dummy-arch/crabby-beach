@@ -288,7 +288,7 @@ export function createGame(
   const view = { x: 0, y: 0, scale: 1 };
 
   function bannerH() {
-    return Math.max(92, Math.min(112, css.h * 0.15));
+    return Math.max(86, Math.min(104, css.h * 0.125));
   }
 
   function slotScreen(index: number, total: number) {
@@ -356,6 +356,7 @@ export function createGame(
     view.scale = scale;
     view.x = (css.w - WORLD_W * scale) / 2;
     view.y = Math.min(0, css.h - WORLD_H * scale);
+    if (css.h >= css.w) view.y = 0;
     placeCans();
   }
 
@@ -407,8 +408,8 @@ export function createGame(
   }
 
   function placeCans() {
-    const x0 = -view.x / view.scale + 70;
-    const x1 = (css.w - view.x) / view.scale - 70;
+    const x0 = -view.x / view.scale + 42;
+    const x1 = (css.w - view.x) / view.scale - 42;
     const left = Math.max(SAND_LEFT, x0);
     const right = Math.min(SAND_RIGHT, x1);
     const n = PAINTS.length;

@@ -234,7 +234,9 @@ function Grownups() {
             Downloads
           </h2>
           <p className="mt-1 text-sm text-ink-soft">
-            Ready files save to your device. Right-click still works. Zip packages are built only when you ask.
+            Ready files save to your device. Right-click still works. Zip packages
+            are a point-in-time snapshot and are built only when you ask — never
+            automatically. Play does not need the network.
           </p>
           <ul className="mt-4 grid gap-3">
             {PACKS.map((pack) => (

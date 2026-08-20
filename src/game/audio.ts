@@ -71,11 +71,15 @@ async function loadVoices() {
     await Promise.all(
       Object.entries(VOICE_FILES).map(async ([key, src]) => {
         if (voiceBufs.has(key)) return;
-        const res = await fetch(src);
-        if (!res.ok) return;
-        const raw = await res.arrayBuffer();
-        const buf = await audio.decodeAudioData(raw.slice(0));
-        voiceBufs.set(key, buf);
+        try {
+          const res = await fetch(src);
+          if (!res.ok) return;
+          const raw = await res.arrayBuffer();
+          const buf = await audio.decodeAudioData(raw.slice(0));
+          voiceBufs.set(key, buf);
+        } catch {
+          // Bundled clip missing — on-screen counts still work.
+        }
       }),
     );
   })();

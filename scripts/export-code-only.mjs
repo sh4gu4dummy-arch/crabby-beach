@@ -13,6 +13,7 @@ const files = [
   "tsconfig.json",
   "vite.config.ts",
   "startup.sh",
+  "src/lib/offline.ts",
   "src/lib/settings.ts",
   "src/lib/version.ts",
   "src/router.tsx",

@@ -1,7 +1,9 @@
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { AuthProvider } from "@/lib/auth/provider";
+import { registerOffline } from "@/lib/offline";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import appCss from "../styles.css?url";
+import { useEffect } from "react";
 
 const APP_NAME = "Crabby Beach";
 const host = import.meta.env.VITE_PUBLIC_HOSTNAME;
@@ -38,7 +40,11 @@ export const Route = createRootRoute({
       { rel: "apple-touch-icon", href: "/__grok/icon-180.png" },
     ],
   }),
-  component: () => (
+  component: () => {
+    useEffect(() => {
+      registerOffline();
+    }, []);
+    return (
     <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
@@ -51,5 +57,6 @@ export const Route = createRootRoute({
         <Scripts />
       </body>
     </html>
-  ),
+    );
+  },
 });

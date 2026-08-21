@@ -339,7 +339,7 @@ export function createGame(
   }
 
   function findsForLevel() {
-    return Math.min(MAX_FINDS, settings.findCount + (level - 1));
+    return Math.min(MAX_FINDS, 2 + hour());
   }
 
   function paintedCount() {

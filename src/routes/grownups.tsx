@@ -6,7 +6,6 @@ import {
   saveSettings,
   type CrabColor,
   type CrabHat,
-  type FindCount,
   type GrownupSettings,
   type TimerMinutes,
 } from "@/lib/settings";
@@ -168,18 +167,7 @@ export function Grownups() {
           <h2 id="play-heading" className="text-xl font-bold">
             Play
           </h2>
-          <p className="mt-4 text-sm font-semibold">How many to find</p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {([3, 6, 9] as FindCount[]).map((n) => (
-              <Choice
-                key={n}
-                label={String(n)}
-                value={n}
-                current={settings.findCount}
-                onPick={(findCount) => update({ findCount })}
-              />
-            ))}
-          </div>
+          <p className="mt-1 text-sm text-ink-soft">How many to find follows the clock: 3 at 1pm, up to 10 at night.</p>
           <p className="mt-4 text-sm font-semibold">Voice counts</p>
           <div className="mt-2 flex flex-wrap gap-2">
             <Choice

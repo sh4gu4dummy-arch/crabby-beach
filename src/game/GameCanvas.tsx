@@ -17,8 +17,41 @@ const EMPTY: GameHud = {
   countKey: 0,
   secondsLeft: null,
   level: 1,
-  maxLevel: 5,
+  maxLevel: 9,
+  hour: 1,
+  skyFill: "#7ec8e3",
 };
+
+function AnalogClock({ hour }: { hour: number }) {
+  const deg = (hour % 12) * 30;
+  const rad = ((deg - 90) * Math.PI) / 180;
+  const hx = 20 + Math.cos(rad) * 9;
+  const hy = 20 + Math.sin(rad) * 9;
+  return (
+    <svg viewBox="0 0 40 40" className="size-10 shrink-0" aria-hidden="true">
+      <circle cx="20" cy="20" r="18" fill="#fff6e8" stroke="#e8c07a" strokeWidth="2.6" />
+      {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((n) => {
+        const a = ((n * 30 - 90) * Math.PI) / 180;
+        const inner = n % 3 === 0 ? 13 : 15;
+        return (
+          <line
+            key={n}
+            x1={20 + Math.cos(a) * inner}
+            y1={20 + Math.sin(a) * inner}
+            x2={20 + Math.cos(a) * 16.5}
+            y2={20 + Math.sin(a) * 16.5}
+            stroke="#6b5348"
+            strokeWidth={n % 3 === 0 ? 1.8 : 1}
+            strokeLinecap="round"
+          />
+        );
+      })}
+      <line x1="20" y1="20" x2="20" y2="8.5" stroke="#3a2a22" strokeWidth="1.6" strokeLinecap="round" />
+      <line x1="20" y1="20" x2={hx} y2={hy} stroke="#e85d4c" strokeWidth="2.6" strokeLinecap="round" />
+      <circle cx="20" cy="20" r="2.2" fill="#3a2a22" />
+    </svg>
+  );
+}
 
 export function GameCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -79,9 +112,10 @@ export function GameCanvas() {
       : `${Math.floor(hud.secondsLeft / 60)}:${String(hud.secondsLeft % 60).padStart(2, "0")}`;
 
   return (
-    <div className="flex h-dvh w-full justify-center overflow-hidden bg-sky">
+    <div className="flex h-dvh w-full justify-center overflow-hidden" style={{ background: hud.skyFill }}>
       <div
-        className={`relative h-dvh w-full max-w-[28rem] overflow-hidden text-ink ${hud.theme === "sunset" ? "bg-coral" : "bg-sky"}`}
+        className="relative h-dvh w-full max-w-[28rem] overflow-hidden text-ink"
+        style={{ background: hud.skyFill }}
       >
       <canvas
         ref={canvasRef}
@@ -90,12 +124,15 @@ export function GameCanvas() {
       />
 
       <header className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-2 px-3 pb-3 pt-[max(0.7rem,env(safe-area-inset-top))]">
-        <div className="rounded-pill bg-cream/90 px-4 py-2 shadow-md shadow-ink/10 ring-2 ring-cream-soft">
-          <p className="text-xs font-semibold tracking-wide text-ink-soft uppercase">Beach</p>
-          <p className="text-lg leading-none font-bold tabular-nums">
-            {hud.level}
-            <span className="text-ink-soft"> / {hud.maxLevel}</span>
-          </p>
+        <div className="flex items-center gap-2 rounded-pill bg-cream/90 py-1.5 pr-4 pl-1.5 shadow-md shadow-ink/10 ring-2 ring-cream-soft">
+          <AnalogClock hour={hud.hour} />
+          <div>
+            <p className="text-xs font-semibold tracking-wide text-ink-soft uppercase">{hud.hour}pm</p>
+            <p className="text-lg leading-none font-bold tabular-nums">
+              {hud.level}
+              <span className="text-ink-soft"> / {hud.maxLevel}</span>
+            </p>
+          </div>
         </div>
         <div className="pointer-events-auto flex items-center gap-2">
           {timerLabel && (
@@ -146,10 +183,10 @@ export function GameCanvas() {
           onClick={play}
         >
           <div className="w-full rounded-t-card rounded-b-3xl bg-cream px-5 py-6 text-center shadow-xl shadow-ink/20 ring-4 ring-cream-soft">
-            <p className="text-sky-deep text-sm font-semibold tracking-wide uppercase">Five little beaches</p>
+            <p className="text-sky-deep text-sm font-semibold tracking-wide uppercase">Nine little hours</p>
             <h1 className="mt-1 text-3xl font-bold tracking-tight text-coral">Crabby Beach</h1>
             <p className="mt-3 text-base leading-relaxed text-ink-soft">
-              Tap a white shell to paint it. Walk to a can in the water to change colors.
+              Start at 1pm. Each beach is an hour later. By 9pm the sky is night and the shells glow.
             </p>
             <button
               type="button"
@@ -173,24 +210,24 @@ export function GameCanvas() {
         <div className="absolute inset-0 z-20 grid place-items-end bg-ink/25 px-3 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <div className="w-full rounded-t-card rounded-b-3xl bg-cream px-5 py-6 text-center shadow-xl shadow-ink/20 ring-4 ring-mint">
             <p className="text-mint-deep text-sm font-semibold tracking-wide uppercase">
-              {hud.level >= hud.maxLevel ? "Every beach" : `Beach ${hud.level} of ${hud.maxLevel}`}
+              {hud.level >= hud.maxLevel ? "9pm · night" : `${hud.hour}pm`}
             </p>
             <h2 className="mt-1 text-3xl font-bold tracking-tight text-mint-deep sm:text-4xl">
-              {hud.level >= hud.maxLevel ? "You found them all!" : "Yay! You found them all"}
+              {hud.level >= hud.maxLevel ? "The shells lit up the night!" : "Yay! You found them all"}
             </h2>
             <p className="mt-3 text-base text-ink-soft">
               {hud.level >= hud.maxLevel
-                ? "Five beaches, and a full tray. Want to start over?"
-                : `Next beach has ${hud.total + 1} finds.`}
+                ? "From 1pm to 9pm. Want to start the afternoon again?"
+                : `Next hour is ${hud.hour + 1}pm. The sky gets a little darker.`}
             </p>
             <div className="mt-6 grid gap-3">
               {hud.level < hud.maxLevel ? (
                 <button
                   type="button"
-                  onClick={() => replay({ theme: hud.theme === "sunset" ? "sunny" : "sunset", advance: true })}
+                  onClick={() => replay({ advance: true })}
                   className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-pill bg-coral px-6 py-3 text-lg font-bold text-cream shadow-md hover:bg-coral-deep"
                 >
-                  Next beach
+                  Next hour
                 </button>
               ) : (
                 <button
@@ -198,16 +235,16 @@ export function GameCanvas() {
                   onClick={() => replay({ theme: "sunny", restart: true })}
                   className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-pill bg-coral px-6 py-3 text-lg font-bold text-cream shadow-md hover:bg-coral-deep"
                 >
-                  Start over
+                  Start at 1pm
                 </button>
               )}
               <button
                 type="button"
-                onClick={() => replay({ theme: hud.theme, restart: hud.level >= hud.maxLevel })}
+                onClick={() => replay({ restart: hud.level >= hud.maxLevel })}
                 className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-pill bg-mint px-6 py-3 text-lg font-bold text-cream shadow-md hover:bg-mint-deep"
               >
                 <RotateCcw className="size-5" />
-                This beach again
+                This hour again
               </button>
             </div>
           </div>

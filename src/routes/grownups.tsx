@@ -35,22 +35,25 @@ const PACKS: Pack[] = [
     title: "Code + assets",
     blurb: "Full project tree, including art and config, for an offline rebuild.",
     filename: DOWNLOADS.codebase,
-    ready: true,
+    ready: false,
     icon: FolderArchive,
+    note: "Ask me to export this zip when you want it.",
   },
   {
     title: "Portable app",
     blurb: "Playable offline snapshot. Unzip and open index.html — no install, no network.",
     filename: DOWNLOADS.portable,
-    ready: true,
+    ready: false,
     icon: Package,
+    note: "Ask me to export this zip when you want it.",
   },
   {
     title: "Android project",
     blurb: "Android Studio project with the game inside. Build a signed APK on a machine with the Android SDK — we do not ship a fake APK.",
     filename: DOWNLOADS.android,
-    ready: true,
+    ready: false,
     icon: Smartphone,
+    note: "Ask me to export this zip when you want the Android project.",
   },
 ];
 

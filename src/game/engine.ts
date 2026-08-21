@@ -25,6 +25,8 @@ export type GameHud = {
   secondsLeft: number | null;
   level: number;
   maxLevel: number;
+  hour: number;
+  skyFill: string;
 };
 
 export type GameApi = {
@@ -35,7 +37,7 @@ export type GameApi = {
 };
 
 const MAX_FINDS = 10;
-const EXTRA_LEVELS = 4;
+const MAX_LEVELS = 9;
 
 const WORLD_W = 1600;
 const WORLD_H = 900;
@@ -48,6 +50,17 @@ const CRAB_SPEED = 300;
 const HIT = 72;
 const CRAB_SIZE = 92;
 const FIND_SIZE = 56;
+const SKY_TINTS = [
+  { fill: "#7ec8e3", multiply: "#f6e7b0", alpha: 0.04 },
+  { fill: "#6eb8d8", multiply: "#f0d090", alpha: 0.10 },
+  { fill: "#5aa4c8", multiply: "#e8b070", alpha: 0.18 },
+  { fill: "#4a8cb8", multiply: "#e09050", alpha: 0.26 },
+  { fill: "#c97a4a", multiply: "#e07a4a", alpha: 0.36 },
+  { fill: "#b45a58", multiply: "#c45a6a", alpha: 0.46 },
+  { fill: "#5a3a78", multiply: "#4a3a78", alpha: 0.56 },
+  { fill: "#243056", multiply: "#1e2a4a", alpha: 0.64 },
+  { fill: "#0c1428", multiply: "#0a1224", alpha: 0.74 },
+] as const;
 const CAN_HIT = 56;
 const WATER_WALK = 118;
 
@@ -310,7 +323,19 @@ export function createGame(
   }
 
   function maxLevel() {
-    return 1 + Math.min(EXTRA_LEVELS, MAX_FINDS - settings.findCount);
+    return MAX_LEVELS;
+  }
+
+  function hour() {
+    return Math.min(MAX_LEVELS, Math.max(1, level));
+  }
+
+  function nightGlow() {
+    return (hour() - 1) / (MAX_LEVELS - 1);
+  }
+
+  function skyTint() {
+    return SKY_TINTS[hour() - 1] ?? SKY_TINTS[0]!;
   }
 
   function findsForLevel() {
@@ -338,6 +363,8 @@ export function createGame(
       secondsLeft: secondsLeft(),
       level,
       maxLevel: maxLevel(),
+      hour: hour(),
+      skyFill: skyTint().fill,
     });
   }
 
@@ -424,7 +451,7 @@ export function createGame(
 
   function resetWorld(nextTheme: BeachTheme) {
     refreshSettings();
-    theme = nextTheme;
+    theme = hour() >= 6 ? "sunset" : "sunny";
     const vis = sandView();
     finds = placeFinds(vis);
     placeCans();
@@ -894,10 +921,10 @@ export function createGame(
     ctx.restore();
   }
 
-  function drawSandDollar(x: number, y: number, s: number, happy: boolean, hex = "#5dbb63") {
+  function drawSandDollar(x: number, y: number, s: number, happy: boolean, hex = "#fff4dc") {
     ctx.save();
     ctx.translate(x, y);
-    ctx.fillStyle = happy ? hex : "#fff4dc";
+    ctx.fillStyle = hex;
     ctx.beginPath();
     ctx.ellipse(0, 0, s * 0.46, s * 0.42, 0, 0, Math.PI * 2);
     ctx.fill();
@@ -917,14 +944,14 @@ export function createGame(
     ctx.restore();
   }
 
-  function drawSnail(x: number, y: number, s: number, happy: boolean, hex = "#5dbb63") {
+  function drawSnail(x: number, y: number, s: number, happy: boolean, hex = "#fffce8") {
     ctx.save();
     ctx.translate(x, y);
-    ctx.fillStyle = happy ? hex : "#fff6e8";
+    ctx.fillStyle = hex;
     ctx.beginPath();
     ctx.ellipse(s * 0.16, s * 0.16, s * 0.28, s * 0.16, 0.2, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = happy ? hex : "#fffce8";
+    ctx.fillStyle = hex;
     ctx.beginPath();
     ctx.arc(-s * 0.06, -s * 0.04, s * 0.28, 0, Math.PI * 2);
     ctx.fill();
@@ -1014,11 +1041,12 @@ export function createGame(
   }
 
   function drawWaterShimmer() {
+    const glow = nightGlow();
     ctx.save();
     for (let i = 0; i < 5; i++) {
       const y = 36 + i * 28 + Math.sin(time * 1.2 + i * 0.9) * 5;
-      ctx.globalAlpha = 0.12;
-      ctx.strokeStyle = "#e8fbff";
+      ctx.globalAlpha = 0.12 * (1 - glow * 0.55);
+      ctx.strokeStyle = glow > 0.6 ? "#8ec8ff" : "#e8fbff";
       ctx.lineWidth = 6;
       ctx.beginPath();
       ctx.moveTo(0, y);
@@ -1027,8 +1055,8 @@ export function createGame(
       }
       ctx.stroke();
     }
-    ctx.globalAlpha = 0.55;
-    ctx.fillStyle = "#f7fdff";
+    ctx.globalAlpha = 0.55 * (1 - nightGlow() * 0.7);
+    ctx.fillStyle = nightGlow() > 0.6 ? "#c8e4f8" : "#f7fdff";
     const foamY = 188 + Math.sin(time * 1.4) * 2;
     ctx.beginPath();
     ctx.moveTo(0, foamY);
@@ -1042,19 +1070,81 @@ export function createGame(
     ctx.restore();
   }
 
+  function drawSkyMood() {
+    const tint = skyTint();
+    ctx.save();
+    ctx.globalCompositeOperation = "multiply";
+    ctx.globalAlpha = tint.alpha;
+    ctx.fillStyle = tint.multiply;
+    ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+    ctx.restore();
+
+    const glow = nightGlow();
+    if (glow > 0.45) {
+      ctx.save();
+      ctx.globalAlpha = (glow - 0.45) * 1.4;
+      for (let i = 0; i < 28; i++) {
+        const x = 80 + ((i * 137) % (WORLD_W - 160));
+        const y = 20 + ((i * 53) % 170);
+        const twinkle = 0.45 + Math.sin(time * 2 + i) * 0.35;
+        ctx.fillStyle = `rgba(255,246,232,${twinkle})`;
+        ctx.beginPath();
+        ctx.arc(x, y, i % 4 === 0 ? 2.2 : 1.2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+    if (glow > 0.7) {
+      ctx.save();
+      ctx.globalAlpha = 0.9;
+      ctx.fillStyle = "#fff6e8";
+      ctx.beginPath();
+      ctx.arc(1280, 90, 34, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.beginPath();
+      ctx.arc(1296, 78, 28, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
   function drawFindSprite(item: Find, x: number, y: number, s: number, happy: boolean) {
-    drawShadow(x, y, s * 0.34, s * 0.13);
+    const glow = nightGlow();
     const hex = paintHex(item.color);
+    const light = happy ? hex : "#9effe0";
+    if (glow > 0.08) {
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.globalAlpha = 0.18 + glow * 0.7;
+      ctx.fillStyle = light;
+      ctx.beginPath();
+      ctx.ellipse(x, y, s * (0.42 + glow * 0.28), s * (0.32 + glow * 0.2), 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+    drawShadow(x, y, s * 0.34, s * 0.13);
     if (item.kind === "shell" && assets) {
       const base = happy ? assets.green[item.variant]! : assets.white[item.variant]!;
-      const img = happy ? colorizeSprite(base, hex) : base;
+      const img = happy ? colorizeSprite(base, hex) : glow > 0.35 ? colorizeSprite(base, "#c8ffe8") : base;
       drawCentered(img, x, y, s, s);
     } else if (item.kind === "starfish" && assets) {
       drawCentered(assets.starfish, x, y, s * 1.05, s * 1.05, false, happy ? 0.2 : 0);
     } else if (item.kind === "sanddollar") {
-      drawSandDollar(x, y, s, happy, hex);
+      drawSandDollar(x, y, s, happy, happy ? hex : glow > 0.35 ? "#c8ffe8" : "#fff4dc");
     } else {
-      drawSnail(x, y, s, happy, hex);
+      drawSnail(x, y, s, happy, happy ? hex : glow > 0.35 ? "#c8ffe8" : "#fffce8");
+    }
+    if (glow > 0.2) {
+      ctx.save();
+      ctx.globalCompositeOperation = "screen";
+      ctx.globalAlpha = glow * 0.45;
+      ctx.strokeStyle = light;
+      ctx.lineWidth = 2 + glow * 3;
+      ctx.beginPath();
+      ctx.ellipse(x, y, s * 0.38, s * 0.3, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
     }
   }
 
@@ -1136,7 +1226,7 @@ export function createGame(
 
   function draw() {
     ctx.clearRect(0, 0, css.w, css.h);
-    ctx.fillStyle = theme === "sunset" ? "#e07a4a" : "#5aa9c8";
+    ctx.fillStyle = skyTint().fill;
     ctx.fillRect(0, 0, css.w, css.h);
 
     ctx.save();
@@ -1145,14 +1235,7 @@ export function createGame(
 
     if (assets) ctx.drawImage(assets.beach, 0, 0, WORLD_W, WORLD_H);
     drawWaterShimmer();
-    if (theme === "sunset") {
-      ctx.save();
-      ctx.globalCompositeOperation = "multiply";
-      ctx.globalAlpha = 0.42;
-      ctx.fillStyle = "#f4a06a";
-      ctx.fillRect(0, 0, WORLD_W, WORLD_H);
-      ctx.restore();
-    }
+    drawSkyMood();
 
     type Layer = { y: number; z: number; draw: () => void };
     const layers: Layer[] = [];
@@ -1258,6 +1341,7 @@ export function createGame(
     phase: () => GamePhase;
     shells: () => Array<{ x: number; y: number; painted: boolean; sx: number; sy: number }>;
     crab: () => { x: number; y: number; sx: number; sy: number; state: string };
+    setLevel: (n: number) => void;
   };
   (window as unknown as { __gameTest?: TestHook }).__gameTest = {
     phase: () => phase,
@@ -1269,6 +1353,12 @@ export function createGame(
         sx: view.x + s.x * view.scale,
         sy: view.y + s.y * view.scale,
       })),
+    setLevel: (n: number) => {
+      level = Math.min(MAX_LEVELS, Math.max(1, n));
+      resetWorld("sunny");
+      phase = "playing";
+      emitHud();
+    },
     crab: () => ({
       x: crab.x,
       y: crab.y,

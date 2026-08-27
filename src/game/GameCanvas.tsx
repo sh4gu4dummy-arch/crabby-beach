@@ -279,7 +279,7 @@ export function GameCanvas() {
         </div>
       )}
 
-      <p className="pointer-events-none absolute top-[4.6rem] right-3 z-10 text-[10px] font-semibold tracking-wide text-ink/35 uppercase">
+      <p className="pointer-events-none absolute top-[4.6rem] right-3 z-10 rounded-pill bg-cream px-3 py-1 text-sm font-bold tracking-wide text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft">
         {APP_VERSION}
       </p>
 

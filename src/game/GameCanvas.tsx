@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { RotateCcw, Timer, UserRound, Volume2, VolumeX } from "lucide-react";
+import { Check, Home, Lock, RotateCcw, Timer, UserRound, Volume2, VolumeX } from "lucide-react";
 import { SignedIn, SignedOut, UserButton } from "@/lib/auth/gates";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { loadSettings } from "@/lib/settings";
 import { APP_VERSION } from "@/lib/version";
 import { isMuted, setMuted, setMusicEnabled, unlockAudio } from "./audio";
-import { createGame, type GameApi, type GameHud } from "./engine";
+import { createGame, HOUR_SKIES, type GameApi, type GameHud } from "./engine";
 
 const EMPTY: GameHud = {
   phase: "loading",
@@ -20,15 +20,17 @@ const EMPTY: GameHud = {
   maxLevel: 9,
   hour: 1,
   skyFill: "#7ec8e3",
+  cleared: 0,
+  unlocked: 1,
 };
 
-function AnalogClock({ hour }: { hour: number }) {
+function AnalogClock({ hour, className = "size-10 shrink-0" }: { hour: number; className?: string }) {
   const deg = (hour % 12) * 30;
   const rad = ((deg - 90) * Math.PI) / 180;
   const hx = 20 + Math.cos(rad) * 9;
   const hy = 20 + Math.sin(rad) * 9;
   return (
-    <svg viewBox="0 0 40 40" className="size-10 shrink-0" aria-hidden="true">
+    <svg viewBox="0 0 40 40" className={className} aria-hidden="true">
       <circle cx="20" cy="20" r="18" fill="#fff6e8" stroke="#e8c07a" strokeWidth="2.6" />
       {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((n) => {
         const a = ((n * 30 - 90) * Math.PI) / 180;
@@ -86,6 +88,16 @@ export function GameCanvas() {
     unlockAudio();
     setMusicEnabled(loadSettings().music);
     apiRef.current?.start();
+  }
+
+  function playHour(n: number) {
+    unlockAudio();
+    setMusicEnabled(loadSettings().music);
+    apiRef.current?.playLevel(n);
+  }
+
+  function goMenu() {
+    apiRef.current?.goMenu();
   }
 
   function replay(opts?: { theme?: "sunny" | "sunset"; advance?: boolean; restart?: boolean }) {
@@ -149,6 +161,16 @@ export function GameCanvas() {
           >
             {muted ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
           </button>
+          {hud.phase === "playing" && (
+            <button
+              type="button"
+              onClick={goMenu}
+              className="grid size-12 place-items-center rounded-pill bg-cream/90 text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft"
+              aria-label="Back to menu"
+            >
+              <Home className="size-5" />
+            </button>
+          )}
           <AuthChip />
         </div>
       </header>
@@ -177,28 +199,56 @@ export function GameCanvas() {
         </div>
       )}
 
-      {hud.phase === "ready" && (
-        <div
-          className="absolute inset-0 z-20 grid place-items-end bg-ink/20 px-3 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
-          onClick={play}
-        >
-          <div className="w-full rounded-t-card rounded-b-3xl bg-cream px-5 py-6 text-center shadow-xl shadow-ink/20 ring-4 ring-cream-soft">
+      {hud.phase === "menu" && (
+        <div className="absolute inset-0 z-20 grid place-items-end bg-ink/25 px-3 pt-4 pb-[max(0.6rem,env(safe-area-inset-bottom))]">
+          <div className="max-h-[min(92dvh,40rem)] w-full overflow-y-auto rounded-t-card rounded-b-3xl bg-cream px-4 py-5 text-center shadow-xl shadow-ink/20 ring-4 ring-cream-soft">
             <p className="text-sky-deep text-sm font-semibold tracking-wide uppercase">Nine little hours</p>
             <h1 className="mt-1 text-3xl font-bold tracking-tight text-coral">Crabby Beach</h1>
-            <p className="mt-3 text-base leading-relaxed text-ink-soft">
-              Start at 1pm. Each beach is an hour later. By 9pm the sky is night and the shells glow.
-            </p>
+            <p className="mt-2 text-sm leading-relaxed text-ink-soft">Pick an hour. Finish it to open the next one.</p>
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              {HOUR_SKIES.map((sky, i) => {
+                const hour = i + 1;
+                const open = hour <= hud.unlocked;
+                const done = hour <= hud.cleared;
+                return (
+                  <button
+                    key={hour}
+                    type="button"
+                    disabled={!open}
+                    onClick={() => playHour(hour)}
+                    className="relative flex min-h-[4.6rem] flex-col items-center justify-center gap-0.5 rounded-card px-1 py-2 shadow-sm ring-2 disabled:cursor-not-allowed"
+                    style={
+                      open
+                        ? { background: sky, color: hour >= 7 ? "#fff6e8" : "#3a2a22", boxShadow: "inset 0 0 0 2px rgba(255,246,232,0.45)" }
+                        : { background: "#e8d7c0", color: "#8a7468" }
+                    }
+                    aria-label={open ? `${hour}pm` : `${hour}pm locked`}
+                  >
+                    {open ? (
+                      <AnalogClock hour={hour} className="size-8" />
+                    ) : (
+                      <Lock className="size-5 opacity-70" />
+                    )}
+                    <span className="text-sm font-bold">{hour}pm</span>
+                    {done && (
+                      <span className="absolute top-1 right-1 grid size-5 place-items-center rounded-full bg-mint text-cream">
+                        <Check className="size-3.5" strokeWidth={3} />
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
             <button
               type="button"
               onClick={play}
-              className="mt-5 min-h-14 w-full rounded-pill bg-coral px-6 py-3 text-lg font-bold text-cream shadow-md shadow-coral-deep/30 hover:bg-coral-deep"
+              className="mt-4 min-h-14 w-full rounded-pill bg-coral px-6 py-3 text-lg font-bold text-cream shadow-md shadow-coral-deep/30 hover:bg-coral-deep"
             >
-              Let’s play!
+              Play {hud.unlocked}pm
             </button>
             <Link
               to="/grownups"
-              onClick={(e) => e.stopPropagation()}
-              className="mt-4 inline-block text-xs font-semibold tracking-wide text-ink-soft/70 uppercase hover:text-ink-soft"
+              className="mt-3 inline-block text-xs font-semibold tracking-wide text-ink-soft/70 uppercase hover:text-ink-soft"
             >
               Grown-ups
             </Link>
@@ -246,6 +296,14 @@ export function GameCanvas() {
                 <RotateCcw className="size-5" />
                 This hour again
               </button>
+              <button
+                type="button"
+                onClick={goMenu}
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-pill bg-cream-soft px-6 py-3 text-base font-bold text-ink ring-2 ring-sand-deep hover:bg-sand"
+              >
+                <Home className="size-5" />
+                Menu
+              </button>
             </div>
           </div>
         </div>
@@ -273,6 +331,14 @@ export function GameCanvas() {
               >
                 <RotateCcw className="size-5" />
                 New beach
+              </button>
+              <button
+                type="button"
+                onClick={goMenu}
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-pill bg-cream-soft px-6 py-3 text-base font-bold text-ink ring-2 ring-sand-deep hover:bg-sand"
+              >
+                <Home className="size-5" />
+                Menu
               </button>
             </div>
           </div>

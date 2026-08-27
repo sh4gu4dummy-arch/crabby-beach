@@ -1,5 +1,6 @@
 import type { BeachTheme, CrabColor, CrabHat, GrownupSettings } from "@/lib/settings";
 import { DEFAULT_SETTINGS } from "@/lib/settings";
+import { loadCleared, saveCleared, unlockedFrom } from "@/lib/progress";
 import { assetUrl } from "@/lib/asset";
 import {
   playScuttle,
@@ -13,7 +14,7 @@ import {
   unlockAudio,
 } from "./audio";
 
-export type GamePhase = "loading" | "ready" | "playing" | "won" | "timesup";
+export type GamePhase = "loading" | "menu" | "playing" | "won" | "timesup";
 
 export type GameHud = {
   phase: GamePhase;
@@ -27,11 +28,15 @@ export type GameHud = {
   maxLevel: number;
   hour: number;
   skyFill: string;
+  cleared: number;
+  unlocked: number;
 };
 
 export type GameApi = {
   start: () => void;
   replay: (opts?: { theme?: BeachTheme; advance?: boolean; restart?: boolean }) => void;
+  playLevel: (n: number) => void;
+  goMenu: () => void;
   addTime: (seconds: number) => void;
   destroy: () => void;
 };
@@ -61,6 +66,8 @@ const SKY_TINTS = [
   { fill: "#243056", multiply: "#1e2a4a", alpha: 0.64 },
   { fill: "#0c1428", multiply: "#0a1224", alpha: 0.74 },
 ] as const;
+
+export const HOUR_SKIES = SKY_TINTS.map((s) => s.fill);
 const CAN_HIT = 56;
 const WATER_WALK = 118;
 
@@ -277,6 +284,7 @@ export function createGame(
   let lastTick = -1;
   let pendingWin = false;
   let level = 1;
+  let cleared = loadCleared();
   let cans: Array<{ id: PaintId; hex: string; x: number; y: number }> = [];
   const paintCache = new Map<string, HTMLCanvasElement>();
   const tintCache: TintCache = new WeakMap();
@@ -365,6 +373,8 @@ export function createGame(
       maxLevel: maxLevel(),
       hour: hour(),
       skyFill: skyTint().fill,
+      cleared,
+      unlocked: unlockedFrom(cleared),
     });
   }
 
@@ -592,13 +602,7 @@ export function createGame(
   }
 
   function handlePointer(ev: PointerEvent) {
-    if (phase === "loading" || phase === "won" || phase === "timesup") return;
-    if (phase === "ready") {
-      unlockAudio();
-      refreshSettings();
-      phase = "playing";
-      emitHud();
-    }
+    if (phase === "loading" || phase === "won" || phase === "timesup" || phase === "menu") return;
 
     playTap();
     const rect = canvas.getBoundingClientRect();
@@ -642,7 +646,7 @@ export function createGame(
   }
 
   function updateHover(ev: PointerEvent) {
-    if (phase !== "playing" && phase !== "ready") {
+    if (phase !== "playing") {
       canvas.style.cursor = "default";
       return;
     }
@@ -674,6 +678,8 @@ export function createGame(
     if (pendingWin && finds.every((f) => f.fly >= 1)) {
       pendingWin = false;
       phase = "won";
+      cleared = Math.max(cleared, hour());
+      saveCleared(cleared);
       spawnConfetti();
       playWin();
       if (settings.voiceCounts) {
@@ -1342,6 +1348,7 @@ export function createGame(
     shells: () => Array<{ x: number; y: number; painted: boolean; sx: number; sy: number }>;
     crab: () => { x: number; y: number; sx: number; sy: number; state: string };
     setLevel: (n: number) => void;
+    completeHour: () => void;
   };
   (window as unknown as { __gameTest?: TestHook }).__gameTest = {
     phase: () => phase,
@@ -1359,6 +1366,14 @@ export function createGame(
       phase = "playing";
       emitHud();
     },
+    completeHour: () => {
+      for (const item of finds) {
+        item.painted = true;
+        item.fly = 1;
+        item.pop = 1;
+      }
+      pendingWin = true;
+    },
     crab: () => ({
       x: crab.x,
       y: crab.y,
@@ -1372,7 +1387,7 @@ export function createGame(
     .then((loaded) => {
       if (!running) return;
       assets = loaded;
-      phase = "ready";
+      phase = "menu";
       emitHud();
     })
     .catch((err) => {
@@ -1381,16 +1396,31 @@ export function createGame(
 
   return {
     start() {
+      const n = unlockedFrom(cleared);
+      level = n;
+      resetWorld("sunny");
+      phase = "playing";
       unlockAudio();
       refreshSettings();
-      if (phase === "ready") {
-        phase = "playing";
-        emitHud();
-      }
+      emitHud();
+    },
+    playLevel(n: number) {
+      const cap = unlockedFrom(cleared);
+      if (n < 1 || n > cap) return;
+      level = n;
+      resetWorld("sunny");
+      phase = "playing";
+      unlockAudio();
+      refreshSettings();
+      emitHud();
+    },
+    goMenu() {
+      phase = "menu";
+      emitHud();
     },
     replay(opts?: { theme?: BeachTheme; advance?: boolean; restart?: boolean }) {
       if (opts?.restart) level = 1;
-      else if (opts?.advance) level = Math.min(maxLevel(), level + 1);
+      else if (opts?.advance) level = Math.min(unlockedFrom(cleared), level + 1);
       resetWorld(opts?.theme ?? "sunny");
       phase = "playing";
       unlockAudio();

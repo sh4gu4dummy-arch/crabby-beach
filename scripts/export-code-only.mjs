@@ -16,6 +16,7 @@ const files = [
   "src/lib/asset.ts",
   "src/lib/offline.ts",
   "src/lib/settings.ts",
+  "src/lib/progress.ts",
   "src/lib/version.ts",
   "src/router.tsx",
   "src/styles.css",

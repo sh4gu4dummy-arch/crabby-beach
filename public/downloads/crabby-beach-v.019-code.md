@@ -46,7 +46,8 @@ so you can tell which version a file is just by looking at it.
 | Code only | `crabby-beach-v.019-code.md` | One Markdown document: table of contents + essential source in fenced code blocks. For read / search / share / archive. **Not runnable.** No voice, no art assets. |
 | Code + assets (full) | `crabby-beach-v.019-codebase.zip` | Complete project tree, including data, generated assets, and config, for offline rebuild. |
 | Portable app | `crabby-beach-v.019-portable.zip` | Playable, offline-ready. Unzip and open. |
-| Android project | `crabby-beach-v.019-android.zip` | Android project + build readme. A signed `.apk` needs a local Android SDK — we do not ship a fake APK. |
+| Android project | `crabby-beach-v.019-android.zip` | Android project + build readme. |
+| Android APK | `crabby-beach-v.019.apk` | Installable APK for this version. |
 
 Older files keep their names (`v.001` stays `v.001`). New exports use the current number.
 
@@ -459,6 +460,7 @@ export const DOWNLOADS = {
   codebase: `${APP_SLUG}-${APP_VERSION}-codebase.zip`,
   portable: `${APP_SLUG}-${APP_VERSION}-portable.zip`,
   android: `${APP_SLUG}-${APP_VERSION}-android.zip`,
+  apk: `${APP_SLUG}-${APP_VERSION}.apk`,
 } as const;
 ```
 
@@ -2719,25 +2721,29 @@ const PACKS: Pack[] = [
     title: "Code + assets",
     blurb: "Full project tree, including art and config, for an offline rebuild.",
     filename: DOWNLOADS.codebase,
-    ready: false,
+    ready: true,
     icon: FolderArchive,
-    note: "Ask me to export this zip when you want it.",
   },
   {
     title: "Portable app",
     blurb: "Playable offline snapshot. Unzip and open index.html — no install, no network.",
     filename: DOWNLOADS.portable,
-    ready: false,
+    ready: true,
     icon: Package,
-    note: "Ask me to export this zip when you want it.",
   },
   {
     title: "Android project",
-    blurb: "Android Studio project with the game inside. Build a signed APK on a machine with the Android SDK — we do not ship a fake APK.",
+    blurb: "Android Studio project with the game inside, if you want to rebuild.",
     filename: DOWNLOADS.android,
-    ready: false,
+    ready: true,
     icon: Smartphone,
-    note: "Ask me to export this zip when you want the Android project.",
+  },
+  {
+    title: "Android APK",
+    blurb: "Installable APK for this version. Allow unknown sources, then open the file on a phone.",
+    filename: DOWNLOADS.apk,
+    ready: true,
+    icon: Smartphone,
   },
 ];
 

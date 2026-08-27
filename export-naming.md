@@ -12,7 +12,8 @@ so you can tell which version a file is just by looking at it.
 | Code only | `crabby-beach-v.019-code.md` | One Markdown document: table of contents + essential source in fenced code blocks. For read / search / share / archive. **Not runnable.** No voice, no art assets. |
 | Code + assets (full) | `crabby-beach-v.019-codebase.zip` | Complete project tree, including data, generated assets, and config, for offline rebuild. |
 | Portable app | `crabby-beach-v.019-portable.zip` | Playable, offline-ready. Unzip and open. |
-| Android project | `crabby-beach-v.019-android.zip` | Android project + build readme. A signed `.apk` needs a local Android SDK — we do not ship a fake APK. |
+| Android project | `crabby-beach-v.019-android.zip` | Android project + build readme. |
+| Android APK | `crabby-beach-v.019.apk` | Installable APK for this version. |
 
 Older files keep their names (`v.001` stays `v.001`). New exports use the current number.
 

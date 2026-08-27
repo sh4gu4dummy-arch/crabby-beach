@@ -27,7 +27,9 @@ export function downloadsPlugin() {
       ? "text/markdown; charset=utf-8"
       : name.endsWith(".zip")
         ? "application/zip"
-        : "application/octet-stream";
+        : name.endsWith(".apk")
+          ? "application/vnd.android.package-archive"
+          : "application/octet-stream";
     res.statusCode = 200;
     res.setHeader("Content-Type", type);
     res.setHeader("Content-Disposition", `attachment; filename="${name}"`);

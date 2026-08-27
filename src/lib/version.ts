@@ -7,4 +7,5 @@ export const DOWNLOADS = {
   codebase: `${APP_SLUG}-${APP_VERSION}-codebase.zip`,
   portable: `${APP_SLUG}-${APP_VERSION}-portable.zip`,
   android: `${APP_SLUG}-${APP_VERSION}-android.zip`,
+  apk: `${APP_SLUG}-${APP_VERSION}.apk`,
 } as const;

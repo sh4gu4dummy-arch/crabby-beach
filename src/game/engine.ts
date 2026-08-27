@@ -677,7 +677,7 @@ export function createGame(
       spawnConfetti();
       playWin();
       if (settings.voiceCounts) {
-        speak(theme === "sunset" ? "What a glow! Every friend is happy." : "Yay! You found them all.");
+        speak(hour() >= 8 ? "Wow! The shells are glowing!" : "Yay! You found them all.");
       }
       emitHud();
     }

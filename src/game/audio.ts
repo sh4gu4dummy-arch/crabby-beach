@@ -13,23 +13,23 @@ const voiceBufs = new Map<string, AudioBuffer>();
 let voicesLoading: Promise<void> | null = null;
 
 const VOICE_FILES: Record<string, string> = {
-  one: assetUrl("voice/one.mp3"),
-  two: assetUrl("voice/two.mp3"),
-  three: assetUrl("voice/three.mp3"),
-  four: assetUrl("voice/four.mp3"),
-  five: assetUrl("voice/five.mp3"),
-  six: assetUrl("voice/six.mp3"),
-  seven: assetUrl("voice/seven.mp3"),
-  eight: assetUrl("voice/eight.mp3"),
-  nine: assetUrl("voice/nine.mp3"),
-  ten: assetUrl("voice/ten.mp3"),
-  "win-sunny": assetUrl("voice/win-sunny.mp3"),
-  "win-sunset": assetUrl("voice/win-sunset.mp3"),
+  one: assetUrl("voice/one.mp3?v=018"),
+  two: assetUrl("voice/two.mp3?v=018"),
+  three: assetUrl("voice/three.mp3?v=018"),
+  four: assetUrl("voice/four.mp3?v=018"),
+  five: assetUrl("voice/five.mp3?v=018"),
+  six: assetUrl("voice/six.mp3?v=018"),
+  seven: assetUrl("voice/seven.mp3?v=018"),
+  eight: assetUrl("voice/eight.mp3?v=018"),
+  nine: assetUrl("voice/nine.mp3?v=018"),
+  ten: assetUrl("voice/ten.mp3?v=018"),
+  "win-sunny": assetUrl("voice/win-sunny.mp3?v=018"),
+  "win-sunset": assetUrl("voice/win-sunset.mp3?v=018"),
 };
 
 const LINE_TO_CLIP: Record<string, string> = {
   "Yay! You found them all.": "win-sunny",
-  "What a glow! Every friend is happy.": "win-sunset",
+  "Wow! The shells are glowing!": "win-sunset",
 };
 
 function ensureGraph() {

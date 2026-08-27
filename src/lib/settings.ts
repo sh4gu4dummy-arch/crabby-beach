@@ -2,6 +2,7 @@ export type CrabColor = "red" | "blue" | "yellow";
 export type CrabHat = "none" | "bow" | "bucket" | "sailor";
 export type TimerMinutes = 0 | 3 | 5 | 10;
 export type BeachTheme = "sunny" | "sunset";
+export type PenId = "swipe" | "auto";
 
 export type GrownupSettings = {
   color: CrabColor;
@@ -9,6 +10,7 @@ export type GrownupSettings = {
   voiceCounts: boolean;
   music: boolean;
   timerMinutes: TimerMinutes;
+  pen: PenId;
 };
 
 const KEY = "crabby-beach-settings-v1";
@@ -19,6 +21,7 @@ export const DEFAULT_SETTINGS: GrownupSettings = {
   voiceCounts: true,
   music: true,
   timerMinutes: 0,
+  pen: "swipe",
 };
 
 function isColor(v: unknown): v is CrabColor {
@@ -29,6 +32,9 @@ function isHat(v: unknown): v is CrabHat {
 }
 function isTimer(v: unknown): v is TimerMinutes {
   return v === 0 || v === 3 || v === 5 || v === 10;
+}
+function isPen(v: unknown): v is PenId {
+  return v === "swipe" || v === "auto";
 }
 
 export function loadSettings(): GrownupSettings {
@@ -43,6 +49,7 @@ export function loadSettings(): GrownupSettings {
       voiceCounts: typeof parsed.voiceCounts === "boolean" ? parsed.voiceCounts : true,
       music: typeof parsed.music === "boolean" ? parsed.music : true,
       timerMinutes: isTimer(parsed.timerMinutes) ? parsed.timerMinutes : 0,
+      pen: isPen(parsed.pen) ? parsed.pen : DEFAULT_SETTINGS.pen,
     };
   } catch {
     return DEFAULT_SETTINGS;

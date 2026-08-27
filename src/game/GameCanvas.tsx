@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Check, Home, Lock, RotateCcw, Timer, UserRound, Volume2, VolumeX } from "lucide-react";
+import { Check, Home, Lock, Palette, RotateCcw, Timer, UserRound, Volume2, VolumeX } from "lucide-react";
 import { SignedIn, SignedOut, UserButton } from "@/lib/auth/gates";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
-import { loadSettings } from "@/lib/settings";
+import { loadSettings, saveSettings, type CrabColor, type CrabHat, type PenId } from "@/lib/settings";
 import { APP_VERSION } from "@/lib/version";
 import { isMuted, setMuted, setMusicEnabled, unlockAudio } from "./audio";
 import { createGame, HOUR_SKIES, type GameApi, type GameHud } from "./engine";
@@ -22,6 +22,10 @@ const EMPTY: GameHud = {
   skyFill: "#7ec8e3",
   cleared: 0,
   unlocked: 1,
+  pen: "swipe",
+  finished: false,
+  dev: false,
+  extrasOpen: false,
 };
 
 function AnalogClock({ hour, className = "size-10 shrink-0" }: { hour: number; className?: string }) {
@@ -61,6 +65,8 @@ export function GameCanvas() {
   const [hud, setHud] = useState<GameHud>(EMPTY);
   const [muted, setMutedUi] = useState(false);
   const [popOn, setPopOn] = useState(false);
+  const [loadout, setLoadout] = useState(false);
+  const [kit, setKit] = useState(() => loadSettings());
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -97,7 +103,17 @@ export function GameCanvas() {
   }
 
   function goMenu() {
+    setLoadout(false);
     apiRef.current?.goMenu();
+  }
+
+  function equip(patch: Partial<typeof kit>) {
+    if (!hud.extrasOpen && (patch.pen === "auto" || (patch.color && patch.color !== "red") || (patch.hat && patch.hat !== "none"))) {
+      return;
+    }
+    const next = { ...kit, ...patch };
+    setKit(next);
+    saveSettings(next);
   }
 
   function replay(opts?: { theme?: "sunny" | "sunset"; advance?: boolean; restart?: boolean }) {
@@ -186,7 +202,7 @@ export function GameCanvas() {
 
       {hud.phase === "playing" && hud.painted === 0 && (
         <p className="pointer-events-none absolute bottom-32 left-1/2 z-10 w-[min(92%,20rem)] -translate-x-1/2 rounded-pill bg-cream/90 px-4 py-2.5 text-center text-sm font-semibold text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft">
-          Tap a paint can or a white shell
+          {hud.pen === "auto" ? "Tap a paint can or a white shell" : "Color a shell with your finger"}
         </p>
       )}
 
@@ -199,7 +215,7 @@ export function GameCanvas() {
         </div>
       )}
 
-      {hud.phase === "menu" && (
+      {hud.phase === "menu" && !loadout && (
         <div className="absolute inset-0 z-20 grid place-items-end bg-ink/25 px-3 pt-4 pb-[max(0.6rem,env(safe-area-inset-bottom))]">
           <div className="max-h-[min(92dvh,40rem)] w-full overflow-y-auto rounded-t-card rounded-b-3xl bg-cream px-4 py-5 text-center shadow-xl shadow-ink/20 ring-4 ring-cream-soft">
             <p className="text-sky-deep text-sm font-semibold tracking-wide uppercase">Nine little hours</p>
@@ -246,6 +262,15 @@ export function GameCanvas() {
             >
               Play {hud.unlocked}pm
             </button>
+            <button
+              type="button"
+              onClick={() => setLoadout(true)}
+              className="mt-2 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-pill bg-cream-soft px-6 py-3 text-base font-bold text-ink ring-2 ring-sand-deep"
+            >
+              <Palette className="size-5" />
+              Loadout
+            </button>
+            {hud.dev && <p className="mt-2 text-xs font-bold tracking-wide text-coral uppercase">Dev mode on</p>}
             <Link
               to="/grownups"
               className="mt-3 inline-block text-xs font-semibold tracking-wide text-ink-soft/70 uppercase hover:text-ink-soft"
@@ -254,6 +279,15 @@ export function GameCanvas() {
             </Link>
           </div>
         </div>
+      )}
+
+      {hud.phase === "menu" && loadout && (
+        <LoadoutCard
+          extrasOpen={hud.extrasOpen}
+          kit={kit}
+          onEquip={equip}
+          onBack={() => setLoadout(false)}
+        />
       )}
 
       {hud.phase === "won" && (
@@ -267,7 +301,9 @@ export function GameCanvas() {
             </h2>
             <p className="mt-3 text-base text-ink-soft">
               {hud.level >= hud.maxLevel
-                ? "From 1pm to 9pm. Want to start the afternoon again?"
+                ? hud.finished
+                  ? "Loadout is open — auto-fill pen and new looks."
+                  : "From 1pm to 9pm. Want to start the afternoon again?"
                 : `Next hour is ${hud.hour + 1}pm. The sky gets a little darker.`}
             </p>
             <div className="mt-6 grid gap-3">
@@ -346,7 +382,7 @@ export function GameCanvas() {
       )}
 
       <p className="pointer-events-none absolute top-[4.6rem] right-3 z-10 rounded-pill bg-cream px-3 py-1 text-sm font-bold tracking-wide text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft">
-        {APP_VERSION}
+        {APP_VERSION}{hud.dev ? " · DEV" : ""}
       </p>
 
       <div className="turn-phone pointer-events-none absolute inset-0 z-40 hidden place-items-center bg-sky px-8 text-center">
@@ -356,6 +392,152 @@ export function GameCanvas() {
         </div>
       </div>
     </div>
+    </div>
+  );
+}
+
+function KitPick<T extends string>({
+  label,
+  value,
+  current,
+  locked,
+  onPick,
+  swatch,
+}: {
+  label: string;
+  value: T;
+  current: T;
+  locked: boolean;
+  onPick: (v: T) => void;
+  swatch?: string;
+}) {
+  const on = value === current && !locked;
+  return (
+    <button
+      type="button"
+      disabled={locked}
+      onClick={() => onPick(value)}
+      className={`relative inline-flex min-h-11 items-center justify-center gap-2 rounded-pill px-3 text-sm font-bold disabled:cursor-not-allowed ${
+        on ? "bg-coral text-cream" : locked ? "bg-sand/70 text-ink-soft" : "bg-sand text-ink"
+      }`}
+      aria-label={locked ? `${label} locked` : label}
+    >
+      {swatch && <span className={`size-4 rounded-pill ${swatch} ring-2 ring-cream`} />}
+      {label}
+      {locked && <Lock className="size-3.5 opacity-80" />}
+    </button>
+  );
+}
+
+function LoadoutCard({
+  extrasOpen,
+  kit,
+  onEquip,
+  onBack,
+}: {
+  extrasOpen: boolean;
+  kit: ReturnType<typeof loadSettings>;
+  onEquip: (patch: Partial<ReturnType<typeof loadSettings>>) => void;
+  onBack: () => void;
+}) {
+  return (
+    <div className="absolute inset-0 z-20 grid place-items-end bg-ink/25 px-3 pt-4 pb-[max(0.6rem,env(safe-area-inset-bottom))]">
+      <div className="max-h-[min(92dvh,40rem)] w-full overflow-y-auto rounded-t-card rounded-b-3xl bg-cream px-4 py-5 text-center shadow-xl shadow-ink/20 ring-4 ring-cream-soft">
+        <p className="text-sky-deep text-sm font-semibold tracking-wide uppercase">Your kit</p>
+        <h2 className="mt-1 text-3xl font-bold tracking-tight text-coral">Loadout</h2>
+        <p className="mt-2 text-sm text-ink-soft">
+          {extrasOpen ? "Pick a pen and how Crabby looks." : "Finish 9pm to unlock extra pens and looks."}
+        </p>
+
+        <p className="mt-4 text-left text-sm font-bold">Pens</p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          <KitPick
+            label="Swipe"
+            value={"swipe" as PenId}
+            current={kit.pen}
+            locked={false}
+            onPick={(pen) => onEquip({ pen })}
+          />
+          <KitPick
+            label="Auto fill"
+            value={"auto" as PenId}
+            current={kit.pen}
+            locked={!extrasOpen}
+            onPick={(pen) => onEquip({ pen })}
+          />
+        </div>
+        <p className="mt-2 text-left text-xs text-ink-soft">
+          Swipe paints the shell. Auto fill paints it when Crabby touches it.
+        </p>
+
+        <p className="mt-4 text-left text-sm font-bold">Crabby</p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          <KitPick
+            label="Red"
+            value={"red" as CrabColor}
+            current={kit.color}
+            locked={false}
+            onPick={(color) => onEquip({ color })}
+            swatch="bg-coral"
+          />
+          <KitPick
+            label="Blue"
+            value={"blue" as CrabColor}
+            current={kit.color}
+            locked={!extrasOpen}
+            onPick={(color) => onEquip({ color })}
+            swatch="bg-sky-deep"
+          />
+          <KitPick
+            label="Yellow"
+            value={"yellow" as CrabColor}
+            current={kit.color}
+            locked={!extrasOpen}
+            onPick={(color) => onEquip({ color })}
+            swatch="bg-sand-deep"
+          />
+        </div>
+
+        <p className="mt-4 text-left text-sm font-bold">Hats</p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          <KitPick
+            label="None"
+            value={"none" as CrabHat}
+            current={kit.hat}
+            locked={false}
+            onPick={(hat) => onEquip({ hat })}
+          />
+          <KitPick
+            label="Bow"
+            value={"bow" as CrabHat}
+            current={kit.hat}
+            locked={!extrasOpen}
+            onPick={(hat) => onEquip({ hat })}
+          />
+          <KitPick
+            label="Bucket"
+            value={"bucket" as CrabHat}
+            current={kit.hat}
+            locked={!extrasOpen}
+            onPick={(hat) => onEquip({ hat })}
+          />
+          <KitPick
+            label="Sailor"
+            value={"sailor" as CrabHat}
+            current={kit.hat}
+            locked={!extrasOpen}
+            onPick={(hat) => onEquip({ hat })}
+          />
+        </div>
+
+        <button
+          type="button"
+          onClick={onBack}
+          className="mt-5 min-h-14 w-full rounded-pill bg-coral px-6 py-3 text-lg font-bold text-cream"
+        >
+          Back to hours
+        </button>
+      </div>
     </div>
   );
 }

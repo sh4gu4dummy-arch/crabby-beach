@@ -1,6 +1,6 @@
-import type { BeachTheme, CrabColor, CrabHat, GrownupSettings } from "@/lib/settings";
+import type { BeachTheme, CrabColor, CrabHat, GrownupSettings, PenId } from "@/lib/settings";
 import { DEFAULT_SETTINGS } from "@/lib/settings";
-import { loadCleared, saveCleared, unlockedFrom } from "@/lib/progress";
+import { loadCleared, loadDev, loadoutUnlocked, saveCleared, saveDev, unlockedFrom } from "@/lib/progress";
 import { assetUrl } from "@/lib/asset";
 import {
   playScuttle,
@@ -30,6 +30,10 @@ export type GameHud = {
   skyFill: string;
   cleared: number;
   unlocked: number;
+  pen: PenId;
+  finished: boolean;
+  dev: boolean;
+  extrasOpen: boolean;
 };
 
 export type GameApi = {
@@ -37,6 +41,8 @@ export type GameApi = {
   replay: (opts?: { theme?: BeachTheme; advance?: boolean; restart?: boolean }) => void;
   playLevel: (n: number) => void;
   goMenu: () => void;
+  setDev: (on: boolean) => void;
+  resetProgress: () => void;
   addTime: (seconds: number) => void;
   destroy: () => void;
 };
@@ -70,6 +76,8 @@ const SKY_TINTS = [
 export const HOUR_SKIES = SKY_TINTS.map((s) => s.fill);
 const CAN_HIT = 56;
 const WATER_WALK = 118;
+const PAINT_RES = 96;
+const FILL_SECS = 1;
 
 type PaintId = "red" | "orange" | "yellow" | "green" | "blue" | "purple" | "pink";
 
@@ -101,6 +109,9 @@ type Find = {
   fly: number;
   slot: number;
   color: PaintId;
+  paintTime: number;
+  mask: HTMLCanvasElement | null;
+  paintLayer: HTMLCanvasElement | null;
 };
 
 type Particle = {
@@ -285,6 +296,8 @@ export function createGame(
   let pendingWin = false;
   let level = 1;
   let cleared = loadCleared();
+  let dev = loadDev();
+  const brush = { down: false, x: 800, y: 520 };
   let cans: Array<{ id: PaintId; hex: string; x: number; y: number }> = [];
   const paintCache = new Map<string, HTMLCanvasElement>();
   const tintCache: TintCache = new WeakMap();
@@ -360,6 +373,22 @@ export function createGame(
     return Math.max(0, Math.ceil(limit - playElapsed));
   }
 
+  function extrasOpen() {
+    return loadoutUnlocked(cleared, dev);
+  }
+
+  function usingAuto() {
+    return extrasOpen() && settings.pen === "auto";
+  }
+
+  function crabColor(): CrabColor {
+    return extrasOpen() ? settings.color : "red";
+  }
+
+  function crabHat(): CrabHat {
+    return extrasOpen() ? settings.hat : "none";
+  }
+
   function emitHud() {
     hooks.onHud({
       phase,
@@ -374,7 +403,11 @@ export function createGame(
       hour: hour(),
       skyFill: skyTint().fill,
       cleared,
-      unlocked: unlockedFrom(cleared),
+      unlocked: unlockedFrom(cleared, dev),
+      pen: usingAuto() ? "auto" : "swipe",
+      finished: cleared >= MAX_LEVELS,
+      dev,
+      extrasOpen: extrasOpen(),
     });
   }
 
@@ -442,6 +475,9 @@ export function createGame(
       fly: 0,
       slot: -1,
       color: "green" as PaintId,
+      paintTime: 0,
+      mask: null,
+      paintLayer: null,
     }));
   }
 
@@ -501,6 +537,96 @@ export function createGame(
       x: clamp(p.x, vis.x0, vis.x1),
       y: clamp(p.y, allowWater ? WATER_WALK : vis.y0, vis.y1),
     };
+  }
+
+  function flattenMask(c: HTMLCanvasElement) {
+    const x = c.getContext("2d");
+    if (!x) return;
+    const img = x.getImageData(0, 0, c.width, c.height);
+    const d = img.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const a = d[i + 3] ?? 0;
+      if (a > 18) {
+        d[i] = 255;
+        d[i + 1] = 255;
+        d[i + 2] = 255;
+        d[i + 3] = 255;
+      } else {
+        d[i + 3] = 0;
+      }
+    }
+    x.putImageData(img, 0, 0);
+  }
+
+  function ensurePaint(item: Find) {
+    if (item.mask && item.paintLayer) return;
+    const mask = document.createElement("canvas");
+    mask.width = PAINT_RES;
+    mask.height = PAINT_RES;
+    const mx = mask.getContext("2d");
+    if (!mx) return;
+    mx.translate(PAINT_RES / 2, PAINT_RES / 2);
+    const s = PAINT_RES * 0.9;
+    if (item.kind === "shell" && assets) {
+      mx.drawImage(assets.white[item.variant]!, -s / 2, -s / 2, s, s);
+    } else if (item.kind === "starfish" && assets) {
+      mx.drawImage(assets.starfish, -s / 2, -s / 2, s, s);
+    } else if (item.kind === "sanddollar") {
+      mx.fillStyle = "#fff";
+      mx.beginPath();
+      mx.ellipse(0, 0, s * 0.46, s * 0.42, 0, 0, Math.PI * 2);
+      mx.fill();
+    } else {
+      mx.fillStyle = "#fff";
+      mx.beginPath();
+      mx.ellipse(s * 0.16, s * 0.16, s * 0.28, s * 0.16, 0.2, 0, Math.PI * 2);
+      mx.fill();
+      mx.beginPath();
+      mx.arc(-s * 0.06, -s * 0.04, s * 0.28, 0, Math.PI * 2);
+      mx.fill();
+    }
+    flattenMask(mask);
+    const layer = document.createElement("canvas");
+    layer.width = PAINT_RES;
+    layer.height = PAINT_RES;
+    item.mask = mask;
+    item.paintLayer = layer;
+  }
+
+  function findSize() {
+    const n = Math.max(finds.length, 1);
+    return n >= 10 ? 48 : n >= 8 ? 52 : FIND_SIZE;
+  }
+
+  function stampPaint(item: Find, wx: number, wy: number) {
+    ensurePaint(item);
+    if (!item.paintLayer || !item.mask) return;
+    const s = findSize();
+    const lx = ((wx - item.x) / s) * PAINT_RES + PAINT_RES / 2;
+    const ly = ((wy - item.y) / s) * PAINT_RES + PAINT_RES / 2;
+    const px = item.paintLayer.getContext("2d");
+    if (!px) return;
+    px.fillStyle = paintHex(crab.paint);
+    px.beginPath();
+    px.arc(lx, ly, PAINT_RES * 0.2, 0, Math.PI * 2);
+    px.fill();
+    px.globalCompositeOperation = "destination-in";
+    px.drawImage(item.mask, 0, 0);
+    px.globalCompositeOperation = "source-over";
+  }
+
+  function findUnder(world: Vec, extra = 1.15): Find | null {
+    let best: Find | null = null;
+    let bestD = HIT * extra;
+    for (const item of finds) {
+      if (item.painted) continue;
+      const d = dist(world, item);
+      if (d < bestD) {
+        best = item;
+        bestD = d;
+      }
+    }
+    return best;
   }
 
   function spawnSparkles(x: number, y: number, extra = false) {
@@ -603,11 +729,20 @@ export function createGame(
 
   function handlePointer(ev: PointerEvent) {
     if (phase === "loading" || phase === "won" || phase === "timesup" || phase === "menu") return;
+    ev.preventDefault();
+    try {
+      canvas.setPointerCapture(ev.pointerId);
+    } catch {
+      /* ignore */
+    }
+    const world = worldFromEvent(ev);
+    brush.down = true;
+    brush.x = world.x;
+    brush.y = world.y;
 
     playTap();
     const rect = canvas.getBoundingClientRect();
     if (ev.clientY - rect.top > css.h - bannerH()) return;
-    const world = worldFromEvent(ev);
 
     let bestCan: (typeof cans)[number] | null = null;
     let canD = CAN_HIT;
@@ -625,24 +760,34 @@ export function createGame(
 
     if (world.y < WATER_MAX) return;
 
-    let best: Find | null = null;
-    let bestD = HIT;
-    for (const item of finds) {
-      if (item.painted) continue;
-      const d = dist(world, item);
-      if (d < bestD) {
-        best = item;
-        bestD = d;
-      }
-    }
+    const best = findUnder(world);
     if (best) {
-      goTo({ x: best.x, y: best.y }, best.id);
+      if (usingAuto()) {
+        goTo({ x: best.x, y: best.y }, best.id);
+      } else {
+        stampPaint(best, world.x, world.y);
+      }
       return;
     }
     const vis = sandView();
     if (world.x >= vis.x0 && world.x <= vis.x1 && world.y >= vis.y0 && world.y <= vis.y1) {
       goTo(world, null);
     }
+  }
+
+  function handleMove(ev: PointerEvent) {
+    updateHover(ev);
+    if (phase !== "playing" || !brush.down) return;
+    const world = worldFromEvent(ev);
+    brush.x = world.x;
+    brush.y = world.y;
+    if (usingAuto()) return;
+    const item = findUnder(world);
+    if (item) stampPaint(item, world.x, world.y);
+  }
+
+  function handleUp() {
+    brush.down = false;
   }
 
   function updateHover(ev: PointerEvent) {
@@ -657,6 +802,7 @@ export function createGame(
   }
 
   function update(dt: number) {
+    refreshSettings();
     time += dt;
     if (phase === "playing") {
       playElapsed += dt;
@@ -668,6 +814,29 @@ export function createGame(
       if (left === 0) {
         phase = "timesup";
         emitHud();
+      }
+      if (brush.down && !usingAuto()) {
+        const item = findUnder({ x: brush.x, y: brush.y });
+        if (item && !item.painted) {
+          item.paintTime += dt;
+          stampPaint(item, brush.x, brush.y);
+          if (Math.random() < 0.03) {
+            particles.push({
+              x: item.x + (Math.random() - 0.5) * 24,
+              y: item.y + (Math.random() - 0.5) * 18,
+              vx: (Math.random() - 0.5) * 40,
+              vy: -30 - Math.random() * 40,
+              life: 0.35,
+              max: 0.4,
+              size: 3,
+              color: paintHex(crab.paint),
+              kind: "spark",
+              rot: 0,
+              spin: 2,
+            });
+          }
+          if (item.paintTime >= FILL_SECS) paintFind(item);
+        }
       }
     }
 
@@ -683,7 +852,13 @@ export function createGame(
       spawnConfetti();
       playWin();
       if (settings.voiceCounts) {
-        speak(hour() >= 8 ? "Wow! The shells are glowing!" : "Yay! You found them all.");
+        speak(
+          hour() >= 9
+            ? "You finished the day! New pens and looks are in Loadout."
+            : hour() >= 8
+              ? "Wow! The shells are glowing!"
+              : "Yay! You found them all.",
+        );
       }
       emitHud();
     }
@@ -712,7 +887,7 @@ export function createGame(
         crab.y = crab.target.y;
         if (crab.targetId != null) {
           const item = finds.find((s) => s.id === crab.targetId);
-          if (item) paintFind(item);
+          if (item && usingAuto()) paintFind(item);
         } else if (crab.targetCan) {
           dipPaint(crab.targetCan);
         }
@@ -1141,6 +1316,9 @@ export function createGame(
     } else {
       drawSnail(x, y, s, happy, happy ? hex : glow > 0.35 ? "#c8ffe8" : "#fffce8");
     }
+    if (!happy && item.paintLayer) {
+      drawCentered(item.paintLayer, x, y, s, s);
+    }
     if (glow > 0.2) {
       ctx.save();
       ctx.globalCompositeOperation = "screen";
@@ -1268,7 +1446,7 @@ export function createGame(
 
       const frames = crab.state === "walk" ? assets.walk : assets.idle;
       const raw = frames[crab.frame]!;
-      const img = tintImage(raw, settings.color, tintCache);
+      const img = tintImage(raw, crabColor(), tintCache);
       const waveRot = crab.wave > 0 ? Math.sin(crab.wave * 22) * 0.18 : 0;
       layers.push({
         y: crab.y + 8,
@@ -1280,13 +1458,13 @@ export function createGame(
           if (crab.blink > 0) {
             ctx.save();
             ctx.globalAlpha = 0.85;
-            ctx.fillStyle = settings.color === "blue" ? "#4ea8c9" : settings.color === "yellow" ? "#e8c07a" : "#e85d4c";
+            ctx.fillStyle = crabColor() === "blue" ? "#4ea8c9" : crabColor() === "yellow" ? "#e8c07a" : "#e85d4c";
             ctx.beginPath();
             ctx.ellipse(crab.x + crab.facing * 8, crab.y - 10, 10, 3, 0, 0, Math.PI * 2);
             ctx.fill();
             ctx.restore();
           }
-          drawHat(crab.x, crab.y, CRAB_SIZE, settings.hat, crab.facing < 0);
+          drawHat(crab.x, crab.y, CRAB_SIZE, crabHat(), crab.facing < 0);
           drawBrush(crab.x, crab.y, crab.facing, paintHex(crab.paint), waveRot, "head");
         },
       });
@@ -1335,7 +1513,9 @@ export function createGame(
   }
 
   canvas.addEventListener("pointerdown", handlePointer);
-  canvas.addEventListener("pointermove", updateHover);
+  canvas.addEventListener("pointermove", handleMove);
+  canvas.addEventListener("pointerup", handleUp);
+  canvas.addEventListener("pointercancel", handleUp);
   window.addEventListener("resize", resize);
   refreshSettings();
   resize();
@@ -1349,6 +1529,8 @@ export function createGame(
     crab: () => { x: number; y: number; sx: number; sy: number; state: string };
     setLevel: (n: number) => void;
     completeHour: () => void;
+    paintAt: (sx: number, sy: number, seconds: number) => void;
+    setCleared: (n: number) => void;
   };
   (window as unknown as { __gameTest?: TestHook }).__gameTest = {
     phase: () => phase,
@@ -1374,6 +1556,22 @@ export function createGame(
       }
       pendingWin = true;
     },
+    paintAt: (sx: number, sy: number, seconds: number) => {
+      const world = {
+        x: (sx - view.x) / view.scale,
+        y: (sy - view.y) / view.scale,
+      };
+      const item = findUnder(world, 1.4);
+      if (!item) return;
+      item.paintTime += seconds;
+      stampPaint(item, world.x, world.y);
+      if (item.paintTime >= FILL_SECS) paintFind(item);
+    },
+    setCleared: (n: number) => {
+      cleared = Math.min(MAX_LEVELS, Math.max(0, n));
+      saveCleared(cleared);
+      emitHud();
+    },
     crab: () => ({
       x: crab.x,
       y: crab.y,
@@ -1396,7 +1594,7 @@ export function createGame(
 
   return {
     start() {
-      const n = unlockedFrom(cleared);
+      const n = unlockedFrom(cleared, dev);
       level = n;
       resetWorld("sunny");
       phase = "playing";
@@ -1405,7 +1603,7 @@ export function createGame(
       emitHud();
     },
     playLevel(n: number) {
-      const cap = unlockedFrom(cleared);
+      const cap = unlockedFrom(cleared, dev);
       if (n < 1 || n > cap) return;
       level = n;
       resetWorld("sunny");
@@ -1416,11 +1614,25 @@ export function createGame(
     },
     goMenu() {
       phase = "menu";
+      brush.down = false;
+      emitHud();
+    },
+    setDev(on: boolean) {
+      dev = on;
+      saveDev(on);
+      emitHud();
+    },
+    resetProgress() {
+      cleared = 0;
+      saveCleared(0);
+      level = 1;
+      resetWorld("sunny");
+      phase = "menu";
       emitHud();
     },
     replay(opts?: { theme?: BeachTheme; advance?: boolean; restart?: boolean }) {
       if (opts?.restart) level = 1;
-      else if (opts?.advance) level = Math.min(unlockedFrom(cleared), level + 1);
+      else if (opts?.advance) level = Math.min(unlockedFrom(cleared, dev), level + 1);
       resetWorld(opts?.theme ?? "sunny");
       phase = "playing";
       unlockAudio();
@@ -1435,7 +1647,9 @@ export function createGame(
       running = false;
       cancelAnimationFrame(raf);
       canvas.removeEventListener("pointerdown", handlePointer);
-      canvas.removeEventListener("pointermove", updateHover);
+      canvas.removeEventListener("pointermove", handleMove);
+      canvas.removeEventListener("pointerup", handleUp);
+      canvas.removeEventListener("pointercancel", handleUp);
       window.removeEventListener("resize", resize);
       delete (window as unknown as { __gameTest?: unknown }).__gameTest;
     },

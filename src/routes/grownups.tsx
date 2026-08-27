@@ -9,6 +9,7 @@ import {
   type GrownupSettings,
   type TimerMinutes,
 } from "@/lib/settings";
+import { loadProgress, saveCleared, saveProgress } from "@/lib/progress";
 import { APP_NAME, APP_VERSION, DOWNLOADS } from "@/lib/version";
 
 export const Route = createFileRoute("/grownups")({ component: Grownups });
@@ -94,11 +95,18 @@ function Choice<T extends string | number>({
 
 export function Grownups() {
   const [settings, setSettings] = useState<GrownupSettings>(() => loadSettings());
+  const [progress, setProgress] = useState(() => loadProgress());
 
   function update(patch: Partial<GrownupSettings>) {
     const next = { ...settings, ...patch };
     setSettings(next);
     saveSettings(next);
+  }
+
+  function updateProgress(patch: Partial<typeof progress>) {
+    const next = { ...progress, ...patch };
+    setProgress(next);
+    saveProgress(next);
   }
 
   return (
@@ -116,7 +124,7 @@ export function Grownups() {
           <p className="text-sky-deep text-sm font-semibold tracking-wide uppercase">Grown-ups</p>
           <h1 className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">{APP_NAME}</h1>
           <p className="mt-2 text-ink-soft">
-            Pick how Crabby looks and how play feels. Kids just tap — they never see this page.
+            Pick how Crabby looks and how play feels. Extra pens and skins unlock in Loadout after 9pm.
           </p>
           <p className="mt-3 inline-flex rounded-pill bg-cream px-3 py-1 text-sm font-semibold">
             Current version {APP_VERSION}
@@ -223,6 +231,52 @@ export function Grownups() {
               />
             ))}
           </div>
+        </section>
+
+        <section className="mt-8" aria-labelledby="dev-heading">
+          <h2 id="dev-heading" className="text-xl font-bold">
+            Dev
+          </h2>
+          <p className="mt-1 text-sm text-ink-soft">For trying pens, skins, and later hours without replaying the day.</p>
+          <p className="mt-4 text-sm font-semibold">Dev mode</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Choice
+              label="Off"
+              value={"off"}
+              current={progress.dev ? "on" : "off"}
+              onPick={() => updateProgress({ dev: false })}
+            />
+            <Choice
+              label="On"
+              value={"on"}
+              current={progress.dev ? "on" : "off"}
+              onPick={() => updateProgress({ dev: true })}
+            />
+          </div>
+          <p className="mt-4 text-sm font-semibold">Progress</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                saveCleared(9);
+                setProgress(loadProgress());
+              }}
+              className="inline-flex min-h-11 items-center justify-center rounded-pill bg-sand px-4 text-sm font-bold text-ink"
+            >
+              Finish the day
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                saveProgress({ cleared: 0, dev: progress.dev });
+                setProgress(loadProgress());
+              }}
+              className="inline-flex min-h-11 items-center justify-center rounded-pill bg-sand px-4 text-sm font-bold text-ink"
+            >
+              Reset hours
+            </button>
+          </div>
+          <p className="mt-2 text-xs text-ink-soft">Cleared {progress.cleared} / 9. Dev on unlocks every hour and the whole loadout.</p>
         </section>
 
         <section className="mt-10" aria-labelledby="downloads-heading">

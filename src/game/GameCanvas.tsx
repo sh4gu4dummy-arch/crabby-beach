@@ -200,6 +200,23 @@ export function GameCanvas() {
         </div>
       )}
 
+      {hud.phase === "playing" && (
+        <div
+          className="pointer-events-none absolute left-3 right-3 z-10"
+          style={{ top: "max(7.1rem, calc(env(safe-area-inset-top) + 5.6rem))" }}
+        >
+          <div className="relative h-8 overflow-hidden rounded-pill bg-cream/90 shadow-md shadow-ink/10 ring-2 ring-cream-soft">
+            <div
+              className="sky-bar-fill absolute inset-y-0 left-0 rounded-pill"
+              style={{ width: `${hud.total ? (hud.painted / hud.total) * 100 : 0}%` }}
+            />
+            <p className="absolute inset-0 grid place-items-center text-sm font-bold text-ink drop-shadow-[0_1px_0_rgba(255,246,232,0.8)]">
+              {hud.painted >= hud.total ? "All colored!" : `${hud.total - hud.painted} left`}
+            </p>
+          </div>
+        </div>
+      )}
+
       {hud.phase === "playing" && hud.painted === 0 && (
         <p className="pointer-events-none absolute bottom-32 left-1/2 z-10 w-[min(92%,20rem)] -translate-x-1/2 rounded-pill bg-cream/90 px-4 py-2.5 text-center text-sm font-semibold text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft">
           {hud.pen === "auto" ? "Tap a paint can or a white shell" : "Color a shell with your finger"}

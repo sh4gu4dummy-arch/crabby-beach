@@ -200,9 +200,9 @@ export function GameCanvas() {
         </div>
       )}
 
-      {hud.phase === "playing" && (
+      {(hud.phase === "playing" || hud.phase === "won") && (
         <div
-          className="pointer-events-none absolute left-3 right-3 z-10"
+          className="pointer-events-none absolute left-3 right-3 z-30"
           style={{ top: "max(7.1rem, calc(env(safe-area-inset-top) + 5.6rem))" }}
         >
           <div className="sky-bar relative h-8 overflow-hidden rounded-pill bg-cream/90 shadow-md shadow-ink/10 ring-2 ring-cream-soft">
@@ -310,8 +310,14 @@ export function GameCanvas() {
       )}
 
       {hud.phase === "won" && (
-        <div className="absolute inset-0 z-20 grid place-items-end bg-ink/25 px-3 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-          <div className="w-full rounded-t-card rounded-b-3xl bg-cream px-5 py-6 text-center shadow-xl shadow-ink/20 ring-4 ring-mint">
+        <div
+          className="absolute inset-x-0 z-20 flex items-center px-3"
+          style={{
+            top: "max(9.4rem, calc(env(safe-area-inset-top) + 7.8rem))",
+            bottom: "max(7.4rem, calc(env(safe-area-inset-bottom) + 6.6rem))",
+          }}
+        >
+          <div className="max-h-full w-full overflow-y-auto rounded-card bg-cream px-5 py-5 text-center shadow-xl shadow-ink/20 ring-4 ring-mint">
             <p className="text-mint-deep text-sm font-semibold tracking-wide uppercase">
               {hud.level >= hud.maxLevel ? "9pm · night" : `${hud.hour}pm`}
             </p>

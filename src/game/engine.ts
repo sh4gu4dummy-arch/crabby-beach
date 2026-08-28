@@ -718,6 +718,14 @@ export function createGame(
     crab.wave = 0.4;
   }
 
+  function crabBeside(item: Find) {
+    return dist(crab, item) < HIT * 1.35;
+  }
+
+  function canPaint(item: Find) {
+    return !item.painted && crabBeside(item);
+  }
+
   function goTo(world: Vec, id: number | null, canId: PaintId | null = null) {
     const dest = clampToPlay(world, canId != null || world.y < SAND_TOP);
     crab.target = dest;
@@ -762,7 +770,7 @@ export function createGame(
 
     const best = findUnder(world);
     if (best) {
-      if (usingAuto()) {
+      if (usingAuto() || !crabBeside(best)) {
         goTo({ x: best.x, y: best.y }, best.id);
       } else {
         stampPaint(best, world.x, world.y);
@@ -783,7 +791,7 @@ export function createGame(
     brush.y = world.y;
     if (usingAuto()) return;
     const item = findUnder(world);
-    if (item) stampPaint(item, world.x, world.y);
+    if (item && canPaint(item)) stampPaint(item, world.x, world.y);
   }
 
   function handleUp() {
@@ -817,7 +825,7 @@ export function createGame(
       }
       if (brush.down && !usingAuto()) {
         const item = findUnder({ x: brush.x, y: brush.y });
-        if (item && !item.painted) {
+        if (item && canPaint(item)) {
           item.paintTime += dt;
           stampPaint(item, brush.x, brush.y);
           if (Math.random() < 0.03) {
@@ -888,6 +896,7 @@ export function createGame(
         if (crab.targetId != null) {
           const item = finds.find((s) => s.id === crab.targetId);
           if (item && usingAuto()) paintFind(item);
+          else if (item) crab.wave = 0.4;
         } else if (crab.targetCan) {
           dipPaint(crab.targetCan);
         }
@@ -1559,6 +1568,7 @@ export function createGame(
     setLevel: (n: number) => void;
     completeHour: () => void;
     paintAt: (sx: number, sy: number, seconds: number) => void;
+    tryPaint: (sx: number, sy: number, seconds: number) => boolean;
     setCleared: (n: number) => void;
   };
   (window as unknown as { __gameTest?: TestHook }).__gameTest = {
@@ -1592,9 +1602,25 @@ export function createGame(
       };
       const item = findUnder(world, 1.4);
       if (!item) return;
+      crab.x = item.x;
+      crab.y = item.y;
+      crab.target = null;
+      crab.state = "idle";
       item.paintTime += seconds;
       stampPaint(item, world.x, world.y);
       if (item.paintTime >= FILL_SECS) paintFind(item);
+    },
+    tryPaint: (sx: number, sy: number, seconds: number) => {
+      const world = {
+        x: (sx - view.x) / view.scale,
+        y: (sy - view.y) / view.scale,
+      };
+      const item = findUnder(world, 1.4);
+      if (!item || !canPaint(item)) return false;
+      item.paintTime += seconds;
+      stampPaint(item, world.x, world.y);
+      if (item.paintTime >= FILL_SECS) paintFind(item);
+      return true;
     },
     setCleared: (n: number) => {
       cleared = Math.min(MAX_LEVELS, Math.max(0, n));

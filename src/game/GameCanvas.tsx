@@ -219,7 +219,7 @@ export function GameCanvas() {
 
       {hud.phase === "playing" && hud.painted === 0 && (
         <p className="pointer-events-none absolute bottom-32 left-1/2 z-10 w-[min(92%,20rem)] -translate-x-1/2 rounded-pill bg-cream/90 px-4 py-2.5 text-center text-sm font-semibold text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft">
-          {hud.pen === "auto" ? "Tap a paint can or a white shell" : "Color a shell with your finger"}
+          {hud.pen === "auto" ? "Tap a paint can or a white shell" : "Tap a shell so Crabby walks over, then paint"}
         </p>
       )}
 

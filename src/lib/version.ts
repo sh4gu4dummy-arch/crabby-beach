@@ -1,6 +1,6 @@
 export const APP_NAME = "Crabby Beach";
 export const APP_SLUG = "crabby-beach";
-export const APP_VERSION = "v.023";
+export const APP_VERSION = "v.024";
 
 export const DOWNLOADS = {
   codeOnly: `${APP_SLUG}-${APP_VERSION}-code.md`,

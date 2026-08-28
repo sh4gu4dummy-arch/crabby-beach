@@ -726,6 +726,18 @@ export function createGame(
     return !item.painted && crabBeside(item);
   }
 
+  function standByShell(item: Find): Vec {
+    const vis = sandView();
+    const spots = [
+      { x: item.x, y: item.y + 58 },
+      { x: item.x, y: item.y - 58 },
+      { x: item.x + 58, y: item.y },
+      { x: item.x - 58, y: item.y },
+    ];
+    const fit = spots.find((p) => p.x >= vis.x0 && p.x <= vis.x1 && p.y >= vis.y0 && p.y <= vis.y1);
+    return clampToPlay(fit ?? { x: item.x, y: item.y + 40 }, false);
+  }
+
   function goTo(world: Vec, id: number | null, canId: PaintId | null = null) {
     const dest = clampToPlay(world, canId != null || world.y < SAND_TOP);
     crab.target = dest;
@@ -771,7 +783,7 @@ export function createGame(
     const best = findUnder(world);
     if (best) {
       if (usingAuto() || !crabBeside(best)) {
-        goTo({ x: best.x, y: best.y }, best.id);
+        goTo(standByShell(best), best.id);
       } else {
         stampPaint(best, world.x, world.y);
       }
@@ -1375,7 +1387,8 @@ export function createGame(
     const pulse = 1 + Math.sin(time * 2.4 + item.id) * 0.03;
     const n = Math.max(finds.length, 1);
     const base = n >= 10 ? 48 : n >= 8 ? 52 : FIND_SIZE;
-    const s = base * pulse;
+    const focus = crabBeside(item) ? 1.14 : 1;
+    const s = base * pulse * focus;
     drawFindSprite(item, item.x, item.y, s, false);
   }
 
@@ -1471,7 +1484,12 @@ export function createGame(
         });
       }
       for (const item of finds) {
-        layers.push({ y: item.y, z: 1, draw: () => drawFind(item) });
+        const focus = !item.painted && crabBeside(item);
+        layers.push({
+          y: item.y,
+          z: focus ? 4 : 1,
+          draw: () => drawFind(item),
+        });
       }
 
       if (hermit) {
@@ -1508,7 +1526,7 @@ export function createGame(
       });
     }
 
-    layers.sort((a, b) => a.y - b.y || a.z - b.z);
+    layers.sort((a, b) => a.z - b.z || a.y - b.y);
     for (const layer of layers) layer.draw();
 
     for (const p of particles) {

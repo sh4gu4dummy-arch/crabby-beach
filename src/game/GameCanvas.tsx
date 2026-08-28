@@ -205,11 +205,13 @@ export function GameCanvas() {
           className="pointer-events-none absolute left-3 right-3 z-10"
           style={{ top: "max(7.1rem, calc(env(safe-area-inset-top) + 5.6rem))" }}
         >
-          <div className="relative h-8 overflow-hidden rounded-pill bg-cream/90 shadow-md shadow-ink/10 ring-2 ring-cream-soft">
+          <div className="sky-bar relative h-8 overflow-hidden rounded-pill bg-cream/90 shadow-md shadow-ink/10 ring-2 ring-cream-soft">
             <div
-              className="sky-bar-fill absolute inset-y-0 left-0 rounded-pill"
+              className="sky-bar-clip absolute inset-y-0 left-0 overflow-hidden rounded-pill"
               style={{ width: `${hud.total ? (hud.painted / hud.total) * 100 : 0}%` }}
-            />
+            >
+              <div className="sky-bar-fill" />
+            </div>
             <p className="absolute inset-0 grid place-items-center text-sm font-bold text-ink drop-shadow-[0_1px_0_rgba(255,246,232,0.8)]">
               {hud.painted >= hud.total ? "All colored!" : `${hud.total - hud.painted} left`}
             </p>

@@ -1,4 +1,4 @@
-const CACHE = "crabby-beach-v.025";
+const CACHE = "crabby-beach-v.026";
 const PRECACHE = [
   "/",
   "/grownups",

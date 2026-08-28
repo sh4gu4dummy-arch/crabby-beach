@@ -995,7 +995,7 @@ export function createGame(
   }
 
   function colorizeSprite(src: CanvasImageSource, hex: string) {
-    const key = `vivid-${hex}-${src instanceof HTMLImageElement ? src.src : "img"}`;
+    const key = `${hex}-${src instanceof HTMLImageElement ? src.src : "img"}`;
     const hit = paintCache.get(key);
     if (hit) return hit;
     const w = src instanceof HTMLImageElement || src instanceof HTMLCanvasElement ? src.width : 128;
@@ -1006,20 +1006,9 @@ export function createGame(
     const x = c.getContext("2d");
     if (!x) return src;
     x.drawImage(src, 0, 0);
-    x.globalCompositeOperation = "multiply";
-    x.fillStyle = hex;
-    x.fillRect(0, 0, c.width, c.height);
-    x.globalCompositeOperation = "screen";
-    x.fillStyle = hex;
-    x.globalAlpha = 0.35;
-    x.fillRect(0, 0, c.width, c.height);
-    x.globalAlpha = 1;
     x.globalCompositeOperation = "source-atop";
-    const shine = x.createRadialGradient(c.width * 0.32, c.height * 0.28, 2, c.width * 0.32, c.height * 0.28, c.width * 0.45);
-    shine.addColorStop(0, "rgba(255,255,255,0.85)");
-    shine.addColorStop(0.35, "rgba(255,255,255,0.2)");
-    shine.addColorStop(1, "rgba(255,255,255,0)");
-    x.fillStyle = shine;
+    x.fillStyle = hex;
+    x.globalAlpha = 0.88;
     x.fillRect(0, 0, c.width, c.height);
     paintCache.set(key, c);
     return c;
@@ -1338,36 +1327,17 @@ export function createGame(
     drawShadow(x, y, s * 0.34, s * 0.13);
     if (item.kind === "shell" && assets) {
       const base = assets.white[item.variant]!;
-      const img = happy ? colorizeSprite(base, hex) : glow > 0.35 ? colorizeSprite(base, "#b8ffe8") : base;
+      const img = happy ? colorizeSprite(base, hex) : glow > 0.35 ? colorizeSprite(base, "#c8ffe8") : base;
       drawCentered(img, x, y, s, s);
     } else if (item.kind === "starfish" && assets) {
-      const star = happy ? colorizeSprite(assets.starfish, hex) : assets.starfish;
-      drawCentered(star, x, y, s * 1.05, s * 1.05, false, happy ? 0.2 : 0);
+      drawCentered(assets.starfish, x, y, s * 1.05, s * 1.05, false, happy ? 0.2 : 0);
     } else if (item.kind === "sanddollar") {
       drawSandDollar(x, y, s, happy, happy ? hex : glow > 0.35 ? "#c8ffe8" : "#fff4dc");
     } else {
       drawSnail(x, y, s, happy, happy ? hex : glow > 0.35 ? "#c8ffe8" : "#fffce8");
     }
     if (!happy && item.paintLayer) {
-      ctx.save();
-      ctx.globalCompositeOperation = "source-over";
       drawCentered(item.paintLayer, x, y, s, s);
-      ctx.restore();
-    }
-    if (happy) {
-      ctx.save();
-      ctx.globalCompositeOperation = "screen";
-      ctx.globalAlpha = 0.7;
-      ctx.fillStyle = "#ffffff";
-      ctx.beginPath();
-      ctx.ellipse(x - s * 0.12, y - s * 0.16, s * 0.16, s * 0.1, -0.55, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.globalAlpha = 0.45;
-      ctx.fillStyle = hex;
-      ctx.beginPath();
-      ctx.ellipse(x, y, s * 0.28, s * 0.2, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
     }
     if (glow > 0.2) {
       ctx.save();

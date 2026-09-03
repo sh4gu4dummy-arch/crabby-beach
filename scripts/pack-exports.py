@@ -1,7 +1,9 @@
 """Build versioned zip packages. Run only when the user asks for exports."""
 from __future__ import annotations
 
+import os
 import shutil
+import subprocess
 import zipfile
 from pathlib import Path
 
@@ -67,6 +69,11 @@ def assemble_portable() -> Path:
             shutil.copy2(item, target)
     copy_public_assets(dest)
     rewrite_font_urls(dest)
+    index = dest / "index.html"
+    if index.exists():
+        html = index.read_text(encoding="utf-8")
+        html = html.replace(' type="module"', "").replace(" crossorigin", "")
+        index.write_text(html, encoding="utf-8")
     readme = dest / "README.txt"
     readme.write_text(
         f"Crabby Beach {VERSION} — portable\n\n"
@@ -90,16 +97,31 @@ def write_android(www: Path) -> Path:
 
     shutil.copytree(www, assets, dirs_exist_ok=True)
     icon = ROOT / "public/icons/icon-192.png"
+    if not icon.exists():
+        icon = ROOT / "public/icon-192.png"
     if icon.exists():
         shutil.copy2(icon, res / "mipmap-xxxhdpi/ic_launcher.png")
-        shutil.copy2(ROOT / "public/icons/icon-96.png", res / "mipmap-xxxhdpi/ic_launcher_round.png")
+        round_icon = ROOT / "public/icons/icon-192-round.png"
+        shutil.copy2(round_icon if round_icon.exists() else icon, res / "mipmap-xxxhdpi/ic_launcher_round.png")
 
-    (pkg / "settings.gradle").write_text("rootProject.name = 'CrabbyBeach'\ninclude ':app'\n", encoding="utf-8")
-    (pkg / "build.gradle").write_text(
-        "buildscript {\n"
+    (pkg / "settings.gradle").write_text(
+        "pluginManagement {\n"
+        "  repositories { google(); mavenCentral(); gradlePluginPortal() }\n"
+        "}\n"
+        "dependencyResolutionManagement {\n"
+        "  repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)\n"
         "  repositories { google(); mavenCentral() }\n"
-        "  dependencies { classpath 'com.android.tools.build:gradle:8.2.2' }\n"
-        "}\nallprojects { repositories { google(); mavenCentral() } }\n",
+        "}\n"
+        "rootProject.name = 'CrabbyBeach'\n"
+        "include ':app'\n",
+        encoding="utf-8",
+    )
+    (pkg / "build.gradle").write_text(
+        "plugins { id 'com.android.application' version '8.2.2' apply false }\n",
+        encoding="utf-8",
+    )
+    (pkg / "gradle.properties").write_text(
+        "org.gradle.jvmargs=-Xmx2g\nandroid.useAndroidX=true\nandroid.nonTransitiveRClass=true\n",
         encoding="utf-8",
     )
     (pkg / "app/build.gradle").write_text(
@@ -107,8 +129,21 @@ def write_android(www: Path) -> Path:
         "android {\n"
         "  namespace 'beach.crabby'\n"
         "  compileSdk 34\n"
-        "  defaultConfig { applicationId 'beach.crabby' minSdk 24 targetSdk 34 versionCode 15 versionName '0.015' }\n"
-        "  buildTypes { release { minifyEnabled false } }\n"
+        "  defaultConfig {\n"
+        "    applicationId 'beach.crabby'\n"
+        "    minSdk 24\n"
+        "    targetSdk 34\n"
+        "    versionCode 28\n"
+        "    versionName '0.028'\n"
+        "  }\n"
+        "  compileOptions {\n"
+        "    sourceCompatibility JavaVersion.VERSION_17\n"
+        "    targetCompatibility JavaVersion.VERSION_17\n"
+        "  }\n"
+        "  buildTypes {\n"
+        "    release { minifyEnabled false }\n"
+        "    debug { minifyEnabled false }\n"
+        "  }\n"
         "}\n",
         encoding="utf-8",
     )
@@ -146,6 +181,8 @@ def write_android(www: Path) -> Path:
         "    s.setJavaScriptEnabled(true);\n"
         "    s.setDomStorageEnabled(true);\n"
         "    s.setMediaPlaybackRequiresUserGesture(false);\n"
+        "    s.setAllowFileAccess(true);\n"
+        "    s.setAllowContentAccess(true);\n"
         "    w.setWebViewClient(new WebViewClient());\n"
         "    w.setWebChromeClient(new WebChromeClient());\n"
         "    w.loadUrl(\"file:///android_asset/www/index.html\");\n"
@@ -184,9 +221,30 @@ def codebase_zip() -> None:
                 continue
             if path.is_dir():
                 continue
-            if rel.as_posix().startswith("public/downloads/") and rel.suffix == ".zip":
+            if rel.as_posix().startswith("public/downloads/") and rel.suffix in {".zip", ".apk"}:
                 continue
             zf.write(path, f"crabby-beach-{VERSION}-codebase/{rel.as_posix()}")
+    print("wrote", dest, dest.stat().st_size)
+
+
+def build_apk(android_pkg: Path) -> None:
+    build = Path("/tmp/apk-build")
+    if build.exists():
+        shutil.rmtree(build)
+    shutil.copytree(android_pkg, build)
+    (build / "local.properties").write_text("sdk.dir=/tmp/android-sdk\n", encoding="utf-8")
+    env = os.environ.copy()
+    env["ANDROID_HOME"] = "/tmp/android-sdk"
+    env["ANDROID_SDK_ROOT"] = "/tmp/android-sdk"
+    subprocess.run(
+        ["/tmp/gradle-8.4/bin/gradle", ":app:assembleDebug", "--no-daemon"],
+        cwd=build,
+        env=env,
+        check=True,
+    )
+    apk = next((build / "app/build/outputs/apk").rglob("*.apk"))
+    dest = DL / f"crabby-beach-{VERSION}.apk"
+    shutil.copy2(apk, dest)
     print("wrote", dest, dest.stat().st_size)
 
 
@@ -196,6 +254,7 @@ def main() -> None:
     android = write_android(portable)
     zip_dir(android, DL / f"crabby-beach-{VERSION}-android.zip", f"crabby-beach-{VERSION}-android")
     codebase_zip()
+    build_apk(android)
 
 
 if __name__ == "__main__":

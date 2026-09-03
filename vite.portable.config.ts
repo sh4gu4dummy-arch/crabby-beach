@@ -14,8 +14,16 @@ export default defineConfig({
     outDir: "/tmp/crabby-portable",
     emptyOutDir: true,
     assetsDir: "assets",
+    cssCodeSplit: false,
+    modulePreload: false,
     rollupOptions: {
       input: path.resolve("/workspace/portable.html"),
+      output: {
+        format: "iife",
+        inlineDynamicImports: true,
+        entryFileNames: "assets/app.js",
+        assetFileNames: "assets/[name][extname]",
+      },
     },
   },
 });

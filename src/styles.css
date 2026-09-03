@@ -106,7 +106,7 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 
-@media (orientation: landscape) and (max-height: 520px) {
+@media (orientation: landscape) and (max-height: 520px) and (pointer: coarse) {
   .turn-phone {
     display: grid;
   }

@@ -690,9 +690,9 @@ function IntroOverlay({
     <div className="absolute inset-0 z-50 bg-ink">
       <video
         ref={ref}
-        src={assetUrl("game/intro.mp4?v=044")}
+        src={assetUrl("game/intro.mp4?v=045")}
         playsInline
-        className="h-full w-full object-cover"
+        className="h-full w-full object-contain bg-sand"
         onTimeUpdate={(e) => setCaption(captionAt(e.currentTarget.currentTime))}
         onEnded={onDone}
       />

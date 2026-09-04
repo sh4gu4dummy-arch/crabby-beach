@@ -81,7 +81,20 @@ def assemble_portable() -> Path:
             html = html.replace(tag, "", 1)
         if scripts:
             block = "\n    ".join(scripts)
-            html = html.replace("</body>", f"    {block}\n  </body>")
+            boot = (
+                '    <div id="app">'
+                '<div style="min-height:100vh;display:grid;place-items:center;font-family:sans-serif;color:#3a2a22">'
+                '<div style="background:#fff6e8;padding:1.5rem 2rem;border-radius:1.5rem;text-align:center">'
+                '<p style="font-size:1.5rem;font-weight:700;margin:0">Crabby Beach</p>'
+                '<p style="margin:.5rem 0 0">Warming up the sand…</p>'
+                "</div></div></div>\n"
+                "    <script>window.onerror=function(m){var a=document.getElementById('app');"
+                "if(a)a.innerHTML='<div style=\"padding:2rem;font-family:sans-serif;background:#fff6e8;margin:2rem;border-radius:1rem\">"
+                "<p><b>Could not start</b></p><p>'+m+'</p></div>';};</script>\n"
+                f"    {block}\n"
+            )
+            html = html.replace('<div id="app"></div>', "")
+            html = html.replace("</body>", boot + "  </body>")
         index.write_text(html, encoding="utf-8")
     readme = dest / "README.txt"
     readme.write_text(
@@ -142,8 +155,8 @@ def write_android(www: Path) -> Path:
         "    applicationId 'beach.crabby'\n"
         "    minSdk 24\n"
         "    targetSdk 34\n"
-        "    versionCode 59\n"
-        "    versionName '0.059'\n"
+        "    versionCode 60\n"
+        "    versionName '0.060'\n"
         "  }\n"
         "  compileOptions {\n"
         "    sourceCompatibility JavaVersion.VERSION_17\n"
@@ -153,6 +166,9 @@ def write_android(www: Path) -> Path:
         "    release { minifyEnabled false }\n"
         "    debug { minifyEnabled false }\n"
         "  }\n"
+        "}\n"
+        "dependencies {\n"
+        "  implementation 'androidx.webkit:webkit:1.11.0'\n"
         "}\n",
         encoding="utf-8",
     )
@@ -160,7 +176,7 @@ def write_android(www: Path) -> Path:
         '<?xml version="1.0" encoding="utf-8"?>\n'
         '<manifest xmlns:android="http://schemas.android.com/apk/res/android">\n'
         '  <uses-permission android:name="android.permission.INTERNET" />\n'
-        "  <application android:label=\"Crabby Beach\" android:icon=\"@mipmap/ic_launcher\" android:usesCleartextTraffic=\"true\">\n"
+        "  <application android:label=\"Crabby Beach\" android:icon=\"@mipmap/ic_launcher\" android:hardwareAccelerated=\"true\" android:usesCleartextTraffic=\"true\">\n"
         '    <activity android:name=".MainActivity" android:exported="true" android:screenOrientation="portrait" android:configChanges="orientation|screenSize">\n'
         "      <intent-filter>\n"
         '        <action android:name="android.intent.action.MAIN" />\n'
@@ -180,7 +196,10 @@ def write_android(www: Path) -> Path:
         "import android.webkit.WebChromeClient;\n"
         "import android.webkit.WebSettings;\n"
         "import android.webkit.WebView;\n"
+        "import android.webkit.WebResourceRequest;\n"
+        "import android.webkit.WebResourceResponse;\n"
         "import android.webkit.WebViewClient;\n"
+        "import androidx.webkit.WebViewAssetLoader;\n"
         "public class MainActivity extends Activity {\n"
         "  @SuppressLint(\"SetJavaScriptEnabled\")\n"
         "  @Override protected void onCreate(Bundle savedInstanceState) {\n"
@@ -190,6 +209,7 @@ def write_android(www: Path) -> Path:
         "    WebSettings s = w.getSettings();\n"
         "    s.setJavaScriptEnabled(true);\n"
         "    s.setDomStorageEnabled(true);\n"
+        "    s.setDatabaseEnabled(true);\n"
         "    s.setMediaPlaybackRequiresUserGesture(false);\n"
         "    s.setAllowFileAccess(true);\n"
         "    s.setAllowContentAccess(true);\n"
@@ -198,9 +218,16 @@ def write_android(www: Path) -> Path:
         "    if (Build.VERSION.SDK_INT >= 21) {\n"
         "      s.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);\n"
         "    }\n"
-        "    w.setWebViewClient(new WebViewClient());\n"
+        "    final WebViewAssetLoader loader = new WebViewAssetLoader.Builder()\n"
+        "      .addPathHandler(\"/assets/\", new WebViewAssetLoader.AssetsPathHandler(this))\n"
+        "      .build();\n"
+        "    w.setWebViewClient(new WebViewClient() {\n"
+        "      @Override public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest req) {\n"
+        "        return loader.shouldInterceptRequest(req.getUrl());\n"
+        "      }\n"
+        "    });\n"
         "    w.setWebChromeClient(new WebChromeClient());\n"
-        "    w.loadUrl(\"file:///android_asset/www/index.html\");\n"
+        "    w.loadUrl(\"https://appassets.androidplatform.net/assets/www/index.html\");\n"
         "  }\n"
         "}\n",
         encoding="utf-8",

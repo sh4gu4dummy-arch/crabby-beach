@@ -10,6 +10,9 @@ export default defineConfig({
   resolve: {
     alias: { "@": path.resolve("/workspace/src") },
   },
+  define: {
+    "import.meta.env.VITE_AUTH_ENABLED": JSON.stringify("false"),
+  },
   build: {
     outDir: "/tmp/crabby-portable",
     emptyOutDir: true,

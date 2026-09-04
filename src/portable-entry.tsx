@@ -48,11 +48,13 @@ const router = createRouter({ routeTree, history: createHashHistory() });
 
 function mount() {
   const el = document.getElementById("app");
-  if (el) createRoot(el).render(<RouterProvider router={router} />);
+  if (!el || el.dataset.mounted === "1") return;
+  el.dataset.mounted = "1";
+  createRoot(el).render(<RouterProvider router={router} />);
 }
 
+mount();
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", mount);
-} else {
-  mount();
 }
+

@@ -163,9 +163,9 @@ export function GameCanvas() {
   const inGame = hud.phase === "playing" || hud.phase === "won" || hud.phase === "timesup";
 
   return (
-    <div className="flex h-dvh w-full justify-center overflow-hidden bg-sand" style={inGame ? { background: hud.skyFill } : undefined}>
+    <div className="flex h-full min-h-[100vh] w-full justify-center overflow-hidden bg-sand" style={inGame ? { background: hud.skyFill } : undefined}>
       <div
-        className="relative h-dvh w-full max-w-[28rem] overflow-hidden bg-sand text-ink"
+        className="relative h-full min-h-[100vh] w-full max-w-[28rem] overflow-hidden bg-sand text-ink"
         style={inGame ? { background: hud.skyFill } : undefined}
       >
       <canvas

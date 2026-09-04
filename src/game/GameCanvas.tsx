@@ -720,7 +720,7 @@ function IntroOverlay({
         </button>
       )}
       {playing && (
-        <p className="pointer-events-none absolute inset-x-3 bottom-28 z-10 rounded-pill bg-cream px-4 py-3 text-center text-xl font-bold leading-snug text-ink shadow-md">
+        <p className="pointer-events-none absolute inset-x-3 top-[max(4.4rem,calc(env(safe-area-inset-top)+3.4rem))] z-10 rounded-pill bg-cream/95 px-4 py-2 text-center text-base font-bold leading-snug text-ink shadow-md sm:text-lg">
           {caption}
         </p>
       )}

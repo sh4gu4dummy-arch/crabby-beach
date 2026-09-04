@@ -354,6 +354,11 @@ export function createGame(
     return (hour() - 1) / (MAX_LEVELS - 1);
   }
 
+  /** Luminescent shells start at 6pm, full by 9pm. Afternoon stays white. */
+  function shellGlow() {
+    return Math.max(0, (hour() - 5) / 4);
+  }
+
   function skyTint() {
     return SKY_TINTS[hour() - 1] ?? SKY_TINTS[0]!;
   }
@@ -1277,13 +1282,13 @@ export function createGame(
   }
 
   function drawFindSprite(item: Find, x: number, y: number, s: number, happy: boolean) {
-    const glow = nightGlow();
+    const glow = shellGlow();
     const hex = paintHex(item.color);
-    const light = happy ? hex : "#9effe0";
-    if (glow > 0.08) {
+    const light = happy ? hex : "#e8f6ff";
+    if (!happy && glow > 0.04) {
       ctx.save();
       ctx.globalCompositeOperation = "lighter";
-      ctx.globalAlpha = 0.18 + glow * 0.7;
+      ctx.globalAlpha = 0.12 + glow * 0.55;
       ctx.fillStyle = light;
       ctx.beginPath();
       ctx.ellipse(x, y, s * (0.42 + glow * 0.28), s * (0.32 + glow * 0.2), 0, 0, Math.PI * 2);
@@ -1293,22 +1298,22 @@ export function createGame(
     drawShadow(x, y, s * 0.34, s * 0.13);
     if (item.kind === "shell" && assets) {
       const base = assets.white[item.variant]!;
-      const img = happy ? colorizeSprite(base, hex) : glow > 0.35 ? colorizeSprite(base, "#c8ffe8") : base;
+      const img = happy ? colorizeSprite(base, hex) : base;
       drawCentered(img, x, y, s, s);
     } else if (item.kind === "starfish" && assets) {
       drawCentered(assets.starfish, x, y, s * 1.05, s * 1.05, false, happy ? 0.2 : 0);
     } else if (item.kind === "sanddollar") {
-      drawSandDollar(x, y, s, happy, happy ? hex : glow > 0.35 ? "#c8ffe8" : "#fff4dc");
+      drawSandDollar(x, y, s, happy, happy ? hex : "#fff4dc");
     } else {
-      drawSnail(x, y, s, happy, happy ? hex : glow > 0.35 ? "#c8ffe8" : "#fffce8");
+      drawSnail(x, y, s, happy, happy ? hex : "#fffce8");
     }
     if (!happy && item.paintLayer) {
       drawCentered(item.paintLayer, x, y, s, s);
     }
-    if (glow > 0.2) {
+    if (!happy && glow > 0.2) {
       ctx.save();
       ctx.globalCompositeOperation = "screen";
-      ctx.globalAlpha = glow * 0.45;
+      ctx.globalAlpha = glow * 0.4;
       ctx.strokeStyle = light;
       ctx.lineWidth = 2 + glow * 3;
       ctx.beginPath();

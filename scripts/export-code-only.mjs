@@ -27,6 +27,7 @@ const files = [
   "src/game/engine.ts",
   "src/game/GameCanvas.tsx",
   "scripts/make-crabby-voice.py",
+  "scripts/render-crabby.py",
   "src/routes/__root.tsx",
   "src/routes/index.tsx",
   "src/routes/grownups.tsx",

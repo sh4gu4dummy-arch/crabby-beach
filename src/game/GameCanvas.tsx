@@ -362,7 +362,7 @@ export function GameCanvas() {
                 className="absolute right-8 bottom-8 w-11 rotate-[22deg] drop-shadow-md"
               />
               <img
-                src={assetUrl("game/crab-idle-1.png")}
+                src={assetUrl("game/crabby/idle-green-0.png?v=051")}
                 alt=""
                 className="menu-crab relative z-10 w-28 drop-shadow-md"
               />

@@ -59,7 +59,7 @@ const SAND_LEFT = 130;
 const SAND_RIGHT = 1470;
 const CRAB_SPEED = 300;
 const HIT = 72;
-const CRAB_SIZE = 92;
+const CRAB_SIZE = 112;
 const FIND_SIZE = 56;
 const SKY_TINTS = [
   { fill: "#7ec8e3", multiply: "#f6e7b0", alpha: 0.04 },
@@ -157,6 +157,7 @@ type Assets = {
   starfish: HTMLImageElement;
   bucket: HTMLImageElement;
   pebble: HTMLImageElement;
+  crab: Record<PaintId, { idle: HTMLImageElement[]; walk: HTMLImageElement[] }>;
 };
 
 type TintCache = WeakMap<CanvasImageSource, HTMLCanvasElement>;
@@ -172,6 +173,12 @@ function loadImage(src: string) {
 }
 
 async function loadAssets(): Promise<Assets> {
+  const paintIds = PAINTS.map((p) => p.id);
+  const crabFiles = paintIds.flatMap((id) => [
+    loadImage(assetUrl(`game/crabby/idle-${id}-0.png?v=051`)),
+    loadImage(assetUrl(`game/crabby/idle-${id}-1.png?v=051`)),
+    ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crabby/walk-${id}-${i}.png?v=051`))),
+  ]);
   const [beach, ...rest] = await Promise.all([
     loadImage(assetUrl("game/beach.jpg?v=v003")),
     ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crab-walk-${i}.png?v=topdown2`))),
@@ -181,7 +188,19 @@ async function loadAssets(): Promise<Assets> {
     loadImage(assetUrl("game/prop-starfish.png?v=topdown2")),
     loadImage(assetUrl("game/prop-bucket.png?v=topdown2")),
     loadImage(assetUrl("game/prop-pebble.png?v=topdown2")),
+    ...crabFiles,
   ]);
+  const crabImgs = rest.slice(19) as HTMLImageElement[];
+  const crab = {} as Record<PaintId, { idle: HTMLImageElement[]; walk: HTMLImageElement[] }>;
+  paintIds.forEach((id, i) => {
+    const slice = crabImgs.slice(i * 6, i * 6 + 6);
+    const idle0 = slice[0]!;
+    const idle1 = slice[1]!;
+    crab[id] = {
+      idle: [idle0, idle1, idle0, idle1],
+      walk: slice.slice(2, 6),
+    };
+  });
   return {
     beach,
     walk: rest.slice(0, 4),
@@ -191,6 +210,7 @@ async function loadAssets(): Promise<Assets> {
     starfish: rest[16] as HTMLImageElement,
     bucket: rest[17] as HTMLImageElement,
     pebble: rest[18] as HTMLImageElement,
+    crab,
   };
 }
 
@@ -1433,28 +1453,26 @@ export function createGame(
         });
       }
 
-      const frames = crab.state === "walk" ? assets.walk : assets.idle;
-      const raw = frames[crab.frame]!;
-      const img = tintImage(raw, crabColor(), tintCache);
+      const kit = assets.crab[crab.paint] ?? assets.crab.green;
+      const frames = crab.state === "walk" ? kit.walk : kit.idle;
+      const img = frames[crab.frame]!;
       const waveRot = crab.wave > 0 ? Math.sin(crab.wave * 22) * 0.18 : 0;
       layers.push({
         y: crab.y + 8,
         z: 2,
         draw: () => {
           drawShadow(crab.x, crab.y, 28, 10);
-          drawBrush(crab.x, crab.y, crab.facing, paintHex(crab.paint), waveRot, "handle");
           drawCentered(img, crab.x, crab.y, CRAB_SIZE, CRAB_SIZE, crab.facing < 0, waveRot);
           if (crab.blink > 0) {
             ctx.save();
             ctx.globalAlpha = 0.85;
-            ctx.fillStyle = crabColor() === "blue" ? "#4ea8c9" : crabColor() === "yellow" ? "#e8c07a" : "#e85d4c";
+            ctx.fillStyle = "#e85d4c";
             ctx.beginPath();
             ctx.ellipse(crab.x + crab.facing * 8, crab.y - 10, 10, 3, 0, 0, Math.PI * 2);
             ctx.fill();
             ctx.restore();
           }
           drawHat(crab.x, crab.y, CRAB_SIZE, crabHat(), crab.facing < 0);
-          drawBrush(crab.x, crab.y, crab.facing, paintHex(crab.paint), waveRot, "head");
         },
       });
     }

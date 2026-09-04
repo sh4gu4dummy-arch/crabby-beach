@@ -11,6 +11,8 @@ import {
   setMusicEnabled,
   speak,
   speakCount,
+  startBrush,
+  stopBrush,
   unlockAudio,
 } from "./audio";
 
@@ -896,6 +898,7 @@ export function createGame(
   function handleUp() {
     brush.down = false;
     brush.swiping = false;
+    stopBrush();
   }
 
   function updateHover(ev: PointerEvent) {
@@ -927,6 +930,7 @@ export function createGame(
         const item = findUnder({ x: brush.x, y: brush.y });
         if (item && canPaint(item)) {
           item.paintTime += dt;
+          startBrush();
           if (Math.random() < 0.03) {
             particles.push({
               x: item.x + (Math.random() - 0.5) * 24,
@@ -943,7 +947,11 @@ export function createGame(
             });
           }
           if (item.paintTime >= FILL_SECS) paintFind(item);
+        } else {
+          stopBrush();
         }
+      } else {
+        stopBrush();
       }
       brush.swiping = false;
     }

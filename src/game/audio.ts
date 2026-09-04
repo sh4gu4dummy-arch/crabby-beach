@@ -10,20 +10,24 @@ let musicOn = true;
 let ambientStarted = false;
 let noiseBuffer: AudioBuffer | null = null;
 let voiceSrc: AudioBufferSourceNode | null = null;
+let brushSrc: AudioBufferSourceNode | null = null;
+let musicTimer: number | null = null;
 const voiceBufs = new Map<string, AudioBuffer>();
 let voicesLoading: Promise<void> | null = null;
 
 const VOICE_FILES: Record<string, string> = {
-  one: assetUrl("voice/one.mp3?v=050"),
-  two: assetUrl("voice/two.mp3?v=050"),
-  three: assetUrl("voice/three.mp3?v=050"),
-  four: assetUrl("voice/four.mp3?v=050"),
-  five: assetUrl("voice/five.mp3?v=050"),
-  six: assetUrl("voice/six.mp3?v=050"),
-  seven: assetUrl("voice/seven.mp3?v=050"),
-  eight: assetUrl("voice/eight.mp3?v=050"),
-  nine: assetUrl("voice/nine.mp3?v=050"),
-  ten: assetUrl("voice/ten.mp3?v=050"),
+  one: assetUrl("voice/crabby/one.mp3?v=062"),
+  two: assetUrl("voice/crabby/two.mp3?v=062"),
+  three: assetUrl("voice/crabby/three.mp3?v=062"),
+  four: assetUrl("voice/crabby/four.mp3?v=062"),
+  five: assetUrl("voice/crabby/five.mp3?v=062"),
+  six: assetUrl("voice/crabby/six.mp3?v=062"),
+  seven: assetUrl("voice/crabby/seven.mp3?v=062"),
+  eight: assetUrl("voice/crabby/eight.mp3?v=062"),
+  nine: assetUrl("voice/crabby/nine.mp3?v=062"),
+  ten: assetUrl("voice/crabby/ten.mp3?v=062"),
+  eleven: assetUrl("voice/crabby/eleven.mp3?v=062"),
+  twelve: assetUrl("voice/crabby/twelve.mp3?v=062"),
   "win-sunny": assetUrl("voice/win-sunny.mp3?v=050"),
   "win-sunset": assetUrl("voice/win-sunset.mp3?v=050"),
   "win-done": assetUrl("voice/win-done.mp3?v=050"),
@@ -45,7 +49,7 @@ function ensureGraph() {
   sfxBus = ctx.createGain();
   musicBus = ctx.createGain();
   sfxBus.gain.value = 0.85;
-  musicBus.gain.value = musicOn ? 0.18 : 0;
+  musicBus.gain.value = musicOn ? 0.12 : 0;
   master.gain.value = muted ? 0 : 1;
   sfxBus.connect(master);
   musicBus.connect(master);
@@ -133,7 +137,7 @@ export function isMuted() {
 export function setMusicEnabled(on: boolean) {
   musicOn = on;
   if (musicBus && ctx) {
-    musicBus.gain.setTargetAtTime(on ? 0.18 : 0, ctx.currentTime, 0.05);
+    musicBus.gain.setTargetAtTime(on ? 0.12 : 0, ctx.currentTime, 0.05);
   }
 }
 
@@ -147,7 +151,20 @@ export function speak(text: string) {
 }
 
 export function speakCount(n: number) {
-  const words = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
+  const words = [
+    "one",
+    "two",
+    "three",
+    "four",
+    "five",
+    "six",
+    "seven",
+    "eight",
+    "nine",
+    "ten",
+    "eleven",
+    "twelve",
+  ];
   const word = words[n - 1];
   if (word) playVoice(word);
 }
@@ -218,6 +235,36 @@ export function playDip() {
   beep(520, 0.16, "triangle", 0.1, at + 0.04, 740);
 }
 
+export function startBrush() {
+  if (!ctx || !sfxBus || !noiseBuffer || muted || brushSrc) return;
+  const src = ctx.createBufferSource();
+  src.buffer = noiseBuffer;
+  src.loop = true;
+  src.playbackRate.value = 0.92;
+  const filter = ctx.createBiquadFilter();
+  filter.type = "bandpass";
+  filter.frequency.value = 1650;
+  filter.Q.value = 1.4;
+  const g = ctx.createGain();
+  g.gain.value = 0.04;
+  src.connect(filter);
+  filter.connect(g);
+  g.connect(sfxBus);
+  src.start();
+  brushSrc = src;
+}
+
+export function stopBrush() {
+  if (brushSrc) {
+    try {
+      brushSrc.stop();
+    } catch {
+      /* already ended */
+    }
+    brushSrc = null;
+  }
+}
+
 export function playSparkle() {
   if (!ctx || muted) return;
   const at = tNow();
@@ -237,6 +284,22 @@ export function playWin() {
   });
 }
 
+function pluck(freq: number, dur: number, peak: number, at: number) {
+  if (!ctx || !musicBus) return;
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = "triangle";
+  osc.frequency.setValueAtTime(freq, at);
+  osc.frequency.exponentialRampToValueAtTime(freq * 0.98, at + dur);
+  g.gain.setValueAtTime(0.0001, at);
+  g.gain.exponentialRampToValueAtTime(Math.max(0.0002, peak), at + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+  osc.connect(g);
+  g.connect(musicBus);
+  osc.start(at);
+  osc.stop(at + dur + 0.05);
+}
+
 function startAmbient() {
   if (!ctx || !musicBus || !noiseBuffer || ambientStarted) return;
   ambientStarted = true;
@@ -246,32 +309,45 @@ function startAmbient() {
   src.loop = true;
   const filter = ctx.createBiquadFilter();
   filter.type = "lowpass";
-  filter.frequency.value = 420;
-  filter.Q.value = 0.6;
+  filter.frequency.value = 380;
+  filter.Q.value = 0.5;
   const g = ctx.createGain();
-  g.gain.value = 0.22;
+  g.gain.value = 0.1;
   src.connect(filter);
   filter.connect(g);
   g.connect(musicBus);
   src.start();
 
-  const swell = ctx.createOscillator();
-  const swellGain = ctx.createGain();
-  swell.type = "sine";
-  swell.frequency.value = 196;
-  swellGain.gain.value = 0.035;
-  swell.connect(swellGain);
-  swellGain.connect(musicBus);
-  swell.start();
+  const tune: Array<[number, number]> = [
+    [262, 0.55],
+    [330, 0.55],
+    [392, 0.8],
+    [330, 0.4],
+    [294, 0.7],
+    [262, 0.9],
+    [196, 0.7],
+    [262, 0.55],
+    [392, 0.55],
+    [440, 0.7],
+    [392, 0.5],
+    [330, 0.9],
+    [294, 0.55],
+    [262, 1.1],
+  ];
 
-  const swell2 = ctx.createOscillator();
-  const swell2Gain = ctx.createGain();
-  swell2.type = "sine";
-  swell2.frequency.value = 246.94;
-  swell2Gain.gain.value = 0.02;
-  swell2.connect(swell2Gain);
-  swell2Gain.connect(musicBus);
-  swell2.start();
+  const tick = () => {
+    if (!ctx || !musicOn) {
+      musicTimer = window.setTimeout(tick, 1200);
+      return;
+    }
+    let t = ctx.currentTime + 0.05;
+    for (const [freq, dur] of tune) {
+      pluck(freq, dur * 0.92, 0.045, t);
+      t += dur;
+    }
+    musicTimer = window.setTimeout(tick, (t - ctx.currentTime + 0.8) * 1000);
+  };
+  tick();
 }
 
 if (typeof document !== "undefined") {

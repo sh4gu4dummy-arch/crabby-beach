@@ -182,7 +182,7 @@ export function Grownups() {
           <h2 id="play-heading" className="text-xl font-bold">
             Play
           </h2>
-          <p className="mt-1 text-sm text-ink-soft">How many to find follows the clock: 3 at 1pm, up to 10 at night.</p>
+          <p className="mt-1 text-sm text-ink-soft">How many to find follows the clock: 1 at 1pm, up to 12 at midnight.</p>
           <p className="mt-4 text-sm font-semibold">Voice counts</p>
           <div className="mt-2 flex flex-wrap gap-2">
             <Choice
@@ -257,7 +257,7 @@ export function Grownups() {
             <button
               type="button"
               onClick={() => {
-                saveCleared(9);
+                saveCleared(12);
                 setProgress(loadProgress());
               }}
               className="inline-flex min-h-11 items-center justify-center rounded-pill bg-sand px-4 text-sm font-bold text-ink"
@@ -275,7 +275,7 @@ export function Grownups() {
               Reset hours
             </button>
           </div>
-          <p className="mt-2 text-xs text-ink-soft">Cleared {progress.cleared} / 9. Dev on unlocks every hour and the whole loadout.</p>
+          <p className="mt-2 text-xs text-ink-soft">Cleared {progress.cleared} / 12. Dev on unlocks every hour and the whole loadout.</p>
         </section>
 
         <section className="mt-10" aria-labelledby="downloads-heading">

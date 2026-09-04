@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Check, Home, Lock, Palette, Play, RotateCcw, Timer, UserRound, Volume2, VolumeX } from "lucide-react";
+import { Check, Home, Lock, Music2, Palette, Play, RotateCcw, Timer, UserRound, Volume2, VolumeX } from "lucide-react";
 import { SignedIn, SignedOut, UserButton } from "@/lib/auth/gates";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { loadSettings, saveSettings, type CrabColor, type CrabHat, type PenId } from "@/lib/settings";
@@ -65,6 +65,7 @@ export function GameCanvas() {
   const apiRef = useRef<GameApi | null>(null);
   const [hud, setHud] = useState<GameHud>(EMPTY);
   const [muted, setMutedUi] = useState(false);
+  const [music, setMusicUi] = useState(() => loadSettings().music);
   const [popOn, setPopOn] = useState(false);
   const [loadout, setLoadout] = useState(false);
   const [kit, setKit] = useState(() => loadSettings());
@@ -155,6 +156,14 @@ export function GameCanvas() {
     if (!next) unlockAudio();
   }
 
+  function toggleMusic() {
+    const next = !music;
+    setMusicUi(next);
+    saveSettings({ ...loadSettings(), music: next });
+    setMusicEnabled(next);
+    if (next) unlockAudio();
+  }
+
   const timerLabel =
     hud.secondsLeft == null
       ? null
@@ -184,6 +193,11 @@ export function GameCanvas() {
               {hud.level}
               <span className="text-ink-soft"> / {hud.maxLevel}</span>
             </p>
+            {hud.phase === "playing" || hud.phase === "won" ? (
+              <p className="text-[11px] font-bold tracking-wide text-ink-soft uppercase">
+                {hud.painted >= hud.total ? "All colored" : `${hud.total - hud.painted} left`}
+              </p>
+            ) : null}
           </div>
         </div>
         <div className="pointer-events-auto flex items-center gap-2">
@@ -227,24 +241,21 @@ export function GameCanvas() {
 
       {(hud.phase === "playing" || hud.phase === "won") && (
         <div
-          className="pointer-events-none absolute left-3 right-3 z-30"
-          style={{ top: "max(7.1rem, calc(env(safe-area-inset-top) + 5.6rem))" }}
+          className="pointer-events-none absolute left-3 right-3 z-20"
+          style={{ top: "max(4.85rem, calc(env(safe-area-inset-top) + 3.5rem))" }}
         >
-          <div className="sky-bar relative h-8 overflow-hidden rounded-pill bg-cream/90 shadow-md shadow-ink/10 ring-2 ring-cream-soft">
+          <div className="sky-bar relative h-2 overflow-hidden rounded-pill bg-cream/80 shadow-sm ring-1 ring-cream-soft">
             <div
               className="sky-bar-clip absolute inset-y-0 left-0 overflow-hidden rounded-pill"
               style={{ width: `${hud.total ? (hud.painted / hud.total) * 100 : 0}%` }}
             >
               <div className="sky-bar-fill" />
             </div>
-            <p className="absolute inset-0 grid place-items-center text-sm font-bold text-ink drop-shadow-[0_1px_0_rgba(255,246,232,0.8)]">
-              {hud.painted >= hud.total ? "All colored!" : `${hud.total - hud.painted} left`}
-            </p>
           </div>
         </div>
       )}
 
-      {hud.phase === "playing" && hud.painted === 0 && (
+      {hud.phase === "playing" && hud.painted === 0 && hud.hour === 1 && (
         <p className="pointer-events-none absolute bottom-32 left-1/2 z-10 w-[min(92%,20rem)] -translate-x-1/2 rounded-pill bg-cream/90 px-4 py-2.5 text-center text-sm font-semibold text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft">
           {hud.pen === "auto" ? "Tap a paint can or a white shell" : "Tap a shell so Crabby walks over, then paint"}
         </p>
@@ -266,14 +277,24 @@ export function GameCanvas() {
             <p className="rounded-pill bg-cream px-3 py-1 text-sm font-bold tracking-wide text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft">
               {APP_VERSION}{hud.dev ? " · DEV" : ""}
             </p>
-            <button
-              type="button"
-              onClick={toggleMute}
-              className="grid size-12 place-items-center rounded-pill bg-cream text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft"
-              aria-label={muted ? "Unmute sounds" : "Mute sounds"}
-            >
-              {muted ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={toggleMusic}
+                className="grid size-12 place-items-center rounded-pill bg-cream text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft"
+                aria-label={music ? "Turn beach music off" : "Turn beach music on"}
+              >
+                <Music2 className={`size-5 ${music ? "" : "opacity-40"}`} />
+              </button>
+              <button
+                type="button"
+                onClick={toggleMute}
+                className="grid size-12 place-items-center rounded-pill bg-cream text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft"
+                aria-label={muted ? "Unmute sounds" : "Mute sounds"}
+              >
+                {muted ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
+              </button>
+            </div>
           </div>
           <div className="relative z-10 mx-auto flex w-full max-w-sm flex-1 flex-col px-4 pb-2 text-center">
             <p className="mt-3 text-sm font-semibold tracking-wide text-sky-deep uppercase">From 1pm to midnight</p>
@@ -339,6 +360,18 @@ export function GameCanvas() {
             >
               <Play className="size-5" />
               Watch intro
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (window.confirm("Reset all hours? You'll start at 1pm again.")) {
+                  apiRef.current?.resetProgress();
+                }
+              }}
+              className="mt-2 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-pill bg-cream px-6 py-3 text-base font-bold text-ink ring-2 ring-sand-deep"
+            >
+              <RotateCcw className="size-5" />
+              Reset progress
             </button>
             {hud.dev && <p className="mt-2 text-xs font-bold tracking-wide text-coral uppercase">Dev mode on · all hours open</p>}
             <button

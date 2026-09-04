@@ -46,5 +46,13 @@ const grownupsRoute = createRoute({
 const routeTree = rootRoute.addChildren([indexRoute, grownupsRoute]);
 const router = createRouter({ routeTree, history: createHashHistory() });
 
-const el = document.getElementById("app");
-if (el) createRoot(el).render(<RouterProvider router={router} />);
+function mount() {
+  const el = document.getElementById("app");
+  if (el) createRoot(el).render(<RouterProvider router={router} />);
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", mount);
+} else {
+  mount();
+}

@@ -76,6 +76,12 @@ def assemble_portable() -> Path:
     if index.exists():
         html = index.read_text(encoding="utf-8")
         html = html.replace(' type="module"', "").replace(" crossorigin", "")
+        scripts = re.findall(r"<script[^>]*></script>|<script[^>]*src=\"[^\"]+\"[^>]*>\s*</script>", html)
+        for tag in scripts:
+            html = html.replace(tag, "", 1)
+        if scripts:
+            block = "\n    ".join(scripts)
+            html = html.replace("</body>", f"    {block}\n  </body>")
         index.write_text(html, encoding="utf-8")
     readme = dest / "README.txt"
     readme.write_text(
@@ -136,8 +142,8 @@ def write_android(www: Path) -> Path:
         "    applicationId 'beach.crabby'\n"
         "    minSdk 24\n"
         "    targetSdk 34\n"
-        "    versionCode 28\n"
-        "    versionName '0.028'\n"
+        "    versionCode 59\n"
+        "    versionName '0.059'\n"
         "  }\n"
         "  compileOptions {\n"
         "    sourceCompatibility JavaVersion.VERSION_17\n"
@@ -170,6 +176,7 @@ def write_android(www: Path) -> Path:
         "import android.annotation.SuppressLint;\n"
         "import android.app.Activity;\n"
         "import android.os.Bundle;\n"
+        "import android.os.Build;\n"
         "import android.webkit.WebChromeClient;\n"
         "import android.webkit.WebSettings;\n"
         "import android.webkit.WebView;\n"
@@ -186,6 +193,11 @@ def write_android(www: Path) -> Path:
         "    s.setMediaPlaybackRequiresUserGesture(false);\n"
         "    s.setAllowFileAccess(true);\n"
         "    s.setAllowContentAccess(true);\n"
+        "    s.setAllowFileAccessFromFileURLs(true);\n"
+        "    s.setAllowUniversalAccessFromFileURLs(true);\n"
+        "    if (Build.VERSION.SDK_INT >= 21) {\n"
+        "      s.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);\n"
+        "    }\n"
         "    w.setWebViewClient(new WebViewClient());\n"
         "    w.setWebChromeClient(new WebChromeClient());\n"
         "    w.loadUrl(\"file:///android_asset/www/index.html\");\n"

@@ -332,7 +332,7 @@ export function createGame(
   let level = 1;
   let cleared = loadCleared();
   let dev = loadDev();
-  const brush = { down: false, x: 800, y: 520 };
+  const brush = { down: false, swiping: false, x: 800, y: 520, lastX: 800, lastY: 520 };
   let cans: Array<{ id: PaintId; hex: string; x: number; y: number }> = [];
   const paintCache = new Map<string, HTMLCanvasElement>();
   const tintCache: TintCache = new WeakMap();
@@ -838,8 +838,11 @@ export function createGame(
     }
     const world = worldFromEvent(ev);
     brush.down = true;
+    brush.swiping = false;
     brush.x = world.x;
     brush.y = world.y;
+    brush.lastX = world.x;
+    brush.lastY = world.y;
 
     playTap();
     const rect = canvas.getBoundingClientRect();
@@ -865,8 +868,6 @@ export function createGame(
     if (best) {
       if (usingAuto() || !crabBeside(best)) {
         goTo(standByShell(best), best.id);
-      } else {
-        stampPaint(best, world.x, world.y);
       }
       return;
     }
@@ -880,15 +881,21 @@ export function createGame(
     updateHover(ev);
     if (phase !== "playing" || !brush.down) return;
     const world = worldFromEvent(ev);
+    const moved = dist(world, { x: brush.lastX, y: brush.lastY });
     brush.x = world.x;
     brush.y = world.y;
     if (usingAuto()) return;
+    if (moved < 3) return;
+    brush.swiping = true;
+    brush.lastX = world.x;
+    brush.lastY = world.y;
     const item = findUnder(world);
     if (item && canPaint(item)) stampPaint(item, world.x, world.y);
   }
 
   function handleUp() {
     brush.down = false;
+    brush.swiping = false;
   }
 
   function updateHover(ev: PointerEvent) {
@@ -916,11 +923,10 @@ export function createGame(
         phase = "timesup";
         emitHud();
       }
-      if (brush.down && !usingAuto()) {
+      if (brush.down && brush.swiping && !usingAuto()) {
         const item = findUnder({ x: brush.x, y: brush.y });
         if (item && canPaint(item)) {
           item.paintTime += dt;
-          stampPaint(item, brush.x, brush.y);
           if (Math.random() < 0.03) {
             particles.push({
               x: item.x + (Math.random() - 0.5) * 24,
@@ -939,6 +945,7 @@ export function createGame(
           if (item.paintTime >= FILL_SECS) paintFind(item);
         }
       }
+      brush.swiping = false;
     }
 
     for (const item of finds) {

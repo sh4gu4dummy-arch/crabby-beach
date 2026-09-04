@@ -1394,13 +1394,6 @@ export function createGame(
       } else {
         drawCentered(base, x, y, s, s);
         if (item.paintLayer) drawCentered(item.paintLayer, x, y, s, s);
-        const t = Math.min(1, item.paintTime / FILL_SECS);
-        if (t > 0.45) {
-          ctx.save();
-          ctx.globalAlpha = (t - 0.45) / 0.55;
-          drawCentered(colorizeSprite(base, paintHex(crab.paint)), x, y, s, s);
-          ctx.restore();
-        }
       }
     } else if (item.kind === "starfish" && assets) {
       drawCentered(assets.starfish, x, y, s * 1.05, s * 1.05, false, happy ? 0.2 : 0);

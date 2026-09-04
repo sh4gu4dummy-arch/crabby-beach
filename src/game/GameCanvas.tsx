@@ -312,8 +312,17 @@ export function GameCanvas() {
               <Palette className="size-5" />
               Loadout
             </button>
-            {hud.dev && <p className="mt-2 text-xs font-bold tracking-wide text-coral uppercase">Dev mode on</p>}
-            <div className="relative mt-auto flex min-h-[7.5rem] items-end justify-center pt-4">
+            {hud.dev && <p className="mt-2 text-xs font-bold tracking-wide text-coral uppercase">Dev mode on · all hours open</p>}
+            <button
+              type="button"
+              onClick={() => apiRef.current?.setDev(!hud.dev)}
+              className={`mt-2 min-h-10 self-center rounded-pill px-4 text-sm font-bold ring-2 ${
+                hud.dev ? "bg-coral text-cream ring-coral-deep" : "bg-cream/90 text-ink-soft ring-sand-deep"
+              }`}
+            >
+              Dev {hud.dev ? "on" : "off"}
+            </button>
+            <div className="relative mt-auto flex min-h-[7.5rem] items-end justify-center pt-3">
               <img
                 src={assetUrl("game/shell-white-2.png")}
                 alt=""

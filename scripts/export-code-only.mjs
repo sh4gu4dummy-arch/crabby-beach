@@ -29,6 +29,7 @@ const files = [
   "scripts/make-crabby-voice.py",
   "scripts/render-crabby.py",
   "scripts/render-shells.py",
+  "scripts/render-intro.py",
   "src/routes/__root.tsx",
   "src/routes/index.tsx",
   "src/routes/grownups.tsx",

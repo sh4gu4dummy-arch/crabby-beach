@@ -8,6 +8,8 @@ import {
   playTap,
   playWin,
   playDip,
+  playJewel,
+  playWave,
   setMusicEnabled,
   speak,
   speakCount,
@@ -36,6 +38,7 @@ export type GameHud = {
   finished: boolean;
   dev: boolean;
   extrasOpen: boolean;
+  tideBusy: boolean;
 };
 
 export type GameApi = {
@@ -88,6 +91,10 @@ export function hourLabel(hour: number) {
 const CAN_HIT = 56;
 const WATER_WALK = 118;
 const FILL_SECS = 1;
+const TIDE_IN = 1.28;
+const TIDE_OUT = 1.12;
+const TIDE_SHINE_AT = 1.5;
+const TIDE_END = 2.55;
 
 type PaintId = "red" | "orange" | "yellow" | "green" | "blue" | "purple" | "pink";
 
@@ -122,12 +129,17 @@ type Find = {
   variant: number;
   x: number;
   y: number;
+  homeX: number;
+  homeY: number;
+  startX: number;
+  startY: number;
   painted: boolean;
   pop: number;
   fly: number;
   slot: number;
   color: PaintId;
   paintTime: number;
+  shine: number;
   mask: HTMLCanvasElement | null;
   paintLayer: HTMLCanvasElement | null;
 };
@@ -331,6 +343,9 @@ export function createGame(
   let extraTime = 0;
   let pendingWin = false;
   let lastTick = -1;
+  let tideT = 0;
+  let tideWavePlayed = false;
+  let tideJewelPlayed = false;
   let level = 1;
   let cleared = loadCleared();
   let dev = loadDev();
@@ -450,6 +465,7 @@ export function createGame(
       finished: cleared >= MAX_LEVELS,
       dev,
       extrasOpen: extrasOpen(),
+      tideBusy: phase === "playing" && tideT < TIDE_END,
     });
   }
 
@@ -536,21 +552,30 @@ export function createGame(
         }
       }
     }
-    return spots.map((p, i) => ({
-      id: i,
-      kind: kinds[i] ?? "shell",
-      variant: i % 4,
-      x: p.x,
-      y: p.y,
-      painted: false,
-      pop: 1,
-      fly: 0,
-      slot: -1,
-      color: "green" as PaintId,
-      paintTime: 0,
-      mask: null,
-      paintLayer: null,
-    }));
+    return spots.map((p, i) => {
+      const startX = p.x + (Math.random() - 0.5) * 36;
+      const startY = 70 + Math.random() * 50;
+      return {
+        id: i,
+        kind: kinds[i] ?? "shell",
+        variant: i % 4,
+        x: startX,
+        y: startY,
+        homeX: p.x,
+        homeY: p.y,
+        startX,
+        startY,
+        painted: false,
+        pop: 1,
+        fly: 0,
+        slot: -1,
+        color: "green" as PaintId,
+        paintTime: 0,
+        shine: 0,
+        mask: null,
+        paintLayer: null,
+      };
+    });
   }
 
   function placeCans() {
@@ -592,6 +617,22 @@ export function createGame(
     crab.wave = 0;
     crab.blink = 0;
     crab.blinkWait = 2.4;
+    tideT = 0;
+    tideWavePlayed = false;
+    tideJewelPlayed = false;
+  }
+
+  function tideBusy() {
+    return phase === "playing" && tideT < TIDE_END;
+  }
+
+  function waveFrontY() {
+    const vis = sandView();
+    const rest = WATER_MAX + 16;
+    const deep = Math.min(vis.y1 + 36, SAND_BOT - 48);
+    if (tideT <= TIDE_IN) return rest + (deep - rest) * easeInOut(Math.min(1, tideT / TIDE_IN));
+    const u = Math.min(1, (tideT - TIDE_IN) / TIDE_OUT);
+    return deep + (rest - deep) * easeInOut(u);
   }
 
   function worldFromEvent(ev: PointerEvent): Vec {
@@ -832,6 +873,7 @@ export function createGame(
 
   function handlePointer(ev: PointerEvent) {
     if (phase === "loading" || phase === "won" || phase === "timesup" || phase === "menu") return;
+    if (tideBusy()) return;
     ev.preventDefault();
     try {
       canvas.setPointerCapture(ev.pointerId);
@@ -882,6 +924,7 @@ export function createGame(
   function handleMove(ev: PointerEvent) {
     updateHover(ev);
     if (phase !== "playing" || !brush.down) return;
+    if (tideBusy()) return;
     const world = worldFromEvent(ev);
     const moved = dist(world, { x: brush.lastX, y: brush.lastY });
     brush.x = world.x;
@@ -916,7 +959,37 @@ export function createGame(
     refreshSettings();
     time += dt;
     if (phase === "playing") {
-      playElapsed += dt;
+      if (!tideBusy()) playElapsed += dt;
+      if (tideT < TIDE_END + 0.4) {
+        const before = tideT;
+        tideT += dt;
+        if (!tideWavePlayed) {
+          tideWavePlayed = true;
+          playWave();
+        }
+        const ride = easeInOut(Math.min(1, tideT / TIDE_IN));
+        const front = waveFrontY();
+        for (const item of finds) {
+          if (item.painted) continue;
+          item.x = item.startX + (item.homeX - item.startX) * ride;
+          item.y = item.startY + (item.homeY - item.startY) * ride;
+          if (tideT < TIDE_IN) item.y = Math.min(item.y, front - 20);
+          else {
+            item.x = item.homeX;
+            item.y = item.homeY;
+          }
+          if (item.shine > 0) item.shine = Math.max(0, item.shine - dt * 1.4);
+        }
+        if (!tideJewelPlayed && before < TIDE_SHINE_AT && tideT >= TIDE_SHINE_AT) {
+          tideJewelPlayed = true;
+          playJewel();
+          for (const item of finds) {
+            item.shine = 1;
+            spawnSparkles(item.x, item.y, false);
+          }
+        }
+        if (before < TIDE_END && tideT >= TIDE_END) emitHud();
+      }
       const left = secondsLeft();
       if (left !== lastTick) {
         lastTick = left ?? -1;
@@ -1341,6 +1414,35 @@ export function createGame(
     ctx.restore();
   }
 
+  function drawTide() {
+    if (phase !== "playing" || tideT > TIDE_END) return;
+    const y = waveFrontY();
+    const night = nightGlow();
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(WORLD_W, 0);
+    for (let x = WORLD_W; x >= 0; x -= 18) {
+      const wiggle = Math.sin(x * 0.018 + time * 5.5) * 16 + Math.sin(x * 0.05 + time * 8) * 8;
+      ctx.lineTo(x, y + wiggle);
+    }
+    ctx.closePath();
+    ctx.fillStyle = night > 0.55 ? "rgba(28, 48, 92, 0.78)" : "rgba(46, 168, 196, 0.66)";
+    ctx.fill();
+    ctx.beginPath();
+    for (let x = 0; x <= WORLD_W; x += 14) {
+      const wiggle = Math.sin(x * 0.03 + time * 7.2) * 14;
+      if (x === 0) ctx.moveTo(x, y + wiggle - 6);
+      else ctx.lineTo(x, y + wiggle - 6);
+    }
+    ctx.lineTo(WORLD_W, y + 26);
+    ctx.lineTo(0, y + 26);
+    ctx.closePath();
+    ctx.fillStyle = night > 0.55 ? "rgba(210, 230, 255, 0.88)" : "rgba(255, 255, 255, 0.92)";
+    ctx.fill();
+    ctx.restore();
+  }
+
   function drawSkyMood() {
     const tint = skyTint();
     ctx.save();
@@ -1412,6 +1514,16 @@ export function createGame(
     }
     if (!happy && item.kind !== "shell" && item.paintLayer) {
       drawCentered(item.paintLayer, x, y, s, s);
+    }
+    if (!happy && item.shine > 0.04) {
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.globalAlpha = item.shine * (nightGlow() > 0.5 ? 0.85 : 0.55);
+      ctx.fillStyle = nightGlow() > 0.5 ? "#c8e8ff" : "#fff8c8";
+      ctx.beginPath();
+      ctx.ellipse(x, y, s * 0.46, s * 0.34, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     }
   }
 
@@ -1503,6 +1615,7 @@ export function createGame(
 
     if (assets) ctx.drawImage(assets.beach, 0, 0, WORLD_W, WORLD_H);
     drawWaterShimmer();
+    drawTide();
     drawSkyMood();
 
     type Layer = { y: number; z: number; draw: () => void };

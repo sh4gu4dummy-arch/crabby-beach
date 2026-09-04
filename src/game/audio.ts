@@ -284,6 +284,37 @@ export function playWin() {
   });
 }
 
+export function playWave() {
+  if (!ctx || !sfxBus || !noiseBuffer || muted) return;
+  const at = tNow();
+  const src = ctx.createBufferSource();
+  src.buffer = noiseBuffer;
+  src.playbackRate.value = 0.55;
+  const filter = ctx.createBiquadFilter();
+  filter.type = "lowpass";
+  filter.frequency.setValueAtTime(900, at);
+  filter.frequency.exponentialRampToValueAtTime(220, at + 1.1);
+  const g = ctx.createGain();
+  env(g, 0.28, 0.08, 1.25, at);
+  src.connect(filter);
+  filter.connect(g);
+  g.connect(sfxBus);
+  src.start(at);
+  src.stop(at + 1.35);
+  beep(90, 1.1, "sine", 0.1, at, 48);
+  beep(140, 0.9, "triangle", 0.05, at + 0.12, 70);
+}
+
+export function playJewel() {
+  if (!ctx || muted) return;
+  const at = tNow();
+  const notes = [1046.5, 1318.5, 1568, 2093];
+  notes.forEach((freq, i) => {
+    beep(freq, 0.38, "sine", 0.09 - i * 0.012, at + i * 0.07);
+    beep(freq * 2.01, 0.22, "triangle", 0.03, at + i * 0.07 + 0.02);
+  });
+}
+
 function pluck(freq: number, dur: number, peak: number, at: number) {
   if (!ctx || !musicBus) return;
   const osc = ctx.createOscillator();

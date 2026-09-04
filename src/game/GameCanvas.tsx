@@ -27,6 +27,7 @@ const EMPTY: GameHud = {
   finished: false,
   dev: false,
   extrasOpen: false,
+  tideBusy: false,
 };
 
 function AnalogClock({ hour, className = "size-10 shrink-0" }: { hour: number; className?: string }) {
@@ -255,7 +256,7 @@ export function GameCanvas() {
         </div>
       )}
 
-      {hud.phase === "playing" && hud.painted === 0 && hud.hour === 1 && (
+      {hud.phase === "playing" && hud.painted === 0 && hud.hour === 1 && !hud.tideBusy && (
         <p className="pointer-events-none absolute bottom-32 left-1/2 z-10 w-[min(92%,20rem)] -translate-x-1/2 rounded-pill bg-cream/90 px-4 py-2.5 text-center text-sm font-semibold text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft">
           {hud.pen === "auto" ? "Tap a paint can or a white shell" : "Tap a shell so Crabby walks over, then paint"}
         </p>
@@ -703,9 +704,9 @@ function IntroOverlay({
   }, [muted]);
 
   function captionAt(t: number) {
-    if (t < 2.4) return "Hiii! I'm Crabby!";
-    if (t < 4.8) return "Tap a white shell!";
-    if (t < 7.6) return "Whoooosh! I will walk over!";
+    if (t < 2.2) return "Hiii! I'm Crabby!";
+    if (t < 5.0) return "Tap a white shell!";
+    if (t < 8.2) return "Whoooosh! I will walk over!";
     if (t < 10.4) return "Paint it with your finger!";
     return "Yaaay! Let's play!";
   }
@@ -723,7 +724,7 @@ function IntroOverlay({
     <div className="absolute inset-0 z-50 bg-ink">
       <video
         ref={ref}
-        src={assetUrl("game/intro.mp4?v=047")}
+        src={assetUrl("game/intro.mp4?v=063")}
         playsInline
         className="h-full w-full object-contain bg-sand"
         onTimeUpdate={(e) => setCaption(captionAt(e.currentTarget.currentTime))}

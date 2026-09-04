@@ -5,6 +5,7 @@ import { SignedIn, SignedOut, UserButton } from "@/lib/auth/gates";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { loadSettings, saveSettings, type CrabColor, type CrabHat, type PenId } from "@/lib/settings";
 import { APP_VERSION } from "@/lib/version";
+import { assetUrl } from "@/lib/asset";
 import { isMuted, setMuted, setMusicEnabled, unlockAudio } from "./audio";
 import { createGame, HOUR_SKIES, type GameApi, type GameHud } from "./engine";
 
@@ -239,8 +240,9 @@ export function GameCanvas() {
       )}
 
       {hud.phase === "menu" && !loadout && (
-        <div className="absolute inset-0 z-30 flex flex-col overflow-y-auto bg-sand px-4 pt-[max(1.1rem,env(safe-area-inset-top))] pb-[max(1.1rem,env(safe-area-inset-bottom))]">
-          <div className="mb-3 flex items-center justify-between">
+        <div className="menu-sky absolute inset-0 z-30 flex flex-col overflow-y-auto">
+          <div className="menu-sun" aria-hidden="true" />
+          <div className="relative z-10 flex items-center justify-between px-4 pt-[max(1.1rem,env(safe-area-inset-top))]">
             <p className="rounded-pill bg-cream px-3 py-1 text-sm font-bold tracking-wide text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft">
               {APP_VERSION}{hud.dev ? " · DEV" : ""}
             </p>
@@ -253,43 +255,47 @@ export function GameCanvas() {
               {muted ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
             </button>
           </div>
-          <div className="mx-auto flex w-full max-w-sm flex-1 flex-col text-center">
-            <p className="text-sky-deep text-sm font-semibold tracking-wide uppercase">Nine little hours</p>
-            <h1 className="mt-1 text-3xl font-bold tracking-tight text-coral">Crabby Beach</h1>
+          <div className="relative z-10 mx-auto flex w-full max-w-sm flex-1 flex-col px-4 pb-2 text-center">
+            <p className="mt-3 text-sm font-semibold tracking-wide text-sky-deep uppercase">Nine little hours</p>
+            <h1 className="mt-1 text-[2.4rem] leading-none font-bold tracking-tight text-coral drop-shadow-[0_2px_0_rgba(255,246,232,0.8)]">
+              Crabby Beach
+            </h1>
             <p className="mt-2 text-sm leading-relaxed text-ink-soft">Pick an hour. Finish it to open the next one.</p>
-            <div className="mt-4 grid grid-cols-3 gap-2">
-              {HOUR_SKIES.map((sky, i) => {
-                const hour = i + 1;
-                const open = hour <= hud.unlocked;
-                const done = hour <= hud.cleared;
-                return (
-                  <button
-                    key={hour}
-                    type="button"
-                    disabled={!open}
-                    onClick={() => playHour(hour)}
-                    className="relative flex min-h-[4.6rem] flex-col items-center justify-center gap-0.5 rounded-card px-1 py-2 shadow-sm ring-2 disabled:cursor-not-allowed"
-                    style={
-                      open
-                        ? { background: sky, color: hour >= 7 ? "#fff6e8" : "#3a2a22", boxShadow: "inset 0 0 0 2px rgba(255,246,232,0.45)" }
-                        : { background: "#e8d7c0", color: "#8a7468" }
-                    }
-                    aria-label={open ? `${hour}pm` : `${hour}pm locked`}
-                  >
-                    {open ? (
-                      <AnalogClock hour={hour} className="size-8" />
-                    ) : (
-                      <Lock className="size-5 opacity-70" />
-                    )}
-                    <span className="text-sm font-bold">{hour}pm</span>
-                    {done && (
-                      <span className="absolute top-1 right-1 grid size-5 place-items-center rounded-full bg-mint text-cream">
-                        <Check className="size-3.5" strokeWidth={3} />
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
+            <div className="mt-4 rounded-[1.75rem] bg-cream/95 p-3 shadow-lg shadow-ink/10 ring-4 ring-cream-soft">
+              <div className="grid grid-cols-3 gap-2">
+                {HOUR_SKIES.map((sky, i) => {
+                  const hour = i + 1;
+                  const open = hour <= hud.unlocked;
+                  const done = hour <= hud.cleared;
+                  return (
+                    <button
+                      key={hour}
+                      type="button"
+                      disabled={!open}
+                      onClick={() => playHour(hour)}
+                      className="relative flex min-h-[4.5rem] flex-col items-center justify-center gap-0.5 rounded-2xl px-1 py-2 shadow-sm ring-2 disabled:cursor-not-allowed"
+                      style={
+                        open
+                          ? { background: sky, color: hour >= 7 ? "#fff6e8" : "#3a2a22", boxShadow: "inset 0 0 0 2px rgba(255,246,232,0.55)" }
+                          : { background: "#efe0c8", color: "#8a7468" }
+                      }
+                      aria-label={open ? `${hour}pm` : `${hour}pm locked`}
+                    >
+                      {open ? (
+                        <AnalogClock hour={hour} className="size-8" />
+                      ) : (
+                        <Lock className="size-5 opacity-70" />
+                      )}
+                      <span className="text-sm font-bold">{hour}pm</span>
+                      {done && (
+                        <span className="absolute top-1 right-1 grid size-5 place-items-center rounded-full bg-mint text-cream">
+                          <Check className="size-3.5" strokeWidth={3} />
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
             <button
               type="button"
@@ -307,9 +313,26 @@ export function GameCanvas() {
               Loadout
             </button>
             {hud.dev && <p className="mt-2 text-xs font-bold tracking-wide text-coral uppercase">Dev mode on</p>}
+            <div className="relative mt-auto flex min-h-[7.5rem] items-end justify-center pt-4">
+              <img
+                src={assetUrl("game/shell-white-2.png")}
+                alt=""
+                className="absolute bottom-6 left-6 w-12 rotate-[-18deg] drop-shadow-md"
+              />
+              <img
+                src={assetUrl("game/shell-white-4.png")}
+                alt=""
+                className="absolute right-8 bottom-8 w-11 rotate-[22deg] drop-shadow-md"
+              />
+              <img
+                src={assetUrl("game/crab-idle-1.png")}
+                alt=""
+                className="menu-crab relative z-10 w-28 drop-shadow-md"
+              />
+            </div>
             <Link
               to="/grownups"
-              className="mt-4 inline-block text-xs font-semibold tracking-wide text-ink-soft/70 uppercase hover:text-ink-soft"
+              className="mt-1 mb-1 inline-block text-xs font-semibold tracking-wide text-ink-soft/70 uppercase hover:text-ink-soft"
             >
               Grown-ups
             </Link>
@@ -485,8 +508,9 @@ function LoadoutCard({
   onBack: () => void;
 }) {
   return (
-    <div className="absolute inset-0 z-30 overflow-y-auto bg-sand px-4 pt-[max(1.1rem,env(safe-area-inset-top))] pb-[max(1.1rem,env(safe-area-inset-bottom))]">
-      <div className="mx-auto w-full max-w-sm text-center">
+    <div className="menu-sky absolute inset-0 z-30 overflow-y-auto px-4 pt-[max(1.1rem,env(safe-area-inset-top))] pb-[max(1.1rem,env(safe-area-inset-bottom))]">
+      <div className="menu-sun" aria-hidden="true" />
+      <div className="relative z-10 mx-auto w-full max-w-sm text-center">
         <p className="text-sky-deep text-sm font-semibold tracking-wide uppercase">Your kit</p>
         <h2 className="mt-1 text-3xl font-bold tracking-tight text-coral">Loadout</h2>
         <p className="mt-2 text-sm text-ink-soft">

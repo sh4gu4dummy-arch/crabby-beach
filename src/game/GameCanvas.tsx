@@ -139,18 +139,21 @@ export function GameCanvas() {
       ? null
       : `${Math.floor(hud.secondsLeft / 60)}:${String(hud.secondsLeft % 60).padStart(2, "0")}`;
 
+  const inGame = hud.phase === "playing" || hud.phase === "won" || hud.phase === "timesup";
+
   return (
-    <div className="flex h-dvh w-full justify-center overflow-hidden" style={{ background: hud.skyFill }}>
+    <div className="flex h-dvh w-full justify-center overflow-hidden bg-sand" style={inGame ? { background: hud.skyFill } : undefined}>
       <div
-        className="relative h-dvh w-full max-w-[28rem] overflow-hidden text-ink"
-        style={{ background: hud.skyFill }}
+        className="relative h-dvh w-full max-w-[28rem] overflow-hidden bg-sand text-ink"
+        style={inGame ? { background: hud.skyFill } : undefined}
       >
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 h-full w-full touch-none select-none"
+        className={`absolute inset-0 h-full w-full touch-none select-none ${inGame ? "" : "invisible"}`}
         aria-label="Crabby walking on the beach"
       />
 
+      {inGame && (
       <header className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-2 px-3 pb-3 pt-[max(0.7rem,env(safe-area-inset-top))]">
         <div className="flex items-center gap-2 rounded-pill bg-cream/90 py-1.5 pr-4 pl-1.5 shadow-md shadow-ink/10 ring-2 ring-cream-soft">
           <AnalogClock hour={hud.hour} />
@@ -190,6 +193,7 @@ export function GameCanvas() {
           <AuthChip />
         </div>
       </header>
+      )}
 
       {popOn && hud.countPop != null && (
         <div
@@ -235,8 +239,21 @@ export function GameCanvas() {
       )}
 
       {hud.phase === "menu" && !loadout && (
-        <div className="absolute inset-0 z-20 grid place-items-end bg-ink/25 px-3 pt-4 pb-[max(0.6rem,env(safe-area-inset-bottom))]">
-          <div className="max-h-[min(92dvh,40rem)] w-full overflow-y-auto rounded-t-card rounded-b-3xl bg-cream px-4 py-5 text-center shadow-xl shadow-ink/20 ring-4 ring-cream-soft">
+        <div className="absolute inset-0 z-30 flex flex-col overflow-y-auto bg-sand px-4 pt-[max(1.1rem,env(safe-area-inset-top))] pb-[max(1.1rem,env(safe-area-inset-bottom))]">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="rounded-pill bg-cream px-3 py-1 text-sm font-bold tracking-wide text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft">
+              {APP_VERSION}{hud.dev ? " · DEV" : ""}
+            </p>
+            <button
+              type="button"
+              onClick={toggleMute}
+              className="grid size-12 place-items-center rounded-pill bg-cream text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft"
+              aria-label={muted ? "Unmute sounds" : "Mute sounds"}
+            >
+              {muted ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
+            </button>
+          </div>
+          <div className="mx-auto flex w-full max-w-sm flex-1 flex-col text-center">
             <p className="text-sky-deep text-sm font-semibold tracking-wide uppercase">Nine little hours</p>
             <h1 className="mt-1 text-3xl font-bold tracking-tight text-coral">Crabby Beach</h1>
             <p className="mt-2 text-sm leading-relaxed text-ink-soft">Pick an hour. Finish it to open the next one.</p>
@@ -284,7 +301,7 @@ export function GameCanvas() {
             <button
               type="button"
               onClick={() => setLoadout(true)}
-              className="mt-2 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-pill bg-cream-soft px-6 py-3 text-base font-bold text-ink ring-2 ring-sand-deep"
+              className="mt-2 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-pill bg-cream px-6 py-3 text-base font-bold text-ink ring-2 ring-sand-deep"
             >
               <Palette className="size-5" />
               Loadout
@@ -292,7 +309,7 @@ export function GameCanvas() {
             {hud.dev && <p className="mt-2 text-xs font-bold tracking-wide text-coral uppercase">Dev mode on</p>}
             <Link
               to="/grownups"
-              className="mt-3 inline-block text-xs font-semibold tracking-wide text-ink-soft/70 uppercase hover:text-ink-soft"
+              className="mt-4 inline-block text-xs font-semibold tracking-wide text-ink-soft/70 uppercase hover:text-ink-soft"
             >
               Grown-ups
             </Link>
@@ -406,9 +423,11 @@ export function GameCanvas() {
         </div>
       )}
 
+      {inGame && (
       <p className="pointer-events-none absolute top-[4.6rem] right-3 z-10 rounded-pill bg-cream px-3 py-1 text-sm font-bold tracking-wide text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft">
         {APP_VERSION}{hud.dev ? " · DEV" : ""}
       </p>
+      )}
 
       <div className="turn-phone pointer-events-none absolute inset-0 z-40 hidden place-items-center bg-sky px-8 text-center">
         <div>
@@ -466,8 +485,8 @@ function LoadoutCard({
   onBack: () => void;
 }) {
   return (
-    <div className="absolute inset-0 z-20 grid place-items-end bg-ink/25 px-3 pt-4 pb-[max(0.6rem,env(safe-area-inset-bottom))]">
-      <div className="max-h-[min(92dvh,40rem)] w-full overflow-y-auto rounded-t-card rounded-b-3xl bg-cream px-4 py-5 text-center shadow-xl shadow-ink/20 ring-4 ring-cream-soft">
+    <div className="absolute inset-0 z-30 overflow-y-auto bg-sand px-4 pt-[max(1.1rem,env(safe-area-inset-top))] pb-[max(1.1rem,env(safe-area-inset-bottom))]">
+      <div className="mx-auto w-full max-w-sm text-center">
         <p className="text-sky-deep text-sm font-semibold tracking-wide uppercase">Your kit</p>
         <h2 className="mt-1 text-3xl font-bold tracking-tight text-coral">Loadout</h2>
         <p className="mt-2 text-sm text-ink-soft">

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Check, Home, Lock, Palette, RotateCcw, Timer, UserRound, Volume2, VolumeX } from "lucide-react";
+import { Check, Home, Lock, Palette, Play, RotateCcw, Timer, UserRound, Volume2, VolumeX } from "lucide-react";
 import { SignedIn, SignedOut, UserButton } from "@/lib/auth/gates";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { loadSettings, saveSettings, type CrabColor, type CrabHat, type PenId } from "@/lib/settings";
@@ -332,6 +332,14 @@ export function GameCanvas() {
               <Palette className="size-5" />
               Loadout
             </button>
+            <button
+              type="button"
+              onClick={() => setShowIntro(true)}
+              className="mt-2 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-pill bg-cream px-6 py-3 text-base font-bold text-ink ring-2 ring-sand-deep"
+            >
+              <Play className="size-5" />
+              Watch intro
+            </button>
             {hud.dev && <p className="mt-2 text-xs font-bold tracking-wide text-coral uppercase">Dev mode on · all hours open</p>}
             <button
               type="button"
@@ -361,17 +369,10 @@ export function GameCanvas() {
             </div>
             <Link
               to="/grownups"
-              className="mt-1 mb-1 inline-block text-xs font-semibold tracking-wide text-ink-soft/70 uppercase hover:text-ink-soft"
+              className="mt-1 mb-2 inline-block text-xs font-semibold tracking-wide text-ink-soft/70 uppercase hover:text-ink-soft"
             >
               Grown-ups
             </Link>
-            <button
-              type="button"
-              onClick={() => setShowIntro(true)}
-              className="mt-1 mb-2 text-xs font-semibold tracking-wide text-ink-soft/70 uppercase hover:text-ink-soft"
-            >
-              Watch intro
-            </button>
           </div>
         </div>
       )}

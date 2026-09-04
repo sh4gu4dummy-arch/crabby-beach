@@ -1,6 +1,6 @@
-# export-naming.md — v.034
+# export-naming.md — v.035
 
-Current product version: **v.033** (Crabby Beach)
+Current product version: **v.034** (Crabby Beach)
 
 ## How filenames work
 
@@ -9,11 +9,11 @@ so you can tell which version a file is just by looking at it.
 
 | Package | Filename | What it is |
 | --- | --- | --- |
-| Code only | `crabby-beach-v.033-code.md` | One Markdown document: table of contents + essential source in fenced code blocks. For read / search / share / archive. **Not runnable.** No voice, no art assets. |
-| Code + assets (full) | `crabby-beach-v.033-codebase.zip` | Complete project tree, including data, generated assets, and config, for offline rebuild. |
-| Portable app | `crabby-beach-v.033-portable.zip` | Playable, offline-ready. Unzip and open. |
-| Android project | `crabby-beach-v.033-android.zip` | Android project + build readme. |
-| Android APK | `crabby-beach-v.033.apk` | Installable APK for this version. |
+| Code only | `crabby-beach-v.034-code.md` | One Markdown document: table of contents + essential source in fenced code blocks. For read / search / share / archive. **Not runnable.** No voice, no art assets. |
+| Code + assets (full) | `crabby-beach-v.034-codebase.zip` | Complete project tree, including data, generated assets, and config, for offline rebuild. |
+| Portable app | `crabby-beach-v.034-portable.zip` | Playable, offline-ready. Unzip and open. |
+| Android project | `crabby-beach-v.034-android.zip` | Android project + build readme. |
+| Android APK | `crabby-beach-v.034.apk` | Installable APK for this version. |
 
 Older files keep their names (`v.001` stays `v.001`). New exports use the current number.
 
@@ -31,5 +31,5 @@ Older files keep their names (`v.001` stays `v.001`). New exports use the curren
 ## Version numbers
 
 - Product versions increment `v.001`, `v.002`, `v.003`, …
-- This naming document started at `v.001` and is now **v.034**.
+- This naming document started at `v.001` and is now **v.035**.
 - Never skip or reuse a number. A new version is a new number.

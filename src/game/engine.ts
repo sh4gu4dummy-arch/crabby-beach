@@ -291,9 +291,8 @@ export function createGame(
   let countKey = 0;
   let playElapsed = 0;
   let extraTime = 0;
-  let hermit: { x: number; y: number; life: number } | null = null;
-  let lastTick = -1;
   let pendingWin = false;
+  let lastTick = -1;
   let level = 1;
   let cleared = loadCleared();
   let dev = loadDev();
@@ -502,7 +501,6 @@ export function createGame(
     finds = placeFinds(vis);
     placeCans();
     particles = [];
-    hermit = null;
     pendingWin = false;
     countPop = null;
     playElapsed = 0;
@@ -704,7 +702,6 @@ export function createGame(
     crab.wave = 0.55;
     if (settings.voiceCounts) speakCount(n);
     if (last) {
-      hermit = { x: item.x, y: item.y - 8, life: 2.4 };
       pendingWin = true;
     }
     emitHud();
@@ -883,12 +880,7 @@ export function createGame(
       emitHud();
     }
 
-    if (hermit) {
-      hermit.life -= dt;
-      if (hermit.life <= 0) hermit = null;
-    }
-
-    crab.wave = Math.max(0, crab.wave - dt);
+    if (crab.wave > 0) crab.wave = Math.max(0, crab.wave - dt);
     if (crab.blink > 0) crab.blink = Math.max(0, crab.blink - dt);
     else {
       crab.blinkWait -= dt;
@@ -1169,32 +1161,6 @@ export function createGame(
     ctx.restore();
   }
 
-  function drawHermit(x: number, y: number, life: number) {
-    const peek = Math.sin((1 - Math.min(1, life / 2.4)) * Math.PI) * 14;
-    ctx.save();
-    ctx.translate(x, y - peek);
-    ctx.fillStyle = "#e8a060";
-    ctx.beginPath();
-    ctx.ellipse(0, 8, 16, 12, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#e85d4c";
-    ctx.beginPath();
-    ctx.arc(-8, -2, 6, 0, Math.PI * 2);
-    ctx.arc(8, -2, 6, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#fff6e8";
-    ctx.beginPath();
-    ctx.arc(-8, -3, 2.6, 0, Math.PI * 2);
-    ctx.arc(8, -3, 2.6, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#3a2a22";
-    ctx.beginPath();
-    ctx.arc(-8, -3, 1.2, 0, Math.PI * 2);
-    ctx.arc(8, -3, 1.2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  }
-
   function drawHat(x: number, y: number, size: number, hat: CrabHat, flip: boolean) {
     if (hat === "none") return;
     ctx.save();
@@ -1459,14 +1425,6 @@ export function createGame(
           y: item.y,
           z: focus ? 4 : 1,
           draw: () => drawFind(item),
-        });
-      }
-
-      if (hermit) {
-        layers.push({
-          y: hermit.y,
-          z: 3,
-          draw: () => drawHermit(hermit!.x, hermit!.y, hermit!.life),
         });
       }
 

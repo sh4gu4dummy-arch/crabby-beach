@@ -199,7 +199,7 @@ async function loadAssets(): Promise<Assets> {
     loadImage(assetUrl("game/beach.jpg?v=v003")),
     ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crab-walk-${i}.png?v=topdown2`))),
     ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crab-idle-${i}.png?v=topdown2`))),
-    ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/shell-white-${i}.png?v=054`))),
+    ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/shell-white-${i}.png?v=055`))),
     ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/shell-green-${i}.png?v=v003`))),
     loadImage(assetUrl("game/prop-starfish.png?v=topdown2")),
     loadImage(assetUrl("game/prop-bucket.png?v=topdown2")),
@@ -637,7 +637,7 @@ export function createGame(
     mx.imageSmoothingEnabled = true;
     mx.imageSmoothingQuality = "high";
     mx.translate(PAINT_RES / 2, PAINT_RES / 2);
-    const s = PAINT_RES * 0.9;
+    const s = PAINT_RES;
     if (item.kind === "shell" && assets) {
       mx.drawImage(assets.white[item.variant]!, -s / 2, -s / 2, s, s);
     } else if (item.kind === "starfish" && assets) {
@@ -679,11 +679,14 @@ export function createGame(
     if (!px) return;
     px.imageSmoothingEnabled = true;
     px.imageSmoothingQuality = "high";
-    const r = PAINT_RES * 0.2;
+    const r = PAINT_RES * 0.28;
     const hex = paintHex(crab.paint);
-    const g = px.createRadialGradient(lx, ly, r * 0.12, lx, ly, r);
+    px.fillStyle = hex;
+    px.beginPath();
+    px.arc(lx, ly, r * 0.72, 0, Math.PI * 2);
+    px.fill();
+    const g = px.createRadialGradient(lx, ly, r * 0.55, lx, ly, r);
     g.addColorStop(0, hex);
-    g.addColorStop(0.55, hex);
     g.addColorStop(1, hexRgba(hex, 0));
     px.fillStyle = g;
     px.beginPath();
@@ -1082,15 +1085,10 @@ export function createGame(
     if (!x) return src;
     x.imageSmoothingEnabled = true;
     x.imageSmoothingQuality = "high";
-    x.drawImage(src, 0, 0);
+    x.fillStyle = hex;
+    x.fillRect(0, 0, c.width, c.height);
     x.globalCompositeOperation = "multiply";
-    x.fillStyle = hex;
-    x.fillRect(0, 0, c.width, c.height);
-    x.globalCompositeOperation = "source-atop";
-    x.globalAlpha = 0.28;
-    x.fillStyle = hex;
-    x.fillRect(0, 0, c.width, c.height);
-    x.globalAlpha = 1;
+    x.drawImage(src, 0, 0);
     x.globalCompositeOperation = "destination-in";
     x.drawImage(src, 0, 0);
     paintCache.set(key, c);
@@ -1384,8 +1382,18 @@ export function createGame(
     drawShadow(x, y, s * 0.34, s * 0.13);
     if (item.kind === "shell" && assets) {
       const base = assets.white[item.variant]!;
-      const img = happy ? colorizeSprite(base, hex) : base;
-      drawCentered(img, x, y, s, s);
+      if (happy) {
+        drawCentered(colorizeSprite(base, hex), x, y, s, s);
+      } else {
+        drawCentered(base, x, y, s, s);
+        if (item.paintTime > 0) {
+          const t = Math.min(1, item.paintTime / FILL_SECS);
+          ctx.save();
+          ctx.globalAlpha = 0.45 + 0.55 * t;
+          drawCentered(colorizeSprite(base, paintHex(crab.paint)), x, y, s, s);
+          ctx.restore();
+        }
+      }
     } else if (item.kind === "starfish" && assets) {
       drawCentered(assets.starfish, x, y, s * 1.05, s * 1.05, false, happy ? 0.2 : 0);
     } else if (item.kind === "sanddollar") {
@@ -1393,29 +1401,16 @@ export function createGame(
     } else {
       drawSnail(x, y, s, happy, happy ? hex : "#fffce8");
     }
-    if (!happy && item.paintLayer) {
+    if (!happy && item.kind !== "shell" && item.paintLayer) {
       drawCentered(item.paintLayer, x, y, s, s);
-    }
-    if (!happy && glow > 0.2) {
-      ctx.save();
-      ctx.globalCompositeOperation = "screen";
-      ctx.globalAlpha = glow * 0.4;
-      ctx.strokeStyle = light;
-      ctx.lineWidth = 2 + glow * 3;
-      ctx.beginPath();
-      ctx.ellipse(x, y, s * 0.38, s * 0.3, 0, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
     }
   }
 
   function drawFind(item: Find) {
     if (item.painted) return;
     const pulse = 1 + Math.sin(time * 2.4 + item.id) * 0.03;
-    const n = Math.max(finds.length, 1);
-    const base = n >= 10 ? 48 : n >= 8 ? 52 : FIND_SIZE;
     const focus = crabBeside(item) ? 1.14 : 1;
-    const s = base * pulse * focus;
+    const s = findSize() * pulse * focus;
     drawFindSprite(item, item.x, item.y, s, false);
   }
 

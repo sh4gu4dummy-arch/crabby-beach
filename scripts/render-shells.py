@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""High-res pearly cartoon shells, transparent PNGs."""
+"""Bold, readable cartoon shells — cream with dark ridges, hard alpha."""
 from __future__ import annotations
 
 import math
@@ -10,6 +10,11 @@ from PIL import Image, ImageDraw, ImageFilter
 OUT = Path("/workspace/public/game")
 SIZE = 256
 CX = CY = SIZE / 2
+CREAM = (255, 214, 150, 255)
+CREAM_LT = (255, 236, 190, 255)
+RIDGE = (166, 96, 42, 255)
+EDGE = (110, 58, 28, 255)
+BELLY = (255, 244, 214, 255)
 
 
 def new() -> tuple[Image.Image, ImageDraw.ImageDraw]:
@@ -17,108 +22,93 @@ def new() -> tuple[Image.Image, ImageDraw.ImageDraw]:
     return img, ImageDraw.Draw(img, "RGBA")
 
 
-def pearl(t: float) -> tuple[int, int, int, int]:
-    t = max(0, min(1, t))
-    r = int(255 * (0.92 + 0.08 * t))
-    g = int(248 * (0.90 + 0.10 * t))
-    b = int(236 * (0.88 + 0.12 * t))
-    return (r, g, b, 255)
+def flatten(img: Image.Image) -> Image.Image:
+    px = img.load()
+    w, h = img.size
+    for y in range(h):
+        for x in range(w):
+            r, g, b, a = px[x, y]
+            px[x, y] = (r, g, b, 255) if a > 40 else (0, 0, 0, 0)
+    return img
 
 
 def scallop() -> Image.Image:
     img, d = new()
-    fans = 11
-    spread = math.radians(168)
-    start = math.radians(-84)
-    for i in range(fans - 1, -1, -1):
+    fans = 9
+    spread = math.radians(170)
+    start = math.radians(-85)
+    hinge = (CX, CY + 52)
+    for i in range(fans):
         a0 = start + spread * i / fans
         a1 = start + spread * (i + 1) / fans
         am = (a0 + a1) / 2
-        r = 108
-        lite = i % 2 == 0
-        col = pearl(0.85 if lite else 0.35)
-        ridge = pearl(1.0 if lite else 0.55)
-        pts = [(CX, CY + 38)]
-        steps = 10
-        for s in range(steps + 1):
-            a = a0 + (a1 - a0) * s / steps
-            bump = math.sin(s / steps * math.pi) * 10
-            pts.append((CX + math.sin(a) * (r + bump), CY + 10 - math.cos(a) * (r + bump)))
-        d.polygon(pts, fill=col)
+        r = 112
+        fill = CREAM_LT if i % 2 == 0 else CREAM
+        pts = [hinge]
+        for s in range(12):
+            a = a0 + (a1 - a0) * s / 11
+            bump = math.sin(s / 11 * math.pi) * 14
+            pts.append((CX + math.sin(a) * (r + bump), CY + 4 - math.cos(a) * (r + bump)))
+        d.polygon(pts, fill=fill, outline=EDGE)
         d.line(
-            [
-                (CX, CY + 38),
-                (CX + math.sin(am) * r, CY + 10 - math.cos(am) * r),
-            ],
-            fill=ridge,
-            width=3,
+            [hinge, (CX + math.sin(am) * r, CY + 4 - math.cos(am) * r)],
+            fill=RIDGE,
+            width=4,
         )
-    d.ellipse([CX - 28, CY + 22, CX + 28, CY + 58], fill=pearl(0.7))
-    d.ellipse([CX - 18, CY + 30, CX + 18, CY + 52], fill=pearl(0.95))
-    return img.filter(ImageFilter.SMOOTH)
+    d.ellipse([CX - 34, CY + 32, CX + 34, CY + 78], fill=BELLY, outline=EDGE, width=4)
+    return flatten(img.filter(ImageFilter.SMOOTH))
 
 
 def conch() -> Image.Image:
     img, d = new()
-    for i, (rx, ry, dx, dy, t) in enumerate(
-        [
-            (70, 86, 6, 8, 0.4),
-            (58, 72, 2, 0, 0.7),
-            (44, 54, -6, -10, 0.9),
-            (28, 34, -14, -22, 0.6),
-            (16, 18, -20, -32, 0.95),
-        ]
-    ):
-        d.ellipse([CX + dx - rx, CY + dy - ry, CX + dx + rx, CY + dy + ry], fill=pearl(t))
-    # spiral groove
+    d.ellipse([CX - 78, CY - 96, CX + 70, CY + 100], fill=CREAM, outline=EDGE, width=5)
+    d.ellipse([CX - 62, CY - 80, CX + 52, CY + 78], fill=CREAM_LT)
     pts = []
-    for i in range(40):
-        a = i / 40 * math.pi * 2.6 + 0.4
-        rad = 62 - i * 1.2
-        pts.append((CX + math.cos(a) * rad * 0.7 - 4, CY + math.sin(a) * rad - 6))
-    if len(pts) > 1:
-        d.line(pts, fill=pearl(0.2), width=3)
+    for i in range(48):
+        a = i / 48 * math.pi * 2.8 + 0.5
+        rad = 70 - i * 1.15
+        pts.append((CX + math.cos(a) * rad * 0.72 - 2, CY + math.sin(a) * rad - 4))
+    d.line(pts, fill=RIDGE, width=5)
     d.polygon(
-        [(CX + 48, CY + 70), (CX + 86, CY + 92), (CX + 52, CY + 86)],
-        fill=pearl(0.55),
+        [(CX + 40, CY + 78), (CX + 96, CY + 108), (CX + 48, CY + 100)],
+        fill=CREAM,
+        outline=EDGE,
     )
-    return img.filter(ImageFilter.SMOOTH)
+    d.ellipse([CX - 28, CY - 36, CX + 8, CY + 8], fill=BELLY, outline=RIDGE, width=3)
+    return flatten(img.filter(ImageFilter.SMOOTH))
 
 
 def clam() -> Image.Image:
     img, d = new()
-    d.ellipse([CX - 92, CY - 62, CX + 92, CY + 70], fill=pearl(0.55))
-    d.ellipse([CX - 84, CY - 56, CX + 84, CY + 58], fill=pearl(0.9))
-    for i in range(7):
-        t = (i + 1) / 8
-        rx, ry = 84 * (1 - t * 0.12), 56 * (1 - t * 0.18)
+    d.ellipse([CX - 108, CY - 70, CX + 108, CY + 78], fill=CREAM, outline=EDGE, width=5)
+    d.ellipse([CX - 96, CY - 58, CX + 96, CY + 62], fill=CREAM_LT)
+    for i in range(6):
+        t = (i + 1) / 7
+        rx, ry = 96 * (1 - t * 0.14), 58 * (1 - t * 0.2)
         d.ellipse(
-            [CX - rx, CY - ry + 6, CX + rx, CY + ry + 6],
-            outline=pearl(0.25 + 0.1 * (i % 2)),
-            width=2,
+            [CX - rx, CY - ry + 8, CX + rx, CY + ry + 8],
+            outline=RIDGE,
+            width=3,
         )
-    d.arc([CX - 40, CY - 8, CX + 40, CY + 28], 200, 340, fill=(210, 188, 170, 220), width=3)
-    return img.filter(ImageFilter.SMOOTH)
+    d.arc([CX - 48, CY - 6, CX + 48, CY + 36], 200, 340, fill=EDGE, width=4)
+    return flatten(img.filter(ImageFilter.SMOOTH))
 
 
 def cowrie() -> Image.Image:
     img, d = new()
-    d.ellipse([CX - 46, CY - 90, CX + 46, CY + 90], fill=pearl(0.45))
-    d.ellipse([CX - 38, CY - 82, CX + 38, CY + 82], fill=pearl(0.92))
-    d.ellipse([CX - 18, CY - 70, CX + 18, CY + 70], fill=(236, 226, 210, 255))
-    d.rounded_rectangle([CX - 7, CY - 58, CX + 7, CY + 58], radius=7, fill=(255, 250, 244, 255))
-    for y in range(-50, 52, 14):
-        d.line([(CX - 5, CY + y), (CX + 5, CY + y)], fill=pearl(0.3), width=2)
-    return img.filter(ImageFilter.SMOOTH)
+    d.ellipse([CX - 58, CY - 108, CX + 58, CY + 108], fill=CREAM, outline=EDGE, width=5)
+    d.ellipse([CX - 46, CY - 96, CX + 46, CY + 96], fill=CREAM_LT)
+    d.rounded_rectangle([CX - 10, CY - 70, CX + 10, CY + 70], radius=8, fill=BELLY, outline=EDGE, width=3)
+    for y in range(-60, 64, 16):
+        d.line([(CX - 7, CY + y), (CX + 7, CY + y)], fill=RIDGE, width=3)
+    return flatten(img.filter(ImageFilter.SMOOTH))
 
 
 def main() -> None:
-    variants = [scallop, conch, clam, cowrie]
-    for i, fn in enumerate(variants, 1):
-        im = fn()
+    for i, fn in enumerate([scallop, conch, clam, cowrie], 1):
         path = OUT / f"shell-white-{i}.png"
-        im.save(path)
-        print("wrote", path, im.size)
+        fn().save(path)
+        print("wrote", path)
 
 
 if __name__ == "__main__":

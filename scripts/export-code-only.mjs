@@ -2,7 +2,9 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
 const root = "/workspace";
-const version = readFileSync(join(root, "VERSION"), "utf8").trim().split(/\s+/).pop();
+const versionLine = readFileSync(join(root, "VERSION"), "utf8").split("\n")[0];
+const version = versionLine.match(/v\.\d+/)?.[0];
+if (!version) throw new Error("VERSION is missing v.NNN");
 const filename = `crabby-beach-${version}-code.md`;
 const outPath = join(root, "public/downloads", filename);
 

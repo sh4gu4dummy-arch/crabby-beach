@@ -474,18 +474,48 @@ export function createGame(
   function placeFinds(bounds: { x0: number; x1: number; y0: number; y1: number }) {
     const n = findsForLevel();
     const kinds = shuffle(planKinds(n));
-    const cols = n <= 3 ? n : n >= 10 ? 5 : n >= 8 ? 4 : 3;
-    const rows = Math.ceil(n / cols);
+    const minDist = FIND_SIZE * 2.7;
+    const w = Math.max(80, bounds.x1 - bounds.x0);
+    const h = Math.max(80, bounds.y1 - bounds.y0);
+    let cols = Math.max(1, Math.min(n, Math.floor(w / minDist) || 1));
+    let rows = Math.ceil(n / cols);
+    while (rows > 1 && rows * minDist > h && cols < n) {
+      cols += 1;
+      rows = Math.ceil(n / cols);
+    }
+    const cellW = w / cols;
+    const cellH = h / rows;
     const spots: Vec[] = [];
     for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        if (spots.length >= n) break;
-        const jitterX = (Math.random() - 0.5) * 40;
-        const jitterY = (Math.random() - 0.5) * 30;
+      const inRow = Math.min(cols, n - spots.length);
+      const rowPad = (cols - inRow) * 0.5;
+      for (let c = 0; c < inRow; c++) {
         spots.push({
-          x: bounds.x0 + ((c + 0.5) / cols) * (bounds.x1 - bounds.x0) + jitterX,
-          y: bounds.y0 + ((r + 0.5) / rows) * (bounds.y1 - bounds.y0) + jitterY,
+          x: bounds.x0 + (c + rowPad + 0.5) * cellW,
+          y: bounds.y0 + (r + 0.5) * cellH,
         });
+      }
+    }
+    const cx = (bounds.x0 + bounds.x1) / 2;
+    const cy = (bounds.y0 + bounds.y1) / 2;
+    for (let iter = 0; iter < 12; iter++) {
+      for (let i = 0; i < spots.length; i++) {
+        const a = spots[i]!;
+        if (dist(a, { x: cx, y: cy }) < minDist * 0.7) {
+          a.y = clamp(a.y + (a.y >= cy ? 18 : -18), bounds.y0 + 8, bounds.y1 - 8);
+        }
+        for (let j = i + 1; j < spots.length; j++) {
+          const b = spots[j]!;
+          const d = dist(a, b);
+          if (d >= minDist || d < 0.001) continue;
+          const push = (minDist - d) * 0.5;
+          const nx = (a.x - b.x) / d;
+          const ny = (a.y - b.y) / d;
+          a.x = clamp(a.x + nx * push, bounds.x0 + 8, bounds.x1 - 8);
+          a.y = clamp(a.y + ny * push, bounds.y0 + 8, bounds.y1 - 8);
+          b.x = clamp(b.x - nx * push, bounds.x0 + 8, bounds.x1 - 8);
+          b.y = clamp(b.y - ny * push, bounds.y0 + 8, bounds.y1 - 8);
+        }
       }
     }
     return spots.map((p, i) => ({

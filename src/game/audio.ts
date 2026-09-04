@@ -1,4 +1,5 @@
 import { assetUrl } from "@/lib/asset";
+import { CRABBY_CLIPS } from "@/game/crabby-voice";
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -25,6 +26,7 @@ const VOICE_FILES: Record<string, string> = {
   ten: assetUrl("voice/ten.mp3?v=018"),
   "win-sunny": assetUrl("voice/win-sunny.mp3?v=018"),
   "win-sunset": assetUrl("voice/win-sunset.mp3?v=018"),
+  "crabby-intro": CRABBY_CLIPS.intro,
 };
 
 const LINE_TO_CLIP: Record<string, string> = {

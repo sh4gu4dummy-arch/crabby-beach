@@ -2,13 +2,16 @@
 from __future__ import annotations
 
 import os
+import re
 import shutil
 import subprocess
 import zipfile
 from pathlib import Path
 
 ROOT = Path("/workspace")
-VERSION = ROOT.joinpath("VERSION").read_text().strip().split()[-1]
+_first = ROOT.joinpath("VERSION").read_text().splitlines()[0]
+_m = re.search(r"v\.\d+", _first)
+VERSION = _m.group(0) if _m else "v.000"
 DL = ROOT / "public/downloads"
 PORTABLE_SRC = Path("/tmp/crabby-portable")
 ANDROID = Path("/tmp/crabby-android")

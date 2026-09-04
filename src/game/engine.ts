@@ -679,11 +679,11 @@ export function createGame(
     if (!px) return;
     px.imageSmoothingEnabled = true;
     px.imageSmoothingQuality = "high";
-    const r = PAINT_RES * 0.28;
+    const r = PAINT_RES * 0.12;
     const hex = paintHex(crab.paint);
     px.fillStyle = hex;
     px.beginPath();
-    px.arc(lx, ly, r * 0.72, 0, Math.PI * 2);
+    px.arc(lx, ly, r * 0.7, 0, Math.PI * 2);
     px.fill();
     const g = px.createRadialGradient(lx, ly, r * 0.55, lx, ly, r);
     g.addColorStop(0, hex);
@@ -1386,10 +1386,11 @@ export function createGame(
         drawCentered(colorizeSprite(base, hex), x, y, s, s);
       } else {
         drawCentered(base, x, y, s, s);
-        if (item.paintTime > 0) {
-          const t = Math.min(1, item.paintTime / FILL_SECS);
+        if (item.paintLayer) drawCentered(item.paintLayer, x, y, s, s);
+        const t = Math.min(1, item.paintTime / FILL_SECS);
+        if (t > 0.45) {
           ctx.save();
-          ctx.globalAlpha = 0.45 + 0.55 * t;
+          ctx.globalAlpha = (t - 0.45) / 0.55;
           drawCentered(colorizeSprite(base, paintHex(crab.paint)), x, y, s, s);
           ctx.restore();
         }

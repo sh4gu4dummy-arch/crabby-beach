@@ -68,6 +68,7 @@ export function GameCanvas() {
   const [popOn, setPopOn] = useState(false);
   const [loadout, setLoadout] = useState(false);
   const [kit, setKit] = useState(() => loadSettings());
+  const [showIntro, setShowIntro] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -91,6 +92,16 @@ export function GameCanvas() {
     return () => window.clearTimeout(t);
   }, [hud.countKey, hud.countPop]);
 
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem("crabby-beach-intro-seen-v1") !== "1") {
+        setShowIntro(true);
+      }
+    } catch {
+      setShowIntro(true);
+    }
+  }, []);
+
   function play() {
     unlockAudio();
     setMusicEnabled(loadSettings().music);
@@ -106,6 +117,15 @@ export function GameCanvas() {
   function goMenu() {
     setLoadout(false);
     apiRef.current?.goMenu();
+  }
+
+  function finishIntro() {
+    try {
+      window.localStorage.setItem("crabby-beach-intro-seen-v1", "1");
+    } catch {
+      /* private mode */
+    }
+    setShowIntro(false);
   }
 
   function equip(patch: Partial<typeof kit>) {
@@ -345,6 +365,13 @@ export function GameCanvas() {
             >
               Grown-ups
             </Link>
+            <button
+              type="button"
+              onClick={() => setShowIntro(true)}
+              className="mt-1 mb-2 text-xs font-semibold tracking-wide text-ink-soft/70 uppercase hover:text-ink-soft"
+            >
+              Watch intro
+            </button>
           </div>
         </div>
       )}
@@ -459,6 +486,10 @@ export function GameCanvas() {
       <p className="pointer-events-none absolute top-[4.6rem] right-3 z-10 rounded-pill bg-cream px-3 py-1 text-sm font-bold tracking-wide text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft">
         {APP_VERSION}{hud.dev ? " · DEV" : ""}
       </p>
+      )}
+
+      {showIntro && (
+        <IntroOverlay muted={muted} onMute={toggleMute} onDone={finishIntro} />
       )}
 
       <div className="turn-phone pointer-events-none absolute inset-0 z-40 hidden place-items-center bg-sky px-8 text-center">
@@ -615,6 +646,90 @@ function LoadoutCard({
           Back to hours
         </button>
       </div>
+    </div>
+  );
+}
+
+function IntroOverlay({
+  muted,
+  onMute,
+  onDone,
+}: {
+  muted: boolean;
+  onMute: () => void;
+  onDone: () => void;
+}) {
+  const ref = useRef<HTMLVideoElement>(null);
+  const [playing, setPlaying] = useState(false);
+  const [caption, setCaption] = useState("Hi! I'm Crabby!");
+
+  useEffect(() => {
+    const v = ref.current;
+    if (v) v.muted = muted;
+  }, [muted]);
+
+  function captionAt(t: number) {
+    if (t < 1.7) return "Hi! I'm Crabby!";
+    if (t < 3.4) return "Tap a white shell.";
+    if (t < 4.8) return "I'll walk over.";
+    if (t < 7.0) return "Then paint it with your finger.";
+    return "Let's play!";
+  }
+
+  function start() {
+    unlockAudio();
+    const v = ref.current;
+    if (!v) return;
+    v.muted = muted;
+    void v.play();
+    setPlaying(true);
+  }
+
+  return (
+    <div className="absolute inset-0 z-50 bg-ink">
+      <video
+        ref={ref}
+        src={assetUrl("game/intro.mp4")}
+        playsInline
+        className="h-full w-full object-cover"
+        onTimeUpdate={(e) => setCaption(captionAt(e.currentTarget.currentTime))}
+        onEnded={onDone}
+      />
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-start justify-between px-3 pt-[max(0.8rem,env(safe-area-inset-top))]">
+        <p className="rounded-pill bg-cream px-3 py-1 text-sm font-bold text-ink shadow-md">{APP_VERSION}</p>
+        <button
+          type="button"
+          onClick={onMute}
+          className="pointer-events-auto grid size-12 place-items-center rounded-pill bg-cream text-ink shadow-md"
+          aria-label={muted ? "Unmute sounds" : "Mute sounds"}
+        >
+          {muted ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
+        </button>
+      </div>
+      {!playing && (
+        <button
+          type="button"
+          onClick={start}
+          className="absolute inset-0 z-10 grid place-items-center bg-ink/25"
+          aria-label="Play intro"
+        >
+          <span className="rounded-pill bg-coral px-8 py-4 text-xl font-bold text-cream shadow-lg">
+            Tap to meet Crabby
+          </span>
+        </button>
+      )}
+      {playing && (
+        <p className="pointer-events-none absolute inset-x-4 bottom-28 z-10 rounded-pill bg-cream/95 px-4 py-3 text-center text-lg font-bold text-ink shadow-md">
+          {caption}
+        </p>
+      )}
+      <button
+        type="button"
+        onClick={onDone}
+        className="absolute inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-20 min-h-12 rounded-pill bg-cream/90 text-sm font-bold text-ink shadow-md"
+      >
+        Skip
+      </button>
     </div>
   );
 }

@@ -59,9 +59,8 @@ const PACKS: Pack[] = [
     title: "Android APK",
     blurb: "Installable APK for this version. Allow unknown sources, then open the file on a phone.",
     filename: DOWNLOADS.apk,
-    ready: false,
+    ready: true,
     icon: Smartphone,
-    note: "Ask me to export the APK when you want it.",
   },
 ];
 

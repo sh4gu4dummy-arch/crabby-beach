@@ -1,5 +1,5 @@
 const KEY = "crabby-beach-progress-v1";
-export const MAX_HOURS = 9;
+export const MAX_HOURS = 12;
 
 export type Progress = {
   cleared: number;

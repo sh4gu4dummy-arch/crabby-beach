@@ -124,7 +124,7 @@ export function Grownups() {
           <p className="text-sky-deep text-sm font-semibold tracking-wide uppercase">Grown-ups</p>
           <h1 className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">{APP_NAME}</h1>
           <p className="mt-2 text-ink-soft">
-            Pick how Crabby looks and how play feels. Extra pens and skins unlock in Loadout after 9pm.
+            Pick how Crabby looks and how play feels. Extra pens and skins unlock in Loadout after 12am.
           </p>
           <p className="mt-3 inline-flex rounded-pill bg-cream px-3 py-1 text-sm font-semibold">
             Current version {APP_VERSION}

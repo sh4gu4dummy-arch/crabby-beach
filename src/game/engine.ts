@@ -47,8 +47,8 @@ export type GameApi = {
   destroy: () => void;
 };
 
-const MAX_FINDS = 10;
-const MAX_LEVELS = 9;
+const MAX_FINDS = 12;
+const MAX_LEVELS = 12;
 
 const WORLD_W = 1600;
 const WORLD_H = 900;
@@ -71,9 +71,17 @@ const SKY_TINTS = [
   { fill: "#5a3a78", multiply: "#4a3a78", alpha: 0.56 },
   { fill: "#243056", multiply: "#1e2a4a", alpha: 0.64 },
   { fill: "#0c1428", multiply: "#0a1224", alpha: 0.74 },
+  { fill: "#090f20", multiply: "#070c18", alpha: 0.80 },
+  { fill: "#070a16", multiply: "#050810", alpha: 0.86 },
+  { fill: "#04060e", multiply: "#03040a", alpha: 0.92 },
 ] as const;
 
 export const HOUR_SKIES = SKY_TINTS.map((s) => s.fill);
+
+export function hourLabel(hour: number) {
+  if (hour >= 12) return "12am";
+  return `${hour}pm`;
+}
 const CAN_HIT = 56;
 const WATER_WALK = 118;
 const PAINT_RES = 96;
@@ -374,9 +382,9 @@ export function createGame(
     return (hour() - 1) / (MAX_LEVELS - 1);
   }
 
-  /** Luminescent shells start at 6pm, full by 9pm. Afternoon stays white. */
+  /** Luminescent shells start at 6pm, full from 9pm through midnight. */
   function shellGlow() {
-    return Math.max(0, (hour() - 5) / 4);
+    return Math.min(1, Math.max(0, (hour() - 5) / 4));
   }
 
   function skyTint() {
@@ -384,7 +392,7 @@ export function createGame(
   }
 
   function findsForLevel() {
-    return Math.min(MAX_FINDS, 2 + hour());
+    return Math.min(MAX_FINDS, hour());
   }
 
   function paintedCount() {
@@ -925,7 +933,7 @@ export function createGame(
       playWin();
       if (settings.voiceCounts) {
         speak(
-          hour() >= 9
+          hour() >= 12
             ? "You finished the day! New pens and looks are in Loadout."
             : hour() >= 8
               ? "Wow! The shells are glowing!"

@@ -7,7 +7,7 @@ import { loadSettings, saveSettings, type CrabColor, type CrabHat, type PenId } 
 import { APP_VERSION } from "@/lib/version";
 import { assetUrl } from "@/lib/asset";
 import { isMuted, setMuted, setMusicEnabled, unlockAudio } from "./audio";
-import { createGame, HOUR_SKIES, type GameApi, type GameHud } from "./engine";
+import { createGame, HOUR_SKIES, hourLabel, type GameApi, type GameHud } from "./engine";
 
 const EMPTY: GameHud = {
   phase: "loading",
@@ -18,7 +18,7 @@ const EMPTY: GameHud = {
   countKey: 0,
   secondsLeft: null,
   level: 1,
-  maxLevel: 9,
+  maxLevel: 12,
   hour: 1,
   skyFill: "#7ec8e3",
   cleared: 0,
@@ -179,7 +179,7 @@ export function GameCanvas() {
         <div className="flex items-center gap-2 rounded-pill bg-cream/90 py-1.5 pr-4 pl-1.5 shadow-md shadow-ink/10 ring-2 ring-cream-soft">
           <AnalogClock hour={hud.hour} />
           <div>
-            <p className="text-xs font-semibold tracking-wide text-ink-soft uppercase">{hud.hour}pm</p>
+            <p className="text-xs font-semibold tracking-wide text-ink-soft uppercase">{hourLabel(hud.hour)}</p>
             <p className="text-lg leading-none font-bold tabular-nums">
               {hud.level}
               <span className="text-ink-soft"> / {hud.maxLevel}</span>
@@ -276,7 +276,7 @@ export function GameCanvas() {
             </button>
           </div>
           <div className="relative z-10 mx-auto flex w-full max-w-sm flex-1 flex-col px-4 pb-2 text-center">
-            <p className="mt-3 text-sm font-semibold tracking-wide text-sky-deep uppercase">Nine little hours</p>
+            <p className="mt-3 text-sm font-semibold tracking-wide text-sky-deep uppercase">From 1pm to midnight</p>
             <h1 className="mt-1 text-[2.4rem] leading-none font-bold tracking-tight text-coral drop-shadow-[0_2px_0_rgba(255,246,232,0.8)]">
               Crabby Beach
             </h1>
@@ -299,14 +299,14 @@ export function GameCanvas() {
                           ? { background: sky, color: hour >= 7 ? "#fff6e8" : "#3a2a22", boxShadow: "inset 0 0 0 2px rgba(255,246,232,0.55)" }
                           : { background: "#efe0c8", color: "#8a7468" }
                       }
-                      aria-label={open ? `${hour}pm` : `${hour}pm locked`}
+                      aria-label={open ? hourLabel(hour) : `${hourLabel(hour)} locked`}
                     >
                       {open ? (
                         <AnalogClock hour={hour} className="size-8" />
                       ) : (
                         <Lock className="size-5 opacity-70" />
                       )}
-                      <span className="text-sm font-bold">{hour}pm</span>
+                      <span className="text-sm font-bold">{hourLabel(hour)}</span>
                       {done && (
                         <span className="absolute top-1 right-1 grid size-5 place-items-center rounded-full bg-mint text-cream">
                           <Check className="size-3.5" strokeWidth={3} />
@@ -322,7 +322,7 @@ export function GameCanvas() {
               onClick={play}
               className="mt-4 min-h-14 w-full rounded-pill bg-coral px-6 py-3 text-lg font-bold text-cream shadow-md shadow-coral-deep/30 hover:bg-coral-deep"
             >
-              Play {hud.unlocked}pm
+              Play {hourLabel(hud.unlocked)}
             </button>
             <button
               type="button"
@@ -396,7 +396,7 @@ export function GameCanvas() {
         >
           <div className="max-h-full w-full overflow-y-auto rounded-card bg-cream px-5 py-5 text-center shadow-xl shadow-ink/20 ring-4 ring-mint">
             <p className="text-mint-deep text-sm font-semibold tracking-wide uppercase">
-              {hud.level >= hud.maxLevel ? "9pm · night" : `${hud.hour}pm`}
+              {hud.level >= hud.maxLevel ? "12am · midnight" : hourLabel(hud.hour)}
             </p>
             <h2 className="mt-1 text-3xl font-bold tracking-tight text-mint-deep sm:text-4xl">
               {hud.level >= hud.maxLevel ? "The shells lit up the night!" : "Yay! You found them all"}
@@ -405,8 +405,8 @@ export function GameCanvas() {
               {hud.level >= hud.maxLevel
                 ? hud.finished
                   ? "Loadout is open — auto-fill pen and new looks."
-                  : "From 1pm to 9pm. Want to start the afternoon again?"
-                : `Next hour is ${hud.hour + 1}pm. The sky gets a little darker.`}
+                  : "From 1pm to midnight. Want to start the afternoon again?"
+                : `Next hour is ${hourLabel(hud.hour + 1)}. The sky gets a little darker.`}
             </p>
             <div className="mt-6 grid gap-3">
               {hud.level < hud.maxLevel ? (
@@ -555,7 +555,7 @@ function LoadoutCard({
         <p className="text-sky-deep text-sm font-semibold tracking-wide uppercase">Your kit</p>
         <h2 className="mt-1 text-3xl font-bold tracking-tight text-coral">Loadout</h2>
         <p className="mt-2 text-sm text-ink-soft">
-          {extrasOpen ? "Pick a pen and how Crabby looks." : "Finish 9pm to unlock extra pens and looks."}
+          {extrasOpen ? "Pick a pen and how Crabby looks." : "Finish 12am to unlock extra pens and looks."}
         </p>
 
         <p className="mt-4 text-left text-sm font-bold">Pens</p>

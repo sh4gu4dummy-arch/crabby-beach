@@ -670,10 +670,10 @@ function IntroOverlay({
   }, [muted]);
 
   function captionAt(t: number) {
-    if (t < 1.6) return "Hiii! I'm Crabby!";
-    if (t < 3.2) return "Tap a white shell!";
-    if (t < 5.2) return "Whoooosh! I will walk over!";
-    if (t < 7.0) return "Paint it with your finger!";
+    if (t < 2.4) return "Hiii! I'm Crabby!";
+    if (t < 4.8) return "Tap a white shell!";
+    if (t < 7.6) return "Whoooosh! I will walk over!";
+    if (t < 10.4) return "Paint it with your finger!";
     return "Yaaay! Let's play!";
   }
 
@@ -690,7 +690,7 @@ function IntroOverlay({
     <div className="absolute inset-0 z-50 bg-ink">
       <video
         ref={ref}
-        src={assetUrl("game/intro.mp4?v=042")}
+        src={assetUrl("game/intro.mp4?v=043")}
         playsInline
         className="h-full w-full object-cover"
         onTimeUpdate={(e) => setCaption(captionAt(e.currentTarget.currentTime))}

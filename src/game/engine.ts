@@ -60,7 +60,8 @@ const SAND_RIGHT = 1470;
 const CRAB_SPEED = 300;
 const HIT = 72;
 const CRAB_SIZE = 112;
-const FIND_SIZE = 56;
+const FIND_SIZE = 68;
+const PAINT_RES = 256;
 const SKY_TINTS = [
   { fill: "#7ec8e3", multiply: "#f6e7b0", alpha: 0.04 },
   { fill: "#6eb8d8", multiply: "#f0d090", alpha: 0.10 },
@@ -84,7 +85,6 @@ export function hourLabel(hour: number) {
 }
 const CAN_HIT = 56;
 const WATER_WALK = 118;
-const PAINT_RES = 96;
 const FILL_SECS = 1;
 
 type PaintId = "red" | "orange" | "yellow" | "green" | "blue" | "purple" | "pink";
@@ -101,6 +101,14 @@ const PAINTS: Array<{ id: PaintId; hex: string }> = [
 
 function paintHex(id: PaintId) {
   return PAINTS.find((p) => p.id === id)?.hex ?? "#5dbb63";
+}
+
+function hexRgba(hex: string, a: number) {
+  const n = parseInt(hex.replace("#", ""), 16);
+  const r = (n >> 16) & 255;
+  const g = (n >> 8) & 255;
+  const b = n & 255;
+  return `rgba(${r},${g},${b},${a})`;
 }
 
 type Vec = { x: number; y: number };
@@ -191,7 +199,7 @@ async function loadAssets(): Promise<Assets> {
     loadImage(assetUrl("game/beach.jpg?v=v003")),
     ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crab-walk-${i}.png?v=topdown2`))),
     ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crab-idle-${i}.png?v=topdown2`))),
-    ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/shell-white-${i}.png?v=topdown2`))),
+    ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/shell-white-${i}.png?v=054`))),
     ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/shell-green-${i}.png?v=v003`))),
     loadImage(assetUrl("game/prop-starfish.png?v=topdown2")),
     loadImage(assetUrl("game/prop-bucket.png?v=topdown2")),
@@ -626,6 +634,8 @@ export function createGame(
     mask.height = PAINT_RES;
     const mx = mask.getContext("2d");
     if (!mx) return;
+    mx.imageSmoothingEnabled = true;
+    mx.imageSmoothingQuality = "high";
     mx.translate(PAINT_RES / 2, PAINT_RES / 2);
     const s = PAINT_RES * 0.9;
     if (item.kind === "shell" && assets) {
@@ -656,7 +666,7 @@ export function createGame(
 
   function findSize() {
     const n = Math.max(finds.length, 1);
-    return n >= 10 ? 48 : n >= 8 ? 52 : FIND_SIZE;
+    return n >= 10 ? 58 : n >= 8 ? 62 : FIND_SIZE;
   }
 
   function stampPaint(item: Find, wx: number, wy: number) {
@@ -667,9 +677,17 @@ export function createGame(
     const ly = ((wy - item.y) / s) * PAINT_RES + PAINT_RES / 2;
     const px = item.paintLayer.getContext("2d");
     if (!px) return;
-    px.fillStyle = paintHex(crab.paint);
+    px.imageSmoothingEnabled = true;
+    px.imageSmoothingQuality = "high";
+    const r = PAINT_RES * 0.2;
+    const hex = paintHex(crab.paint);
+    const g = px.createRadialGradient(lx, ly, r * 0.12, lx, ly, r);
+    g.addColorStop(0, hex);
+    g.addColorStop(0.55, hex);
+    g.addColorStop(1, hexRgba(hex, 0));
+    px.fillStyle = g;
     px.beginPath();
-    px.arc(lx, ly, PAINT_RES * 0.2, 0, Math.PI * 2);
+    px.arc(lx, ly, r, 0, Math.PI * 2);
     px.fill();
     px.globalCompositeOperation = "destination-in";
     px.drawImage(item.mask, 0, 0);
@@ -1032,6 +1050,8 @@ export function createGame(
     rot = 0,
   ) {
     ctx.save();
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
     ctx.translate(x, y);
     if (flip) ctx.scale(-1, 1);
     if (rot) ctx.rotate(rot);
@@ -1060,11 +1080,19 @@ export function createGame(
     c.height = Math.max(1, h);
     const x = c.getContext("2d");
     if (!x) return src;
+    x.imageSmoothingEnabled = true;
+    x.imageSmoothingQuality = "high";
     x.drawImage(src, 0, 0);
-    x.globalCompositeOperation = "source-atop";
+    x.globalCompositeOperation = "multiply";
     x.fillStyle = hex;
-    x.globalAlpha = 0.88;
     x.fillRect(0, 0, c.width, c.height);
+    x.globalCompositeOperation = "source-atop";
+    x.globalAlpha = 0.28;
+    x.fillStyle = hex;
+    x.fillRect(0, 0, c.width, c.height);
+    x.globalAlpha = 1;
+    x.globalCompositeOperation = "destination-in";
+    x.drawImage(src, 0, 0);
     paintCache.set(key, c);
     return c;
   }
@@ -1460,6 +1488,8 @@ export function createGame(
 
   function draw() {
     ctx.clearRect(0, 0, css.w, css.h);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
     ctx.fillStyle = skyTint().fill;
     ctx.fillRect(0, 0, css.w, css.h);
 

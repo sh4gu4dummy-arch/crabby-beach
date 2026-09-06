@@ -214,7 +214,7 @@ async function loadAssets(): Promise<Assets> {
     ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crabby/walk-${id}-${i}.png?v=051`))),
   ]);
   const [beach, ...rest] = await Promise.all([
-    loadImage(assetUrl("game/beach.jpg?v=068")),
+    loadImage(assetUrl("game/beach.jpg?v=070")),
     ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crab-walk-${i}.png?v=topdown2`))),
     ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crab-idle-${i}.png?v=topdown2`))),
     ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/shell-white-${i}.png?v=055`))),
@@ -1479,32 +1479,32 @@ export function createGame(
     ctx.fillStyle = grad;
     ctx.fill();
 
-    for (let i = 0; i < 8; i++) {
-      const u = (time * 0.2 * surge + i / 8) % 1;
-      const y = 16 + u * Math.max(40, yFront - 36);
-      ctx.globalAlpha = 0.1 + u * 0.28;
+    for (let i = 0; i < 4; i++) {
+      const u = (time * 0.16 * surge + i / 4) % 1;
+      const y = 20 + u * Math.max(36, yFront - 40);
+      ctx.globalAlpha = 0.08 + u * 0.16;
       ctx.strokeStyle = lite;
-      ctx.lineWidth = 4 + u * 10;
+      ctx.lineWidth = 3 + u * 5;
       ctx.beginPath();
       ctx.moveTo(0, y);
-      for (let x = 0; x <= WORLD_W; x += 24) {
-        ctx.lineTo(x, y + Math.sin(x * 0.016 + time * 2.6 * surge + i) * (7 + u * 16));
+      for (let x = 0; x <= WORLD_W; x += 20) {
+        ctx.lineTo(x, y + Math.sin(x * 0.014 + time * 2.2 * surge + i) * (6 + u * 10));
       }
       ctx.stroke();
     }
 
     if (waveRushing()) {
-      ctx.globalAlpha = 0.92;
+      ctx.globalAlpha = 0.72;
       ctx.fillStyle = foam;
       ctx.beginPath();
       for (let x = 0; x <= WORLD_W; x += 10) {
-        const w = Math.sin(x * 0.028 + time * 4.2 * surge) * 13 + Math.sin(x * 0.07 + time * 6.8 * surge) * 5;
+        const w = Math.sin(x * 0.028 + time * 3.2 * surge) * 9 + Math.sin(x * 0.07 + time * 5.4 * surge) * 4;
         const yy = yFront + w;
-        if (x === 0) ctx.moveTo(x, yy - 10);
-        else ctx.lineTo(x, yy - 10);
+        if (x === 0) ctx.moveTo(x, yy - 6);
+        else ctx.lineTo(x, yy - 6);
       }
-      ctx.lineTo(WORLD_W, yFront + 26);
-      ctx.lineTo(0, yFront + 26);
+      ctx.lineTo(WORLD_W, yFront + 14);
+      ctx.lineTo(0, yFront + 14);
       ctx.closePath();
       ctx.fill();
     }

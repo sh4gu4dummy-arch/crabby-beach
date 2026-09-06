@@ -210,7 +210,7 @@ async function loadAssets(): Promise<Assets> {
     ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crabby/walk-${id}-${i}.png?v=051`))),
   ]);
   const [beach, ...rest] = await Promise.all([
-    loadImage(assetUrl("game/beach.jpg?v=v003")),
+    loadImage(assetUrl("game/beach.jpg?v=066")),
     ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crab-walk-${i}.png?v=topdown2`))),
     ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crab-idle-${i}.png?v=topdown2`))),
     ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/shell-white-${i}.png?v=055`))),
@@ -1626,7 +1626,11 @@ export function createGame(
     ctx.translate(view.x, view.y);
     ctx.scale(view.scale, view.scale);
 
-    if (assets) ctx.drawImage(assets.beach, 0, 0, WORLD_W, WORLD_H);
+    if (assets) {
+      const y0 = Math.max(0, Math.floor(shoreY() - 6));
+      const h = WORLD_H - y0;
+      ctx.drawImage(assets.beach, 0, y0, WORLD_W, h, 0, y0, WORLD_W, h);
+    }
     drawOcean();
     drawSkyMood();
 

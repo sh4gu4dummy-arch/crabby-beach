@@ -7,7 +7,6 @@ import {
   playTap,
   playWin,
   playDip,
-  playFlow,
   playJewel,
   playSandPat,
   playSplash,
@@ -98,8 +97,8 @@ const TIDE_OUT = 1.12;
 const TIDE_SHINE_AT = 1.5;
 const TIDE_END = 2.55;
 const FLOW_PERIOD = 8.6;
-const FLOW_IN = 2.9;
-const FLOW_OUT = 3.1;
+const FLOW_IN = TIDE_IN;
+const FLOW_OUT = TIDE_OUT;
 
 type PaintId = "red" | "orange" | "yellow" | "green" | "blue" | "purple" | "pink";
 
@@ -215,7 +214,7 @@ async function loadAssets(): Promise<Assets> {
     ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crabby/walk-${id}-${i}.png?v=051`))),
   ]);
   const [beach, ...rest] = await Promise.all([
-    loadImage(assetUrl("game/beach.jpg?v=066")),
+    loadImage(assetUrl("game/beach.jpg?v=068")),
     ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crab-walk-${i}.png?v=topdown2`))),
     ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crab-idle-${i}.png?v=topdown2`))),
     ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/shell-white-${i}.png?v=055`))),
@@ -635,25 +634,36 @@ export function createGame(
     return phase === "playing" && tideT < TIDE_END;
   }
 
+  function tideReachY() {
+    const vis = sandView();
+    return Math.min(vis.y1 + 36, SAND_BOT - 48);
+  }
+
   function flowY() {
     const rest = WATER_MAX + 16;
-    const reach = WATER_MAX + 108;
+    const deep = tideReachY();
     const t = flowT % FLOW_PERIOD;
-    if (t <= FLOW_IN) return rest + (reach - rest) * easeInOut(t / FLOW_IN);
+    if (t <= FLOW_IN) return rest + (deep - rest) * easeInOut(t / FLOW_IN);
     if (t <= FLOW_IN + FLOW_OUT) {
       const u = (t - FLOW_IN) / FLOW_OUT;
-      return reach + (rest - reach) * easeInOut(u);
+      return deep + (rest - deep) * easeInOut(u);
     }
     return rest;
   }
 
   function waveFrontY() {
-    const vis = sandView();
     const rest = WATER_MAX + 16;
-    const deep = Math.min(vis.y1 + 36, SAND_BOT - 48);
+    const deep = tideReachY();
     if (tideT <= TIDE_IN) return rest + (deep - rest) * easeInOut(Math.min(1, tideT / TIDE_IN));
     const u = Math.min(1, (tideT - TIDE_IN) / TIDE_OUT);
     return deep + (rest - deep) * easeInOut(u);
+  }
+
+  function waveRushing() {
+    if (phase !== "playing") return false;
+    if (tideT <= TIDE_END) return true;
+    const t = flowT % FLOW_PERIOD;
+    return t < FLOW_IN + FLOW_OUT;
   }
 
   function inWater(y = crab.y) {
@@ -1035,7 +1045,7 @@ export function createGame(
         const cycle = Math.floor(flowT / FLOW_PERIOD);
         if (cycle !== flowPlayed && flowT % FLOW_PERIOD < FLOW_IN) {
           flowPlayed = cycle;
-          playFlow();
+          playWave();
         }
       }
       const left = secondsLeft();
@@ -1446,7 +1456,7 @@ export function createGame(
   function drawOcean() {
     const night = nightGlow();
     const yFront = shoreY();
-    const surge = phase === "playing" && (tideT < TIDE_END || flowT % FLOW_PERIOD < FLOW_IN) ? 1.55 : 1;
+    const surge = waveRushing() ? 1.55 : 1;
     const deep = night > 0.55 ? "#16345f" : "#2498b8";
     const mid = night > 0.55 ? "#2a538c" : "#3ec4d6";
     const lite = night > 0.55 ? "#9ad0ff" : "#d9f7ff";
@@ -1483,19 +1493,21 @@ export function createGame(
       ctx.stroke();
     }
 
-    ctx.globalAlpha = 0.94;
-    ctx.fillStyle = foam;
-    ctx.beginPath();
-    for (let x = 0; x <= WORLD_W; x += 10) {
-      const w = Math.sin(x * 0.028 + time * 4.2 * surge) * 13 + Math.sin(x * 0.07 + time * 6.8 * surge) * 5;
-      const yy = yFront + w;
-      if (x === 0) ctx.moveTo(x, yy - 10);
-      else ctx.lineTo(x, yy - 10);
+    if (waveRushing()) {
+      ctx.globalAlpha = 0.92;
+      ctx.fillStyle = foam;
+      ctx.beginPath();
+      for (let x = 0; x <= WORLD_W; x += 10) {
+        const w = Math.sin(x * 0.028 + time * 4.2 * surge) * 13 + Math.sin(x * 0.07 + time * 6.8 * surge) * 5;
+        const yy = yFront + w;
+        if (x === 0) ctx.moveTo(x, yy - 10);
+        else ctx.lineTo(x, yy - 10);
+      }
+      ctx.lineTo(WORLD_W, yFront + 26);
+      ctx.lineTo(0, yFront + 26);
+      ctx.closePath();
+      ctx.fill();
     }
-    ctx.lineTo(WORLD_W, yFront + 26);
-    ctx.lineTo(0, yFront + 26);
-    ctx.closePath();
-    ctx.fill();
 
     ctx.globalAlpha = night > 0.55 ? 0.28 : 0.4;
     ctx.fillStyle = "#fff";

@@ -10,7 +10,7 @@ from PIL import Image, ImageDraw, ImageFilter
 SRC = Path("/tmp/beach-original.jpg")
 OUT = Path("/workspace/public/game/beach.jpg")
 W, H = 1600, 900
-SAND_FROM = 430
+SAND_FROM = 540
 
 
 def clamp(n: int) -> int:
@@ -24,7 +24,7 @@ def main() -> None:
     px = out.load()
     for y in range(SAND_FROM):
         t = y / SAND_FROM
-        br, bg, bb = 186 + int(t * 40), 146 + int(t * 42), 96 + int(t * 30)
+        br, bg, bb = 198 + int(t * 30), 160 + int(t * 32), 106 + int(t * 24)
         for x in range(W):
             n = rng.randint(-16, 16)
             dune = int(8 * ((x // 90 + y // 70) % 3 - 1))

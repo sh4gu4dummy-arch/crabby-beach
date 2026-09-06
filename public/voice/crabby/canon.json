@@ -1,13 +1,13 @@
 {
   "id": "crabby-canon-v1",
-  "locked": true,
+  "locked": false,
   "engine": "edge-tts",
   "voice": "en-US-AnaNeural",
   "locale": "en-US",
   "rate": "+8%",
   "pitch": "+30Hz",
   "ffmpeg": "highshelf=f=3500:g=2,loudnorm=I=-14:LRA=9:TP=-1.2,afade=t=in:d=0.04",
-  "notes": "Squeaky American kid. Do not pitch-shift after bake. Do not overwrite intro.mp3 / intro-raw.mp3.",
+  "notes": "Squeaky American kid. Intro clip may be rebaked to match a new video; keep the same voice spec. Do not pitch-shift after bake.",
   "lines": {
     "intro": "Hiii! I'm Crabby! Tap a white shell! Whoooosh! I will walk over! Paint it with your finger! Yaaay! Let's play!",
     "yay": "Yay!",

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bake new Crabby lines in the locked canon voice. Does not overwrite intro."""
+"""Bake Crabby lines in the kid voice spec (public/voice/crabby/canon.json)."""
 from __future__ import annotations
 
 import argparse
@@ -12,7 +12,7 @@ from pathlib import Path
 ROOT = Path("/workspace")
 CANON = ROOT / "public/voice/crabby/canon.json"
 OUT = ROOT / "public/voice/crabby"
-LOCKED = {"intro", "intro-raw"}
+LOCKED = set()
 
 
 def load_canon() -> dict:

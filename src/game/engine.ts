@@ -902,15 +902,16 @@ export function createGame(
   }
 
   function standByShell(item: Find): Vec {
+    const src = tideT < TIDE_IN ? { x: item.homeX, y: item.homeY } : item;
     const vis = sandView();
     const spots = [
-      { x: item.x, y: item.y + 58 },
-      { x: item.x, y: item.y - 58 },
-      { x: item.x + 58, y: item.y },
-      { x: item.x - 58, y: item.y },
+      { x: src.x, y: src.y + 58 },
+      { x: src.x, y: src.y - 58 },
+      { x: src.x + 58, y: src.y },
+      { x: src.x - 58, y: src.y },
     ];
     const fit = spots.find((p) => p.x >= vis.x0 && p.x <= vis.x1 && p.y >= vis.y0 && p.y <= vis.y1);
-    return clampToPlay(fit ?? { x: item.x, y: item.y + 40 }, false);
+    return clampToPlay(fit ?? { x: src.x, y: src.y + 40 }, false);
   }
 
   function goTo(world: Vec, id: number | null, canId: PaintId | null = null) {
@@ -924,7 +925,6 @@ export function createGame(
 
   function handlePointer(ev: PointerEvent) {
     if (phase === "loading" || phase === "won" || phase === "timesup" || phase === "menu") return;
-    if (tideBusy()) return;
     ev.preventDefault();
     try {
       canvas.setPointerCapture(ev.pointerId);
@@ -957,8 +957,6 @@ export function createGame(
       return;
     }
 
-    if (world.y < WATER_MAX) return;
-
     const best = findUnder(world);
     if (best) {
       if (usingAuto() || !crabBeside(best)) {
@@ -966,6 +964,8 @@ export function createGame(
       }
       return;
     }
+
+    if (world.y < WATER_MAX) return;
     const vis = sandView();
     if (world.x >= vis.x0 && world.x <= vis.x1 && world.y >= vis.y0 && world.y <= vis.y1) {
       goTo(world, null);
@@ -975,7 +975,6 @@ export function createGame(
   function handleMove(ev: PointerEvent) {
     updateHover(ev);
     if (phase !== "playing" || !brush.down) return;
-    if (tideBusy()) return;
     const world = worldFromEvent(ev);
     const moved = dist(world, { x: brush.lastX, y: brush.lastY });
     brush.x = world.x;
@@ -1010,7 +1009,7 @@ export function createGame(
     refreshSettings();
     time += dt;
     if (phase === "playing") {
-      if (!tideBusy()) playElapsed += dt;
+      playElapsed += dt;
       if (tideT < TIDE_END + 0.4) {
         const before = tideT;
         tideT += dt;

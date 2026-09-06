@@ -92,11 +92,11 @@ export function hourLabel(hour: number) {
 const CAN_HIT = 56;
 const WATER_WALK = 118;
 const FILL_SECS = 1;
-const TIDE_IN = 3.2;
-const TIDE_OUT = 2.8;
-const TIDE_SHINE_AT = 3.75;
-const TIDE_END = 6.375;
-const FLOW_PERIOD = 12.2;
+const TIDE_IN = 6.4;
+const TIDE_OUT = 5.6;
+const TIDE_SHINE_AT = 7.5;
+const TIDE_END = 12.75;
+const FLOW_PERIOD = 18.2;
 const FLOW_IN = TIDE_IN;
 const FLOW_OUT = TIDE_OUT;
 

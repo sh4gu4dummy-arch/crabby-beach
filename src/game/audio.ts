@@ -327,9 +327,9 @@ export function playWave() {
     src.start(start);
     src.stop(start + dur + 0.05);
   };
-  wash(0.28, 0.055, 0.8, 4.2, at, 380, 150);
-  wash(0.42, 0.028, 1.1, 3.8, at + 0.4, 820, 240);
-  wash(0.26, 0.04, 1.0, 3.5, at + 2.9, 320, 130);
+  wash(0.26, 0.05, 1.6, 8.4, at, 360, 140);
+  wash(0.38, 0.024, 2.2, 7.6, at + 0.8, 760, 220);
+  wash(0.24, 0.035, 2.0, 7.0, at + 5.8, 300, 120);
 }
 
 export function playFlow() {

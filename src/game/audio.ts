@@ -287,22 +287,25 @@ export function playWin() {
 export function playWave() {
   if (!ctx || !sfxBus || !noiseBuffer || muted) return;
   const at = tNow();
-  const src = ctx.createBufferSource();
-  src.buffer = noiseBuffer;
-  src.playbackRate.value = 0.55;
-  const filter = ctx.createBiquadFilter();
-  filter.type = "lowpass";
-  filter.frequency.setValueAtTime(900, at);
-  filter.frequency.exponentialRampToValueAtTime(220, at + 1.1);
-  const g = ctx.createGain();
-  env(g, 0.28, 0.08, 1.25, at);
-  src.connect(filter);
-  filter.connect(g);
-  g.connect(sfxBus);
-  src.start(at);
-  src.stop(at + 1.35);
-  beep(90, 1.1, "sine", 0.1, at, 48);
-  beep(140, 0.9, "triangle", 0.05, at + 0.12, 70);
+  const wash = (rate: number, peak: number, attack: number, dur: number, start: number, fromHz: number, toHz: number) => {
+    const src = ctx!.createBufferSource();
+    src.buffer = noiseBuffer;
+    src.playbackRate.value = rate;
+    const filter = ctx!.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(fromHz, start);
+    filter.frequency.exponentialRampToValueAtTime(toHz, start + dur);
+    const g = ctx!.createGain();
+    env(g, peak, attack, dur, start);
+    src.connect(filter);
+    filter.connect(g);
+    g.connect(sfxBus!);
+    src.start(start);
+    src.stop(start + dur + 0.05);
+  };
+  wash(0.32, 0.08, 0.32, 1.7, at, 420, 160);
+  wash(0.48, 0.035, 0.45, 1.5, at + 0.15, 900, 280);
+  wash(0.28, 0.05, 0.4, 1.4, at + 1.15, 360, 140);
 }
 
 export function playJewel() {

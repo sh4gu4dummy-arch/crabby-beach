@@ -1384,62 +1384,75 @@ export function createGame(
     ctx.restore();
   }
 
-  function drawWaterShimmer() {
-    const glow = nightGlow();
-    ctx.save();
-    for (let i = 0; i < 5; i++) {
-      const y = 36 + i * 28 + Math.sin(time * 1.2 + i * 0.9) * 5;
-      ctx.globalAlpha = 0.12 * (1 - glow * 0.55);
-      ctx.strokeStyle = glow > 0.6 ? "#8ec8ff" : "#e8fbff";
-      ctx.lineWidth = 6;
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      for (let x = 0; x <= WORLD_W; x += 40) {
-        ctx.lineTo(x, y + Math.sin(time * 1.6 + x * 0.012 + i) * 7);
-      }
-      ctx.stroke();
-    }
-    ctx.globalAlpha = 0.55 * (1 - nightGlow() * 0.7);
-    ctx.fillStyle = nightGlow() > 0.6 ? "#c8e4f8" : "#f7fdff";
-    const foamY = 188 + Math.sin(time * 1.4) * 2;
-    ctx.beginPath();
-    ctx.moveTo(0, foamY);
-    for (let x = 0; x <= WORLD_W; x += 24) {
-      ctx.lineTo(x, foamY + Math.sin(time * 2 + x * 0.03) * 4);
-    }
-    ctx.lineTo(WORLD_W, foamY + 16);
-    ctx.lineTo(0, foamY + 16);
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
+  function shoreY() {
+    if (phase === "playing" && tideT <= TIDE_END) return waveFrontY();
+    return WATER_MAX + 18 + Math.sin(time * 1.05) * 7;
   }
 
-  function drawTide() {
-    if (phase !== "playing" || tideT > TIDE_END) return;
-    const y = waveFrontY();
+  function drawOcean() {
     const night = nightGlow();
+    const yFront = shoreY();
+    const surge = phase === "playing" && tideT < TIDE_END ? 1.65 : 1;
+    const deep = night > 0.55 ? "#16345f" : "#2498b8";
+    const mid = night > 0.55 ? "#2a538c" : "#3ec4d6";
+    const lite = night > 0.55 ? "#9ad0ff" : "#d9f7ff";
+    const foam = night > 0.55 ? "#e4f2ff" : "#ffffff";
+
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(0, 0);
     ctx.lineTo(WORLD_W, 0);
-    for (let x = WORLD_W; x >= 0; x -= 18) {
-      const wiggle = Math.sin(x * 0.018 + time * 5.5) * 16 + Math.sin(x * 0.05 + time * 8) * 8;
-      ctx.lineTo(x, y + wiggle);
+    for (let x = WORLD_W; x >= 0; x -= 14) {
+      const w =
+        Math.sin(x * 0.011 + time * 2.1 * surge) * 11 + Math.sin(x * 0.037 + time * 3.3 * surge) * 7;
+      ctx.lineTo(x, yFront + w);
     }
     ctx.closePath();
-    ctx.fillStyle = night > 0.55 ? "rgba(28, 48, 92, 0.78)" : "rgba(46, 168, 196, 0.66)";
+    const grad = ctx.createLinearGradient(0, 0, 0, Math.max(80, yFront));
+    grad.addColorStop(0, deep);
+    grad.addColorStop(0.58, mid);
+    grad.addColorStop(1, lite);
+    ctx.fillStyle = grad;
     ctx.fill();
+
+    for (let i = 0; i < 8; i++) {
+      const u = (time * 0.2 * surge + i / 8) % 1;
+      const y = 16 + u * Math.max(40, yFront - 36);
+      ctx.globalAlpha = 0.1 + u * 0.28;
+      ctx.strokeStyle = lite;
+      ctx.lineWidth = 4 + u * 10;
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      for (let x = 0; x <= WORLD_W; x += 24) {
+        ctx.lineTo(x, y + Math.sin(x * 0.016 + time * 2.6 * surge + i) * (7 + u * 16));
+      }
+      ctx.stroke();
+    }
+
+    ctx.globalAlpha = 0.94;
+    ctx.fillStyle = foam;
     ctx.beginPath();
-    for (let x = 0; x <= WORLD_W; x += 14) {
-      const wiggle = Math.sin(x * 0.03 + time * 7.2) * 14;
-      if (x === 0) ctx.moveTo(x, y + wiggle - 6);
-      else ctx.lineTo(x, y + wiggle - 6);
+    for (let x = 0; x <= WORLD_W; x += 10) {
+      const w = Math.sin(x * 0.028 + time * 4.2 * surge) * 13 + Math.sin(x * 0.07 + time * 6.8 * surge) * 5;
+      const yy = yFront + w;
+      if (x === 0) ctx.moveTo(x, yy - 10);
+      else ctx.lineTo(x, yy - 10);
     }
-    ctx.lineTo(WORLD_W, y + 26);
-    ctx.lineTo(0, y + 26);
+    ctx.lineTo(WORLD_W, yFront + 26);
+    ctx.lineTo(0, yFront + 26);
     ctx.closePath();
-    ctx.fillStyle = night > 0.55 ? "rgba(210, 230, 255, 0.88)" : "rgba(255, 255, 255, 0.92)";
     ctx.fill();
+
+    ctx.globalAlpha = night > 0.55 ? 0.28 : 0.4;
+    ctx.fillStyle = "#fff";
+    for (let i = 0; i < 22; i++) {
+      const x = (i * 173 + time * 55 * surge) % WORLD_W;
+      const span = Math.max(36, yFront - 28);
+      const y = 18 + ((i * 89 + time * 70 * surge) % span);
+      ctx.beginPath();
+      ctx.arc(x, y, 1.4 + (i % 3) * 0.7, 0, Math.PI * 2);
+      ctx.fill();
+    }
     ctx.restore();
   }
 
@@ -1614,8 +1627,7 @@ export function createGame(
     ctx.scale(view.scale, view.scale);
 
     if (assets) ctx.drawImage(assets.beach, 0, 0, WORLD_W, WORLD_H);
-    drawWaterShimmer();
-    drawTide();
+    drawOcean();
     drawSkyMood();
 
     type Layer = { y: number; z: number; draw: () => void };

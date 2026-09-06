@@ -208,24 +208,48 @@ export function playTap() {
   beep(640 * rate, 0.07, "triangle", 0.12, at, 420 * rate);
 }
 
-export function playScuttle() {
+export function playSandPat() {
   if (!ctx || !sfxBus || !noiseBuffer || muted) return;
   const at = tNow();
   const src = ctx.createBufferSource();
   src.buffer = noiseBuffer;
-  src.playbackRate.value = 1.4 + Math.random() * 0.4;
+  src.playbackRate.value = 0.72 + Math.random() * 0.12;
   const filter = ctx.createBiquadFilter();
-  filter.type = "bandpass";
-  filter.frequency.value = 1400 + Math.random() * 400;
-  filter.Q.value = 2.2;
+  filter.type = "lowpass";
+  filter.frequency.value = 620 + Math.random() * 80;
   const g = ctx.createGain();
-  env(g, 0.07, 0.005, 0.05, at);
+  env(g, 0.055, 0.008, 0.07, at);
   src.connect(filter);
   filter.connect(g);
   g.connect(sfxBus);
   src.start(at);
-  src.stop(at + 0.06);
-  beep(210 + Math.random() * 40, 0.045, "triangle", 0.05, at);
+  src.stop(at + 0.09);
+  beep(150 + Math.random() * 25, 0.05, "triangle", 0.035, at, 95);
+}
+
+export function playSplash() {
+  if (!ctx || !sfxBus || !noiseBuffer || muted) return;
+  const at = tNow();
+  const src = ctx.createBufferSource();
+  src.buffer = noiseBuffer;
+  src.playbackRate.value = 1.35 + Math.random() * 0.3;
+  const filter = ctx.createBiquadFilter();
+  filter.type = "bandpass";
+  filter.frequency.value = 980 + Math.random() * 220;
+  filter.Q.value = 1.1;
+  const g = ctx.createGain();
+  env(g, 0.06, 0.01, 0.11, at);
+  src.connect(filter);
+  filter.connect(g);
+  g.connect(sfxBus);
+  src.start(at);
+  src.stop(at + 0.13);
+  beep(480 + Math.random() * 40, 0.08, "sine", 0.04, at, 240);
+  beep(820, 0.05, "sine", 0.025, at + 0.03, 500);
+}
+
+export function playScuttle() {
+  playSandPat();
 }
 
 export function playDip() {
@@ -306,6 +330,25 @@ export function playWave() {
   wash(0.32, 0.08, 0.32, 1.7, at, 420, 160);
   wash(0.48, 0.035, 0.45, 1.5, at + 0.15, 900, 280);
   wash(0.28, 0.05, 0.4, 1.4, at + 1.15, 360, 140);
+}
+
+export function playFlow() {
+  if (!ctx || !sfxBus || !noiseBuffer || muted) return;
+  const at = tNow();
+  const src = ctx.createBufferSource();
+  src.buffer = noiseBuffer;
+  src.playbackRate.value = 0.3;
+  const filter = ctx.createBiquadFilter();
+  filter.type = "lowpass";
+  filter.frequency.setValueAtTime(380, at);
+  filter.frequency.exponentialRampToValueAtTime(150, at + 1.6);
+  const g = ctx.createGain();
+  env(g, 0.045, 0.4, 1.8, at);
+  src.connect(filter);
+  filter.connect(g);
+  g.connect(sfxBus);
+  src.start(at);
+  src.stop(at + 1.9);
 }
 
 export function playJewel() {

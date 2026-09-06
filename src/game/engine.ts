@@ -3,12 +3,14 @@ import { DEFAULT_SETTINGS } from "@/lib/settings";
 import { loadCleared, loadDev, loadoutUnlocked, saveCleared, saveDev, unlockedFrom } from "@/lib/progress";
 import { assetUrl } from "@/lib/asset";
 import {
-  playScuttle,
   playSparkle,
   playTap,
   playWin,
   playDip,
+  playFlow,
   playJewel,
+  playSandPat,
+  playSplash,
   playWave,
   setMusicEnabled,
   speak,
@@ -95,6 +97,9 @@ const TIDE_IN = 1.28;
 const TIDE_OUT = 1.12;
 const TIDE_SHINE_AT = 1.5;
 const TIDE_END = 2.55;
+const FLOW_PERIOD = 8.6;
+const FLOW_IN = 2.9;
+const FLOW_OUT = 3.1;
 
 type PaintId = "red" | "orange" | "yellow" | "green" | "blue" | "purple" | "pink";
 
@@ -346,6 +351,8 @@ export function createGame(
   let tideT = 0;
   let tideWavePlayed = false;
   let tideJewelPlayed = false;
+  let flowT = 0;
+  let flowPlayed = -1;
   let level = 1;
   let cleared = loadCleared();
   let dev = loadDev();
@@ -620,10 +627,24 @@ export function createGame(
     tideT = 0;
     tideWavePlayed = false;
     tideJewelPlayed = false;
+    flowT = 0;
+    flowPlayed = -1;
   }
 
   function tideBusy() {
     return phase === "playing" && tideT < TIDE_END;
+  }
+
+  function flowY() {
+    const rest = WATER_MAX + 16;
+    const reach = WATER_MAX + 108;
+    const t = flowT % FLOW_PERIOD;
+    if (t <= FLOW_IN) return rest + (reach - rest) * easeInOut(t / FLOW_IN);
+    if (t <= FLOW_IN + FLOW_OUT) {
+      const u = (t - FLOW_IN) / FLOW_OUT;
+      return reach + (rest - reach) * easeInOut(u);
+    }
+    return rest;
   }
 
   function waveFrontY() {
@@ -633,6 +654,10 @@ export function createGame(
     if (tideT <= TIDE_IN) return rest + (deep - rest) * easeInOut(Math.min(1, tideT / TIDE_IN));
     const u = Math.min(1, (tideT - TIDE_IN) / TIDE_OUT);
     return deep + (rest - deep) * easeInOut(u);
+  }
+
+  function inWater(y = crab.y) {
+    return y + 10 < shoreY();
   }
 
   function worldFromEvent(ev: PointerEvent): Vec {
@@ -795,6 +820,22 @@ export function createGame(
         spin: (Math.random() - 0.5) * 6,
       });
     }
+  }
+
+  function spawnSplash(x: number, y: number) {
+    particles.push({
+      x: x - crab.facing * 8,
+      y: y + 14,
+      vx: -crab.facing * (8 + Math.random() * 16) + (Math.random() - 0.5) * 20,
+      vy: -18 - Math.random() * 22,
+      life: 0.32 + Math.random() * 0.12,
+      max: 0.45,
+      size: 3 + Math.random() * 3,
+      color: Math.random() > 0.45 ? "#e8fbff" : "#7ec8e3",
+      kind: "spark",
+      rot: 0,
+      spin: 3,
+    });
   }
 
   function spawnSand(x: number, y: number) {
@@ -989,6 +1030,13 @@ export function createGame(
           }
         }
         if (before < TIDE_END && tideT >= TIDE_END) emitHud();
+      } else if (phase === "playing") {
+        flowT += dt;
+        const cycle = Math.floor(flowT / FLOW_PERIOD);
+        if (cycle !== flowPlayed && flowT % FLOW_PERIOD < FLOW_IN) {
+          flowPlayed = cycle;
+          playFlow();
+        }
       }
       const left = secondsLeft();
       if (left !== lastTick) {
@@ -1084,19 +1132,24 @@ export function createGame(
         crab.frameT = 0;
       } else {
         crab.state = "walk";
-        const step = Math.min(d, CRAB_SPEED * dt);
+        const wet = inWater();
+        const step = Math.min(d, CRAB_SPEED * (wet ? 0.62 : 1) * dt);
         crab.x += (dx / d) * step;
         crab.y += (dy / d) * step;
         if (Math.abs(dx) > 3) crab.facing = dx >= 0 ? 1 : -1;
         stepAcc += step;
         puffAcc += dt;
-        if (stepAcc > 28) {
+        if (stepAcc > (wet ? 22 : 28)) {
           stepAcc = 0;
-          if (phase === "playing") playScuttle();
+          if (phase === "playing") {
+            if (wet) playSplash();
+            else playSandPat();
+          }
         }
-        if (puffAcc > 0.09) {
+        if (puffAcc > (wet ? 0.07 : 0.09)) {
           puffAcc = 0;
-          if (crab.y > SAND_TOP) spawnSand(crab.x, crab.y);
+          if (wet) spawnSplash(crab.x, crab.y);
+          else spawnSand(crab.x, crab.y);
         }
       }
     }
@@ -1386,13 +1439,14 @@ export function createGame(
 
   function shoreY() {
     if (phase === "playing" && tideT <= TIDE_END) return waveFrontY();
+    if (phase === "playing") return flowY();
     return WATER_MAX + 18 + Math.sin(time * 1.05) * 7;
   }
 
   function drawOcean() {
     const night = nightGlow();
     const yFront = shoreY();
-    const surge = phase === "playing" && tideT < TIDE_END ? 1.65 : 1;
+    const surge = phase === "playing" && (tideT < TIDE_END || flowT % FLOW_PERIOD < FLOW_IN) ? 1.55 : 1;
     const deep = night > 0.55 ? "#16345f" : "#2498b8";
     const mid = night > 0.55 ? "#2a538c" : "#3ec4d6";
     const lite = night > 0.55 ? "#9ad0ff" : "#d9f7ff";

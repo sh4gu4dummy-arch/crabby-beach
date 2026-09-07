@@ -3,6 +3,7 @@ import { AuthProvider } from "@/lib/auth/provider";
 import { registerOffline } from "@/lib/offline";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import appCss from "../styles.css?url";
+import { useEffect } from "react";
 import { loadSettings, applyTheme } from "@/lib/settings";
 
 const APP_NAME = "Crabby Beach";

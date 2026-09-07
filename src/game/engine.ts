@@ -1,6 +1,6 @@
 import type { BeachTheme, CrabColor, CrabHat, GrownupSettings, PenId } from "@/lib/settings";
 import { DEFAULT_SETTINGS } from "@/lib/settings";
-import { loadCleared, loadDev, loadoutUnlocked, saveCleared, saveDev, unlockedFrom } from "@/lib/progress";
+import { loadAsleep, loadCleared, loadDev, loadoutUnlocked, saveAsleep, saveCleared, saveDev, unlockedFrom } from "@/lib/progress";
 import { assetUrl } from "@/lib/asset";
 import {
   playSparkle,
@@ -19,7 +19,7 @@ import {
   unlockAudio,
 } from "./audio";
 
-export type GamePhase = "loading" | "menu" | "playing" | "won" | "timesup";
+export type GamePhase = "loading" | "menu" | "playing" | "won" | "timesup" | "sleep";
 
 export type GameHud = {
   phase: GamePhase;
@@ -40,6 +40,7 @@ export type GameHud = {
   dev: boolean;
   extrasOpen: boolean;
   tideBusy: boolean;
+  asleep: boolean;
 };
 
 export type GameApi = {
@@ -47,6 +48,7 @@ export type GameApi = {
   replay: (opts?: { theme?: BeachTheme; advance?: boolean; restart?: boolean }) => void;
   playLevel: (n: number) => void;
   goMenu: () => void;
+  goSleep: () => void;
   setDev: (on: boolean) => void;
   resetProgress: () => void;
   addTime: (seconds: number) => void;
@@ -355,6 +357,7 @@ export function createGame(
   let level = 1;
   let cleared = loadCleared();
   let dev = loadDev();
+  let asleep = loadAsleep();
   const brush = { down: false, swiping: false, x: 800, y: 520, lastX: 800, lastY: 520 };
   let cans: Array<{ id: PaintId; hex: string; x: number; y: number }> = [];
   const paintCache = new Map<string, HTMLCanvasElement>();
@@ -436,6 +439,10 @@ export function createGame(
     return Math.max(0, Math.ceil(limit - playElapsed));
   }
 
+  function sleepLocked() {
+    return !dev && asleep;
+  }
+
   function extrasOpen() {
     return loadoutUnlocked(cleared, dev);
   }
@@ -472,6 +479,7 @@ export function createGame(
       dev,
       extrasOpen: extrasOpen(),
       tideBusy: phase === "playing" && tideT < TIDE_END,
+      asleep,
     });
   }
 
@@ -924,7 +932,7 @@ export function createGame(
   }
 
   function handlePointer(ev: PointerEvent) {
-    if (phase === "loading" || phase === "won" || phase === "timesup" || phase === "menu") return;
+    if (phase === "loading" || phase === "won" || phase === "timesup" || phase === "menu" || phase === "sleep") return;
     ev.preventDefault();
     try {
       canvas.setPointerCapture(ev.pointerId);
@@ -1095,9 +1103,13 @@ export function createGame(
       phase = "won";
       cleared = Math.max(cleared, hour());
       saveCleared(cleared);
+      if (hour() >= MAX_LEVELS) {
+        asleep = true;
+        saveAsleep(true);
+      }
       spawnConfetti();
-      playWin();
-      if (settings.voiceCounts) {
+      if (dev || hour() < MAX_LEVELS) playWin();
+      if (settings.voiceCounts && (dev || hour() < MAX_LEVELS)) {
         speak(
           hour() >= 12
             ? "You finished the day! New pens and looks are in Loadout."
@@ -1875,7 +1887,7 @@ export function createGame(
     .then((loaded) => {
       if (!running) return;
       assets = loaded;
-      phase = "menu";
+      phase = sleepLocked() ? "sleep" : "menu";
       emitHud();
     })
     .catch((err) => {
@@ -1884,6 +1896,11 @@ export function createGame(
 
   return {
     start() {
+      if (sleepLocked()) {
+        phase = "sleep";
+        emitHud();
+        return;
+      }
       const n = unlockedFrom(cleared, dev);
       level = n;
       resetWorld("sunny");
@@ -1893,6 +1910,11 @@ export function createGame(
       emitHud();
     },
     playLevel(n: number) {
+      if (sleepLocked()) {
+        phase = "sleep";
+        emitHud();
+        return;
+      }
       const cap = unlockedFrom(cleared, dev);
       if (n < 1 || n > cap) return;
       level = n;
@@ -1903,24 +1925,40 @@ export function createGame(
       emitHud();
     },
     goMenu() {
-      phase = "menu";
+      phase = sleepLocked() ? "sleep" : "menu";
+      brush.down = false;
+      emitHud();
+    },
+    goSleep() {
+      asleep = true;
+      saveAsleep(true);
+      phase = "sleep";
       brush.down = false;
       emitHud();
     },
     setDev(on: boolean) {
       dev = on;
       saveDev(on);
+      if (dev && phase === "sleep") phase = "menu";
+      else if (!dev && asleep && (phase === "menu" || phase === "playing")) phase = "sleep";
       emitHud();
     },
     resetProgress() {
       cleared = 0;
+      asleep = false;
       saveCleared(0);
+      saveAsleep(false);
       level = 1;
       resetWorld("sunny");
       phase = "menu";
       emitHud();
     },
     replay(opts?: { theme?: BeachTheme; advance?: boolean; restart?: boolean }) {
+      if (sleepLocked()) {
+        phase = "sleep";
+        emitHud();
+        return;
+      }
       if (opts?.restart) level = 1;
       else if (opts?.advance) level = Math.min(unlockedFrom(cleared, dev), level + 1);
       resetWorld(opts?.theme ?? "sunny");

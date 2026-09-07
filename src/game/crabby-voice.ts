@@ -5,6 +5,7 @@ export const CRABBY_VOICE_ID = "crabby-canon-v1";
 
 export const CRABBY_CLIPS = {
   intro: assetUrl("voice/crabby/intro.mp3?v=064"),
+  bedtime: assetUrl("voice/crabby/bedtime.mp3?v=073"),
   one: assetUrl("voice/crabby/one.mp3?v=062"),
   two: assetUrl("voice/crabby/two.mp3?v=062"),
   three: assetUrl("voice/crabby/three.mp3?v=062"),

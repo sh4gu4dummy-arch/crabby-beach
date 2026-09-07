@@ -28,6 +28,7 @@ const EMPTY: GameHud = {
   dev: false,
   extrasOpen: false,
   tideBusy: false,
+  asleep: false,
 };
 
 function AnalogClock({ hour, className = "size-10 shrink-0" }: { hour: number; className?: string }) {
@@ -71,6 +72,8 @@ export function GameCanvas() {
   const [loadout, setLoadout] = useState(false);
   const [kit, setKit] = useState(() => loadSettings());
   const [showIntro, setShowIntro] = useState(false);
+  const [showBedtime, setShowBedtime] = useState(false);
+  const [parentReady, setParentReady] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -95,6 +98,7 @@ export function GameCanvas() {
   }, [hud.countKey, hud.countPop]);
 
   useEffect(() => {
+    if (hud.asleep && !hud.dev) return;
     try {
       if (window.localStorage.getItem("crabby-beach-intro-seen-v1") !== "1") {
         setShowIntro(true);
@@ -102,7 +106,13 @@ export function GameCanvas() {
     } catch {
       setShowIntro(true);
     }
-  }, []);
+  }, [hud.asleep, hud.dev]);
+
+  useEffect(() => {
+    if (hud.phase === "won" && hud.hour >= hud.maxLevel && !hud.dev) {
+      setShowBedtime(true);
+    }
+  }, [hud.phase, hud.hour, hud.maxLevel, hud.dev]);
 
   function play() {
     unlockAudio();
@@ -119,6 +129,12 @@ export function GameCanvas() {
   function goMenu() {
     setLoadout(false);
     apiRef.current?.goMenu();
+  }
+
+  function finishBedtime() {
+    setShowBedtime(false);
+    setParentReady(false);
+    apiRef.current?.goSleep();
   }
 
   function finishIntro() {
@@ -171,12 +187,13 @@ export function GameCanvas() {
       : `${Math.floor(hud.secondsLeft / 60)}:${String(hud.secondsLeft % 60).padStart(2, "0")}`;
 
   const inGame = hud.phase === "playing" || hud.phase === "won" || hud.phase === "timesup";
+  const nightBg = hud.phase === "sleep" || showBedtime ? { background: "#0c1428" } : undefined;
 
   return (
-    <div className="flex h-full min-h-[100vh] w-full justify-center overflow-hidden bg-sand" style={inGame ? { background: hud.skyFill } : undefined}>
+    <div className="flex h-full min-h-[100vh] w-full justify-center overflow-hidden bg-sand" style={inGame ? { background: hud.skyFill } : nightBg}>
       <div
         className="relative h-full min-h-[100vh] w-full max-w-[28rem] overflow-hidden bg-sand text-ink"
-        style={inGame ? { background: hud.skyFill } : undefined}
+        style={inGame ? { background: hud.skyFill } : nightBg}
       >
       <canvas
         ref={canvasRef}
@@ -269,6 +286,21 @@ export function GameCanvas() {
             <p className="mt-1 text-ink-soft">Warming up the sand…</p>
           </div>
         </div>
+      )}
+
+      {hud.phase === "sleep" && (
+        <SleepScreen
+          parentReady={parentReady}
+          onParents={() => {
+            if (window.confirm("Are you sure? This is for grown-ups.")) {
+              setParentReady(true);
+            }
+          }}
+          onReset={() => {
+            setParentReady(false);
+            apiRef.current?.resetProgress();
+          }}
+        />
       )}
 
       {hud.phase === "menu" && !loadout && (
@@ -420,7 +452,7 @@ export function GameCanvas() {
         />
       )}
 
-      {hud.phase === "won" && (
+      {hud.phase === "won" && (hud.dev || hud.hour < hud.maxLevel) && (
         <div
           className="absolute inset-x-0 z-20 flex items-center px-3"
           style={{
@@ -523,8 +555,11 @@ export function GameCanvas() {
       </p>
       )}
 
-      {showIntro && (
+      {showIntro && !hud.asleep && (
         <IntroOverlay muted={muted} onMute={toggleMute} onDone={finishIntro} />
+      )}
+      {showBedtime && (
+        <BedtimeOverlay muted={muted} onMute={toggleMute} onDone={finishBedtime} />
       )}
 
       <div className="turn-phone pointer-events-none absolute inset-0 z-40 hidden place-items-center bg-sky px-8 text-center">
@@ -764,6 +799,146 @@ function IntroOverlay({
         className="absolute inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-20 min-h-12 rounded-pill bg-cream/90 text-sm font-bold text-ink shadow-md"
       >
         Skip
+      </button>
+    </div>
+  );
+}
+
+function BedtimeOverlay({
+  muted,
+  onMute,
+  onDone,
+}: {
+  muted: boolean;
+  onMute: () => void;
+  onDone: () => void;
+}) {
+  const ref = useRef<HTMLVideoElement>(null);
+  const [playing, setPlaying] = useState(false);
+  const [caption, setCaption] = useState("Woohoo! You painted every shell!");
+
+  useEffect(() => {
+    const v = ref.current;
+    if (v) v.muted = muted;
+  }, [muted]);
+
+  function captionAt(t: number) {
+    if (t < 3.2) return "Woohoo! You painted every shell!";
+    if (t < 6.0) return "That was the WHOLE day!";
+    if (t < 9.0) return "I'm sooo sleepy now.";
+    if (t < 12.0) return "We all need to get some sleep.";
+    return "We can play again tomorrow. Night night!";
+  }
+
+  function start() {
+    unlockAudio();
+    const v = ref.current;
+    if (!v) return;
+    v.muted = muted;
+    void v.play();
+    setPlaying(true);
+  }
+
+  return (
+    <div className="absolute inset-0 z-50 bg-[#0c1428]">
+      <video
+        ref={ref}
+        src={assetUrl("game/bedtime.mp4?v=073")}
+        playsInline
+        className="h-full w-full object-contain bg-[#0c1428]"
+        onTimeUpdate={(e) => setCaption(captionAt(e.currentTarget.currentTime))}
+        onEnded={onDone}
+      />
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-start justify-between px-3 pt-[max(0.8rem,env(safe-area-inset-top))]">
+        <p className="rounded-pill bg-cream px-3 py-1 text-sm font-bold text-ink shadow-md">{APP_VERSION}</p>
+        <button
+          type="button"
+          onClick={onMute}
+          className="pointer-events-auto grid size-12 place-items-center rounded-pill bg-cream text-ink shadow-md"
+          aria-label={muted ? "Unmute sounds" : "Mute sounds"}
+        >
+          {muted ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
+        </button>
+      </div>
+      {!playing && (
+        <button
+          type="button"
+          onClick={start}
+          className="absolute inset-0 z-10 grid place-items-center bg-ink/30"
+          aria-label="Play bedtime"
+        >
+          <span className="rounded-pill bg-coral px-8 py-4 text-xl font-bold text-cream shadow-lg">
+            Tap for Crabby
+          </span>
+        </button>
+      )}
+      {playing && (
+        <p className="pointer-events-none absolute inset-x-3 top-[max(4.4rem,calc(env(safe-area-inset-top)+3.4rem))] z-10 rounded-pill bg-cream/95 px-4 py-2 text-center text-base font-bold leading-snug text-ink shadow-md sm:text-lg">
+          {caption}
+        </p>
+      )}
+      <button
+        type="button"
+        onClick={onDone}
+        className="absolute inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-20 min-h-12 rounded-pill bg-cream/90 text-sm font-bold text-ink shadow-md"
+      >
+        Night night
+      </button>
+    </div>
+  );
+}
+
+function SleepScreen({
+  parentReady,
+  onParents,
+  onReset,
+}: {
+  parentReady: boolean;
+  onParents: () => void;
+  onReset: () => void;
+}) {
+  return (
+    <div className="absolute inset-0 z-40 flex flex-col bg-[#0c1428] text-[#fff6e8]">
+      <button
+        type="button"
+        onClick={() => {
+          if (parentReady) onReset();
+        }}
+        className="absolute z-50 rounded-full"
+        style={{
+          top: "max(0.35rem, env(safe-area-inset-top))",
+          left: "0.35rem",
+          width: parentReady ? 18 : 12,
+          height: parentReady ? 18 : 12,
+          opacity: parentReady ? 0.4 : 0.07,
+          background: "#fff6e8",
+        }}
+        aria-label={parentReady ? "Reset the day" : undefined}
+      />
+      <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
+        <p className="text-sm font-semibold tracking-wide uppercase text-[#c8e4f8]">Midnight</p>
+        <h1 className="mt-2 text-4xl font-bold">Night night</h1>
+        <p className="mt-3 text-base text-[#d8ecff]">Crabby is sleeping. Play again tomorrow.</p>
+        <div className="relative mt-10">
+          <img
+            src={assetUrl("game/crabby/idle-red-0.png?v=051")}
+            alt=""
+            className="w-40 origin-center rotate-[78deg] drop-shadow-lg"
+          />
+          <p className="absolute -top-4 right-2 text-2xl font-bold text-[#d8ecff] opacity-80">z z z</p>
+        </div>
+        {parentReady && (
+          <p className="mt-8 max-w-xs rounded-pill bg-[#1a2a4a] px-4 py-2 text-sm font-semibold text-[#fff6e8]">
+            Tap the tiny button in the top-left corner to reset.
+          </p>
+        )}
+      </div>
+      <button
+        type="button"
+        onClick={onParents}
+        className="mb-[max(1rem,env(safe-area-inset-bottom))] self-center text-[11px] font-semibold tracking-wide text-[#8aa0c8]/50 uppercase"
+      >
+        Grown-ups
       </button>
     </div>
   );

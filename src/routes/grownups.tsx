@@ -9,7 +9,7 @@ import {
   type GrownupSettings,
   type TimerMinutes,
 } from "@/lib/settings";
-import { loadProgress, saveCleared, saveProgress } from "@/lib/progress";
+import { loadProgress, saveProgress } from "@/lib/progress";
 import { APP_NAME, APP_VERSION, DOWNLOADS } from "@/lib/version";
 
 export const Route = createFileRoute("/grownups")({ component: Grownups });
@@ -257,7 +257,7 @@ export function Grownups() {
             <button
               type="button"
               onClick={() => {
-                saveCleared(12);
+                saveProgress({ cleared: 12, dev: progress.dev, asleep: true });
                 setProgress(loadProgress());
               }}
               className="inline-flex min-h-11 items-center justify-center rounded-pill bg-sand px-4 text-sm font-bold text-ink"
@@ -267,7 +267,7 @@ export function Grownups() {
             <button
               type="button"
               onClick={() => {
-                saveProgress({ cleared: 0, dev: progress.dev });
+                saveProgress({ cleared: 0, dev: progress.dev, asleep: false });
                 setProgress(loadProgress());
               }}
               className="inline-flex min-h-11 items-center justify-center rounded-pill bg-sand px-4 text-sm font-bold text-ink"

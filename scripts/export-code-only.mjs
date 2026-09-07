@@ -30,6 +30,7 @@ const files = [
   "scripts/render-crabby.py",
   "scripts/render-shells.py",
   "scripts/render-sand.py",
+  "scripts/render-crabby-sleep.py",
   "scripts/render-intro.py",
   "src/routes/__root.tsx",
   "src/routes/index.tsx",

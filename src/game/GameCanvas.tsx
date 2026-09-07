@@ -914,6 +914,21 @@ function BedtimeOverlay({
   );
 }
 
+function SleepingCrab() {
+  const [frame, setFrame] = useState(0);
+  useEffect(() => {
+    const t = window.setInterval(() => setFrame((n) => 1 - n), 900);
+    return () => window.clearInterval(t);
+  }, []);
+  return (
+    <img
+      src={assetUrl(`game/crabby-sleep-${frame}.png?v=075`)}
+      alt=""
+      className="w-56 drop-shadow-lg"
+    />
+  );
+}
+
 function SleepScreen({
   parentReady,
   dev,
@@ -950,12 +965,7 @@ function SleepScreen({
         <h1 className="mt-2 text-4xl font-bold">Night night</h1>
         <p className="mt-3 text-base text-[#d8ecff]">Crabby is sleeping. Play again tomorrow.</p>
         <div className="relative mt-10">
-          <img
-            src={assetUrl("game/crabby/idle-red-0.png?v=051")}
-            alt=""
-            className="w-40 origin-center rotate-[78deg] drop-shadow-lg"
-          />
-          <p className="absolute -top-4 right-2 text-2xl font-bold text-[#d8ecff] opacity-80">z z z</p>
+          <SleepingCrab />
         </div>
         {parentReady && (
           <p className="mt-8 max-w-xs rounded-pill bg-[#1a2a4a] px-4 py-2 text-sm font-semibold text-[#fff6e8]">

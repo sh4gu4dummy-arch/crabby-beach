@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Check, Home, Lock, Music2, Palette, Play, RotateCcw, Timer, UserRound, Volume2, VolumeX } from "lucide-react";
+import { Check, Home, Lock, Moon, Music2, Palette, Play, RotateCcw, Sun, Timer, UserRound, Volume2, VolumeX } from "lucide-react";
 import { SignedIn, SignedOut, UserButton } from "@/lib/auth/gates";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
-import { loadSettings, saveSettings, type CrabColor, type CrabHat, type PenId } from "@/lib/settings";
+import { loadSettings, saveSettings, applyTheme, type CrabColor, type CrabHat, type PenId } from "@/lib/settings";
 import { APP_VERSION } from "@/lib/version";
 import { assetUrl } from "@/lib/asset";
 import { isMuted, setMuted, setMusicEnabled, unlockAudio } from "./audio";
@@ -68,6 +68,7 @@ export function GameCanvas() {
   const [hud, setHud] = useState<GameHud>(EMPTY);
   const [muted, setMutedUi] = useState(false);
   const [music, setMusicUi] = useState(() => loadSettings().music);
+  const [dark, setDark] = useState(() => loadSettings().darkMode);
   const [popOn, setPopOn] = useState(false);
   const [loadout, setLoadout] = useState(false);
   const [kit, setKit] = useState(() => loadSettings());
@@ -84,6 +85,7 @@ export function GameCanvas() {
     });
     apiRef.current = api;
     setMusicEnabled(loadSettings().music);
+    applyTheme(loadSettings().darkMode);
     return () => {
       api.destroy();
       apiRef.current = null;
@@ -173,6 +175,12 @@ export function GameCanvas() {
     if (!next) unlockAudio();
   }
 
+  function toggleDark() {
+    const next = !dark;
+    setDark(next);
+    saveSettings({ ...loadSettings(), darkMode: next });
+  }
+
   function toggleMusic() {
     const next = !music;
     setMusicUi(next);
@@ -225,6 +233,14 @@ export function GameCanvas() {
               {timerLabel}
             </div>
           )}
+          <button
+            type="button"
+            onClick={toggleDark}
+            className="grid size-12 place-items-center rounded-pill bg-cream/90 text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft"
+            aria-label={dark ? "Turn dark mode off" : "Turn dark mode on"}
+          >
+            {dark ? <Sun className="size-5" /> : <Moon className="size-5" />}
+          </button>
           <button
             type="button"
             onClick={toggleMute}
@@ -316,6 +332,14 @@ export function GameCanvas() {
               {APP_VERSION}{hud.dev ? " · DEV" : ""}
             </p>
             <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={toggleDark}
+                className="grid size-12 place-items-center rounded-pill bg-cream text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft"
+                aria-label={dark ? "Turn dark mode off" : "Turn dark mode on"}
+              >
+                {dark ? <Sun className="size-5" /> : <Moon className="size-5" />}
+              </button>
               <button
                 type="button"
                 onClick={toggleMusic}

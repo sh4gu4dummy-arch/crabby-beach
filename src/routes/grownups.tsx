@@ -198,6 +198,21 @@ export function Grownups() {
               onPick={() => update({ voiceCounts: false })}
             />
           </div>
+          <p className="mt-4 text-sm font-semibold">Dark mode</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Choice
+              label="Off"
+              value={"off"}
+              current={settings.darkMode ? "on" : "off"}
+              onPick={() => update({ darkMode: false })}
+            />
+            <Choice
+              label="On"
+              value={"on"}
+              current={settings.darkMode ? "on" : "off"}
+              onPick={() => update({ darkMode: true })}
+            />
+          </div>
           <p className="mt-4 text-sm font-semibold">Ocean music</p>
           <div className="mt-2 flex flex-wrap gap-2">
             <Choice

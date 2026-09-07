@@ -154,3 +154,35 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+html.dark {
+  --color-sky: #152238;
+  --color-sky-deep: #8ec8e6;
+  --color-ocean: #1c6d7a;
+  --color-sand: #121018;
+  --color-sand-deep: #3a3348;
+  --color-cream: #243044;
+  --color-cream-soft: #33405a;
+  --color-coral: #ff7a6a;
+  --color-coral-deep: #e85d4c;
+  --color-mint: #6edc78;
+  --color-mint-deep: #4dbb58;
+  --color-ink: #fff6e8;
+  --color-ink-soft: #c8b8ae;
+  --color-foam: #ffffff;
+}
+
+html.dark body {
+  background: #121018;
+}
+
+html.dark .menu-sky {
+  background: linear-gradient(180deg, #0c1428 0%, #1a2744 42%, #243044 74%, #16141c 100%);
+}
+
+html.dark .menu-sun {
+  background: radial-gradient(circle at 35% 35%, #fff, #e8eef8 58%, #c5d0e0);
+  box-shadow:
+    0 0 0 10px rgba(200, 220, 255, 0.18),
+    0 0 28px rgba(180, 200, 255, 0.35);
+}

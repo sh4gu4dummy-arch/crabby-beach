@@ -3,7 +3,7 @@ import { AuthProvider } from "@/lib/auth/provider";
 import { registerOffline } from "@/lib/offline";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import appCss from "../styles.css?url";
-import { useEffect } from "react";
+import { loadSettings, applyTheme } from "@/lib/settings";
 
 const APP_NAME = "Crabby Beach";
 const host = import.meta.env.VITE_PUBLIC_HOSTNAME;
@@ -43,6 +43,7 @@ export const Route = createRootRoute({
   component: () => {
     useEffect(() => {
       registerOffline();
+      applyTheme(loadSettings().darkMode);
     }, []);
     return (
     <html lang="en" suppressHydrationWarning>

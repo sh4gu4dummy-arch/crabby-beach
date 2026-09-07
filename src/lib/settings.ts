@@ -9,6 +9,7 @@ export type GrownupSettings = {
   hat: CrabHat;
   voiceCounts: boolean;
   music: boolean;
+  darkMode: boolean;
   timerMinutes: TimerMinutes;
   pen: PenId;
 };
@@ -20,6 +21,7 @@ export const DEFAULT_SETTINGS: GrownupSettings = {
   hat: "none",
   voiceCounts: true,
   music: true,
+  darkMode: false,
   timerMinutes: 0,
   pen: "swipe",
 };
@@ -48,6 +50,7 @@ export function loadSettings(): GrownupSettings {
       hat: isHat(parsed.hat) ? parsed.hat : DEFAULT_SETTINGS.hat,
       voiceCounts: typeof parsed.voiceCounts === "boolean" ? parsed.voiceCounts : true,
       music: typeof parsed.music === "boolean" ? parsed.music : true,
+      darkMode: parsed.darkMode === true,
       timerMinutes: isTimer(parsed.timerMinutes) ? parsed.timerMinutes : 0,
       pen: isPen(parsed.pen) ? parsed.pen : DEFAULT_SETTINGS.pen,
     };
@@ -59,4 +62,11 @@ export function loadSettings(): GrownupSettings {
 export function saveSettings(next: GrownupSettings) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(KEY, JSON.stringify(next));
+  applyTheme(next.darkMode);
+}
+
+export function applyTheme(dark: boolean) {
+  if (typeof document === "undefined") return;
+  document.documentElement.classList.toggle("dark", dark);
+  document.documentElement.style.colorScheme = dark ? "dark" : "light";
 }

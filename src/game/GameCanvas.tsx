@@ -291,6 +291,7 @@ export function GameCanvas() {
       {hud.phase === "sleep" && (
         <SleepScreen
           parentReady={parentReady}
+          dev={hud.dev}
           onParents={() => {
             if (window.confirm("Are you sure? This is for grown-ups.")) {
               setParentReady(true);
@@ -299,6 +300,10 @@ export function GameCanvas() {
           onReset={() => {
             setParentReady(false);
             apiRef.current?.resetProgress();
+          }}
+          onWake={() => {
+            setParentReady(false);
+            apiRef.current?.wake();
           }}
         />
       )}
@@ -407,6 +412,27 @@ export function GameCanvas() {
               Reset progress
             </button>
             {hud.dev && <p className="mt-2 text-xs font-bold tracking-wide text-coral uppercase">Dev mode on · all hours open</p>}
+            {hud.dev && (
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    unlockAudio();
+                    setShowBedtime(true);
+                  }}
+                  className="min-h-12 rounded-pill bg-ink px-3 text-sm font-bold text-cream ring-2 ring-ink"
+                >
+                  Bedtime video
+                </button>
+                <button
+                  type="button"
+                  onClick={() => apiRef.current?.goSleep()}
+                  className="min-h-12 rounded-pill bg-ink px-3 text-sm font-bold text-cream ring-2 ring-ink"
+                >
+                  Sleep screen
+                </button>
+              </div>
+            )}
             <button
               type="button"
               onClick={() => apiRef.current?.setDev(!hud.dev)}
@@ -890,12 +916,16 @@ function BedtimeOverlay({
 
 function SleepScreen({
   parentReady,
+  dev,
   onParents,
   onReset,
+  onWake,
 }: {
   parentReady: boolean;
+  dev: boolean;
   onParents: () => void;
   onReset: () => void;
+  onWake: () => void;
 }) {
   return (
     <div className="absolute inset-0 z-40 flex flex-col bg-[#0c1428] text-[#fff6e8]">
@@ -931,6 +961,15 @@ function SleepScreen({
           <p className="mt-8 max-w-xs rounded-pill bg-[#1a2a4a] px-4 py-2 text-sm font-semibold text-[#fff6e8]">
             Tap the tiny button in the top-left corner to reset.
           </p>
+        )}
+        {dev && (
+          <button
+            type="button"
+            onClick={onWake}
+            className="mt-6 min-h-12 rounded-pill bg-coral px-6 text-sm font-bold text-cream"
+          >
+            Wake (dev)
+          </button>
         )}
       </div>
       <button

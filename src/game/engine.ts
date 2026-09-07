@@ -49,6 +49,7 @@ export type GameApi = {
   playLevel: (n: number) => void;
   goMenu: () => void;
   goSleep: () => void;
+  wake: () => void;
   setDev: (on: boolean) => void;
   resetProgress: () => void;
   addTime: (seconds: number) => void;
@@ -1933,6 +1934,13 @@ export function createGame(
       asleep = true;
       saveAsleep(true);
       phase = "sleep";
+      brush.down = false;
+      emitHud();
+    },
+    wake() {
+      asleep = false;
+      saveAsleep(false);
+      phase = "menu";
       brush.down = false;
       emitHud();
     },

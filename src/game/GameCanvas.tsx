@@ -188,7 +188,7 @@ export function GameCanvas() {
   function toggleDark() {
     const next = !dark;
     setDark(next);
-    saveSettings({ ...loadSettings(), darkMode: next });
+    saveSettings({ ...loadSettings(), darkMode: next, darkModeChosen: true });
   }
 
   function toggleMusic() {

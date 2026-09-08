@@ -10,6 +10,7 @@ export type GrownupSettings = {
   voiceCounts: boolean;
   music: boolean;
   darkMode: boolean;
+  darkModeChosen: boolean;
   timerMinutes: TimerMinutes;
   pen: PenId;
 };
@@ -21,7 +22,8 @@ export const DEFAULT_SETTINGS: GrownupSettings = {
   hat: "none",
   voiceCounts: true,
   music: true,
-  darkMode: false,
+  darkMode: true,
+  darkModeChosen: false,
   timerMinutes: 0,
   pen: "swipe",
 };
@@ -50,7 +52,8 @@ export function loadSettings(): GrownupSettings {
       hat: isHat(parsed.hat) ? parsed.hat : DEFAULT_SETTINGS.hat,
       voiceCounts: typeof parsed.voiceCounts === "boolean" ? parsed.voiceCounts : true,
       music: typeof parsed.music === "boolean" ? parsed.music : true,
-      darkMode: parsed.darkMode === true,
+      darkMode: parsed.darkModeChosen === true ? parsed.darkMode === true : true,
+      darkModeChosen: parsed.darkModeChosen === true,
       timerMinutes: isTimer(parsed.timerMinutes) ? parsed.timerMinutes : 0,
       pen: isPen(parsed.pen) ? parsed.pen : DEFAULT_SETTINGS.pen,
     };

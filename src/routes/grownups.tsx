@@ -204,13 +204,13 @@ export function Grownups() {
               label="Off"
               value={"off"}
               current={settings.darkMode ? "on" : "off"}
-              onPick={() => update({ darkMode: false })}
+              onPick={() => update({ darkMode: false, darkModeChosen: true })}
             />
             <Choice
               label="On"
               value={"on"}
               current={settings.darkMode ? "on" : "off"}
-              onPick={() => update({ darkMode: true })}
+              onPick={() => update({ darkMode: true, darkModeChosen: true })}
             />
           </div>
           <p className="mt-4 text-sm font-semibold">Music</p>

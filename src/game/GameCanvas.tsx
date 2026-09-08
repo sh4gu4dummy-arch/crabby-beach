@@ -6,7 +6,7 @@ import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { loadSettings, saveSettings, applyTheme, type CrabColor, type CrabHat, type PenId } from "@/lib/settings";
 import { APP_VERSION } from "@/lib/version";
 import { assetUrl } from "@/lib/asset";
-import { isMuted, setMuted, setMusicEnabled, unlockAudio } from "./audio";
+import { isMuted, setMuted, setMusicEnabled, setMusicScene, unlockAudio } from "./audio";
 import { createGame, HOUR_SKIES, hourLabel, type GameApi, type GameHud } from "./engine";
 
 const EMPTY: GameHud = {
@@ -109,6 +109,16 @@ export function GameCanvas() {
       setShowIntro(true);
     }
   }, [hud.asleep, hud.dev]);
+
+  useEffect(() => {
+    if (hud.phase === "playing" || hud.phase === "won" || hud.phase === "timesup") {
+      setMusicScene("game");
+    } else if (hud.phase === "sleep" || showBedtime) {
+      setMusicScene("quiet");
+    } else {
+      setMusicScene("menu");
+    }
+  }, [hud.phase, showBedtime]);
 
   useEffect(() => {
     if (hud.phase === "won" && hud.hour >= hud.maxLevel && !hud.dev) {

@@ -5,9 +5,11 @@ let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
 let sfxBus: GainNode | null = null;
 let musicBus: GainNode | null = null;
+let oceanGain: GainNode | null = null;
 let muted = false;
 let musicOn = true;
-let ambientStarted = false;
+let musicScene: "menu" | "game" | "quiet" = "menu";
+let oceanSrc: AudioBufferSourceNode | null = null;
 let noiseBuffer: AudioBuffer | null = null;
 let voiceSrc: AudioBufferSourceNode | null = null;
 let brushSrc: AudioBufferSourceNode | null = null;
@@ -48,11 +50,14 @@ function ensureGraph() {
   master = ctx.createGain();
   sfxBus = ctx.createGain();
   musicBus = ctx.createGain();
+  oceanGain = ctx.createGain();
   sfxBus.gain.value = 0.85;
-  musicBus.gain.value = musicOn ? 0.12 : 0;
+  musicBus.gain.value = musicOn ? 0.14 : 0;
+  oceanGain.gain.value = 0;
   master.gain.value = muted ? 0 : 1;
   sfxBus.connect(master);
   musicBus.connect(master);
+  oceanGain.connect(musicBus);
   master.connect(ctx.destination);
 
   const n = Math.floor(ctx.sampleRate * 0.8);
@@ -68,7 +73,7 @@ function resume() {
 export function unlockAudio() {
   ensureGraph();
   resume();
-  startAmbient();
+  startMusicEngine();
   void loadVoices();
 }
 
@@ -137,8 +142,19 @@ export function isMuted() {
 export function setMusicEnabled(on: boolean) {
   musicOn = on;
   if (musicBus && ctx) {
-    musicBus.gain.setTargetAtTime(on ? 0.12 : 0, ctx.currentTime, 0.05);
+    musicBus.gain.setTargetAtTime(on ? 0.14 : 0, ctx.currentTime, 0.05);
   }
+  if (oceanGain && ctx) {
+    oceanGain.gain.setTargetAtTime(on && musicScene === "game" ? 0.12 : 0, ctx.currentTime, 0.08);
+  }
+}
+
+export function setMusicScene(scene: "menu" | "game" | "quiet") {
+  musicScene = scene;
+  if (!ctx || !oceanGain) return;
+  const at = ctx.currentTime;
+  const ocean = scene === "game" && musicOn ? 0.12 : 0;
+  oceanGain.gain.setTargetAtTime(ocean, at, 0.08);
 }
 
 export function speak(text: string) {
@@ -377,52 +393,73 @@ function pluck(freq: number, dur: number, peak: number, at: number) {
   osc.stop(at + dur + 0.05);
 }
 
-function startAmbient() {
-  if (!ctx || !musicBus || !noiseBuffer || ambientStarted) return;
-  ambientStarted = true;
-
+function startOcean() {
+  if (!ctx || !oceanGain || !noiseBuffer || oceanSrc) return;
   const src = ctx.createBufferSource();
   src.buffer = noiseBuffer;
   src.loop = true;
+  src.playbackRate.value = 0.28;
   const filter = ctx.createBiquadFilter();
   filter.type = "lowpass";
-  filter.frequency.value = 380;
-  filter.Q.value = 0.5;
-  const g = ctx.createGain();
-  g.gain.value = 0.1;
+  filter.frequency.value = 360;
+  filter.Q.value = 0.45;
   src.connect(filter);
-  filter.connect(g);
-  g.connect(musicBus);
+  filter.connect(oceanGain);
   src.start();
+  oceanSrc = src;
+}
 
-  const tune: Array<[number, number]> = [
-    [262, 0.55],
-    [330, 0.55],
-    [392, 0.8],
-    [330, 0.4],
-    [294, 0.7],
-    [262, 0.9],
-    [196, 0.7],
-    [262, 0.55],
-    [392, 0.55],
-    [440, 0.7],
-    [392, 0.5],
-    [330, 0.9],
-    [294, 0.55],
-    [262, 1.1],
-  ];
+const MENU_TUNE: Array<[number, number]> = [
+  [392, 0.28],
+  [494, 0.28],
+  [587, 0.42],
+  [659, 0.28],
+  [587, 0.28],
+  [494, 0.42],
+  [392, 0.28],
+  [330, 0.28],
+  [392, 0.55],
+  [523, 0.28],
+  [587, 0.28],
+  [659, 0.7],
+  [587, 0.35],
+  [494, 0.9],
+];
+
+const GAME_TUNE: Array<[number, number]> = [
+  [262, 0.7],
+  [330, 0.7],
+  [392, 1.0],
+  [330, 0.5],
+  [294, 0.9],
+  [262, 1.1],
+  [196, 0.9],
+  [262, 1.2],
+];
+
+function startMusicEngine() {
+  if (!ctx || !musicBus || !noiseBuffer) return;
+  startOcean();
+  if (musicTimer != null) return;
 
   const tick = () => {
-    if (!ctx || !musicOn) {
+    if (!ctx) {
       musicTimer = window.setTimeout(tick, 1200);
       return;
     }
-    let t = ctx.currentTime + 0.05;
+    if (!musicOn || musicScene === "quiet") {
+      musicTimer = window.setTimeout(tick, 900);
+      return;
+    }
+    const tune = musicScene === "menu" ? MENU_TUNE : GAME_TUNE;
+    const peak = musicScene === "menu" ? 0.055 : 0.028;
+    let t = ctx.currentTime + 0.04;
     for (const [freq, dur] of tune) {
-      pluck(freq, dur * 0.92, 0.045, t);
+      pluck(freq, dur * (musicScene === "menu" ? 0.78 : 1.05), peak, t);
+      if (musicScene === "menu") pluck(freq * 2, dur * 0.45, peak * 0.28, t + 0.02);
       t += dur;
     }
-    musicTimer = window.setTimeout(tick, (t - ctx.currentTime + 0.8) * 1000);
+    musicTimer = window.setTimeout(tick, (t - ctx.currentTime + 0.55) * 1000);
   };
   tick();
 }

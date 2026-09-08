@@ -213,7 +213,7 @@ export function Grownups() {
               onPick={() => update({ darkMode: true })}
             />
           </div>
-          <p className="mt-4 text-sm font-semibold">Ocean music</p>
+          <p className="mt-4 text-sm font-semibold">Music</p>
           <div className="mt-2 flex flex-wrap gap-2">
             <Choice
               label="On"

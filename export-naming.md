@@ -1,6 +1,6 @@
-# export-naming.md — v.080
+# export-naming.md — v.081
 
-Current product version: **v.079** (Crabby Beach)
+Current product version: **v.080** (Crabby Beach)
 
 ## How filenames work
 
@@ -9,11 +9,11 @@ so you can tell which version a file is just by looking at it.
 
 | Package | Filename | What it is |
 | --- | --- | --- |
-| Code only | `crabby-beach-v.079-code.md` | One Markdown document: table of contents + essential source in fenced code blocks. For read / search / share / archive. **Not runnable.** No voice, no art assets. |
-| Code + assets (full) | `crabby-beach-v.079-codebase.zip` | Complete project tree, including data, generated assets, and config, for offline rebuild. |
-| Portable app | `crabby-beach-v.079-portable.zip` | Playable, offline-ready. Unzip and open. |
-| Android project | `crabby-beach-v.079-android.zip` | Android project + build readme. |
-| Android APK | `crabby-beach-v.079.apk` | Installable APK for this version. |
+| Code only | Last file actually on disk (see Grown-ups). Currently rebuilt each version as `crabby-beach-v.<n>-code.md`. | One Markdown document: table of contents + essential source in fenced code blocks. For read / search / share / archive. **Not runnable.** No voice, no art assets. |
+| Code + assets (full) | Last built zip on disk, e.g. `crabby-beach-v.060-codebase.zip` until you ask for a new export. | Complete project tree, including data, generated assets, and config, for offline rebuild. |
+| Portable app | Last built zip on disk. | Playable, offline-ready. Unzip and open. |
+| Android project | Last built zip on disk. | Android project + build readme. |
+| Android APK | Last built APK on disk. | Installable APK for **that** version, not whatever the game currently is. |
 
 Older files keep their names (`v.001` stays `v.001`). New exports use the current number.
 
@@ -31,5 +31,5 @@ Older files keep their names (`v.001` stays `v.001`). New exports use the curren
 ## Version numbers
 
 - Product versions increment `v.001`, `v.002`, `v.003`, …
-- This naming document started at `v.001` and is now **v.080**.
+- This naming document started at `v.001` and is now **v.081**.
 - Never skip or reuse a number. A new version is a new number.

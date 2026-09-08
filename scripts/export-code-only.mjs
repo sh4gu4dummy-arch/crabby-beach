@@ -1,5 +1,6 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { spawnSync } from "node:child_process";
 
 const root = "/workspace";
 const versionLine = readFileSync(join(root, "VERSION"), "utf8").split("\n")[0];
@@ -19,6 +20,7 @@ const files = [
   "src/lib/offline.ts",
   "src/lib/settings.ts",
   "src/lib/progress.ts",
+  "src/lib/exports.ts",
   "src/lib/version.ts",
   "src/router.tsx",
   "src/styles.css",
@@ -31,6 +33,7 @@ const files = [
   "scripts/render-shells.py",
   "scripts/render-sand.py",
   "scripts/render-crabby-sleep.py",
+  "scripts/write-download-manifest.mjs",
   "scripts/render-intro.py",
   "src/routes/__root.tsx",
   "src/routes/index.tsx",
@@ -73,3 +76,4 @@ for (const file of files) {
 mkdirSync(dirname(outPath), { recursive: true });
 writeFileSync(outPath, parts.join("\n"));
 console.log(`wrote ${outPath}`);
+spawnSync("node", [join(root, "scripts/write-download-manifest.mjs")], { stdio: "inherit" });

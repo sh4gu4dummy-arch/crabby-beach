@@ -297,6 +297,7 @@ def main() -> None:
     zip_dir(android, DL / f"crabby-beach-{VERSION}-android.zip", f"crabby-beach-{VERSION}-android")
     codebase_zip()
     build_apk(android)
+    subprocess.run(["node", str(ROOT / "scripts/write-download-manifest.mjs")], check=True)
 
 
 if __name__ == "__main__":

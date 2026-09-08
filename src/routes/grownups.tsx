@@ -10,7 +10,8 @@ import {
   type TimerMinutes,
 } from "@/lib/settings";
 import { loadProgress, saveProgress } from "@/lib/progress";
-import { APP_NAME, APP_VERSION, DOWNLOADS } from "@/lib/version";
+import { APP_NAME, APP_VERSION } from "@/lib/version";
+import { EXPORTS, type ExportFile } from "@/lib/exports";
 
 export const Route = createFileRoute("/grownups")({ component: Grownups });
 
@@ -18,50 +19,49 @@ type Pack = {
   title: string;
   blurb: string;
   filename: string;
+  version?: string;
   ready: boolean;
   icon: typeof FileText;
   note?: string;
 };
 
+function pack(kind: keyof typeof EXPORTS, extra: Omit<Pack, "filename" | "ready" | "version" | "note"> & { note?: string }): Pack {
+  const hit: ExportFile | null = EXPORTS[kind];
+  return {
+    filename: hit?.file ?? "(not built)",
+    version: hit?.version,
+    ready: Boolean(hit),
+    note: hit ? undefined : "Ask me to export this when you want it.",
+    ...extra,
+  };
+}
+
 const PACKS: Pack[] = [
-  {
+  pack("codeOnly", {
     title: "Code only",
     blurb: "One Markdown file with the source for reading, searching, and review. Not playable.",
-    filename: DOWNLOADS.codeOnly,
-    ready: true,
     icon: FileText,
-  },
-  {
+  }),
+  pack("codebase", {
     title: "Code + assets",
     blurb: "Full project tree, including art and config, for an offline rebuild.",
-    filename: DOWNLOADS.codebase,
-    ready: false,
     icon: FolderArchive,
-    note: "Ask me to export this zip when you want it.",
-  },
-  {
+  }),
+  pack("portable", {
     title: "Portable app",
     blurb: "Playable offline snapshot. Unzip and open index.html — no install, no network.",
-    filename: DOWNLOADS.portable,
-    ready: false,
     icon: Package,
-    note: "Ask me to export this zip when you want it.",
-  },
-  {
+  }),
+  pack("android", {
     title: "Android project",
     blurb: "Android Studio project with the game inside, if you want to rebuild.",
-    filename: DOWNLOADS.android,
-    ready: false,
     icon: Smartphone,
-    note: "Ask me to export this zip when you want it.",
-  },
-  {
+  }),
+  pack("apk", {
     title: "Android APK",
-    blurb: "Installable APK for this version. Allow unknown sources, then open the file on a phone.",
-    filename: DOWNLOADS.apk,
-    ready: true,
+    blurb: "Installable APK. Allow unknown sources, then open the file on a phone.",
     icon: Smartphone,
-  },
+  }),
 ];
 
 function Choice<T extends string | number>({
@@ -312,6 +312,11 @@ export function Grownups() {
                     <p className="font-bold">{pack.title}</p>
                     <p className="mt-1 text-sm leading-relaxed text-ink-soft">{pack.blurb}</p>
                     <p className="mt-2 truncate font-mono text-xs text-ink-soft">{pack.filename}</p>
+                    {pack.ready && pack.version && pack.version !== APP_VERSION && (
+                      <p className="mt-1 text-xs font-semibold text-ink-soft">
+                        Last built {pack.version}. Game is {APP_VERSION}.
+                      </p>
+                    )}
                     {pack.ready ? (
                       <a
                         href={`/downloads/${pack.filename}`}

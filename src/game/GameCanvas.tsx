@@ -903,7 +903,7 @@ function BedtimeOverlay({
     <div className="absolute inset-0 z-50 bg-[#0c1428]">
       <video
         ref={ref}
-        src={assetUrl("game/bedtime.mp4?v=073")}
+        src={assetUrl("game/bedtime.mp4?v=078")}
         playsInline
         className="h-full w-full object-contain bg-[#0c1428]"
         onTimeUpdate={(e) => setCaption(captionAt(e.currentTarget.currentTime))}

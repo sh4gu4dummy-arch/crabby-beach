@@ -4,6 +4,7 @@ Reading / search / archive package. **Not runnable.** No art, audio files, or vo
 
 ## Table of contents
 
+- [AGENTS.project.md](#agents-project-md)
 - [VERSION](#version)
 - [export-naming.md](#export-naming-md)
 - [package.json](#package-json)
@@ -32,6 +33,25 @@ Reading / search / archive package. **Not runnable.** No art, audio files, or vo
 - [src/routes/__root.tsx](#src-routes-__root-tsx)
 - [src/routes/index.tsx](#src-routes-index-tsx)
 - [src/routes/grownups.tsx](#src-routes-grownups-tsx)
+
+## AGENTS.project.md
+
+```md
+# Crabby Beach — standing rules (user)
+
+These override guesswork. Do not “helpfully” ignore them.
+
+## Downloads / exports
+- Rebuild zip / APK / portable / android **only when the user explicitly asks**.
+- Code-only `.md` + local git: every version, unless they say stop.
+- GitHub: only every 10 versions (v.080, v.090, …) unless they ask.
+- Grok Publish: the user clicks Publish. Do not claim it was refreshed unless they give a URL you can verify.
+- **Download labels must be the real file on disk.** Never stamp the current game version on an unbuilt package. `src/lib/exports.ts` is generated from `public/downloads/` by `scripts/write-download-manifest.mjs`. If a zip/APK is still v.060, the page says v.060.
+
+## Honesty
+- Do not say a file, APK, Publish link, or video is updated unless you checked.
+- Do not mark a download `ready` unless that exact filename exists.
+```
 
 ## VERSION
 
@@ -584,34 +604,34 @@ export type ExportKind = "codeOnly" | "codebase" | "portable" | "android" | "apk
 export type ExportFile = { version: string; file: string; bytes: number; mtime: string };
 export const EXPORTS: Record<ExportKind, ExportFile | null> = {
   "codeOnly": {
-    "version": "v.079",
-    "file": "crabby-beach-v.079-code.md",
-    "bytes": 168165,
-    "mtime": "2026-09-08T01:35:50.136Z"
+    "version": "v.080",
+    "file": "crabby-beach-v.080-code.md",
+    "bytes": 171670,
+    "mtime": "2026-09-08T05:21:57.081Z"
   },
   "codebase": {
-    "version": "v.060",
-    "file": "crabby-beach-v.060-codebase.zip",
-    "bytes": 30171645,
-    "mtime": "2026-09-04T12:39:50.450Z"
+    "version": "v.080",
+    "file": "crabby-beach-v.080-codebase.zip",
+    "bytes": 42976783,
+    "mtime": "2026-09-08T05:25:14.701Z"
   },
   "portable": {
-    "version": "v.060",
-    "file": "crabby-beach-v.060-portable.zip",
-    "bytes": 7012093,
-    "mtime": "2026-09-04T12:39:48.494Z"
+    "version": "v.080",
+    "file": "crabby-beach-v.080-portable.zip",
+    "bytes": 19023613,
+    "mtime": "2026-09-08T05:25:11.909Z"
   },
   "android": {
-    "version": "v.060",
-    "file": "crabby-beach-v.060-android.zip",
-    "bytes": 7113694,
-    "mtime": "2026-09-04T12:39:48.798Z"
+    "version": "v.080",
+    "file": "crabby-beach-v.080-android.zip",
+    "bytes": 19125905,
+    "mtime": "2026-09-08T05:25:12.449Z"
   },
   "apk": {
-    "version": "v.060",
-    "file": "crabby-beach-v.060.apk",
-    "bytes": 7848199,
-    "mtime": "2026-09-04T12:40:11.930Z"
+    "version": "v.080",
+    "file": "crabby-beach-v.080.apk",
+    "bytes": 19966685,
+    "mtime": "2026-09-08T05:25:35.713Z"
   }
 };
 ```

@@ -10,6 +10,7 @@ const filename = `crabby-beach-${version}-code.md`;
 const outPath = join(root, "public/downloads", filename);
 
 const files = [
+  "AGENTS.project.md",
   "VERSION",
   "export-naming.md",
   "package.json",

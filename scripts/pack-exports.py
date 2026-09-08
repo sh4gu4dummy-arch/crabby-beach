@@ -12,6 +12,8 @@ ROOT = Path("/workspace")
 _first = ROOT.joinpath("VERSION").read_text().splitlines()[0]
 _m = re.search(r"v\.\d+", _first)
 VERSION = _m.group(0) if _m else "v.000"
+VERSION_CODE = int(re.sub(r"\D", "", VERSION) or "0")
+VERSION_NAME = f"0.{VERSION_CODE:03d}"
 DL = ROOT / "public/downloads"
 PORTABLE_SRC = Path("/tmp/crabby-portable")
 ANDROID = Path("/tmp/crabby-android")
@@ -155,8 +157,8 @@ def write_android(www: Path) -> Path:
         "    applicationId 'beach.crabby'\n"
         "    minSdk 24\n"
         "    targetSdk 34\n"
-        "    versionCode 60\n"
-        "    versionName '0.060'\n"
+        f"    versionCode {VERSION_CODE}\n"
+        f"    versionName '{VERSION_NAME}'\n"
         "  }\n"
         "  compileOptions {\n"
         "    sourceCompatibility JavaVersion.VERSION_17\n"

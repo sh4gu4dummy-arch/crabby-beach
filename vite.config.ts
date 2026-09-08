@@ -134,6 +134,9 @@ export default defineConfig(({ command }) => ({
     host: "0.0.0.0",
     port: 8080,
     strictPort: true,
+    watch: {
+      ignored: ["**/public/downloads/**", "**/.git/**", "**/*.apk", "**/*.zip"],
+    },
   },
   resolve: { tsconfigPaths: true },
   plugins: [

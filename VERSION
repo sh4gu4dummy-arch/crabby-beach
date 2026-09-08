@@ -1,7 +1,5 @@
-Crabby Beach v.080
+Crabby Beach v.081
 
 Local git: every version.
-GitHub + Grok Publish: only at v.040, v.050, v.060, v.070, v.080…
-This is a GitHub checkpoint.
-Next: v.090
-Publish: only when you hit Publish in Grok, or give a URL to verify.
+Zip/APK: only when asked. Labels = files on disk.
+GitHub: v.090 next. Publish: user clicks it.

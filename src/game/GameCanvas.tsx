@@ -75,6 +75,7 @@ export function GameCanvas() {
   const [showIntro, setShowIntro] = useState(false);
   const [showBedtime, setShowBedtime] = useState(false);
   const [parentReady, setParentReady] = useState(false);
+  const [slowLoad, setSlowLoad] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -91,6 +92,15 @@ export function GameCanvas() {
       apiRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    if (hud.phase !== "loading") {
+      setSlowLoad(false);
+      return;
+    }
+    const t = window.setTimeout(() => setSlowLoad(true), 280);
+    return () => window.clearTimeout(t);
+  }, [hud.phase]);
 
   useEffect(() => {
     if (hud.countPop == null) return;
@@ -305,7 +315,7 @@ export function GameCanvas() {
         </p>
       )}
 
-      {hud.phase === "loading" && (
+      {slowLoad && hud.phase === "loading" && (
         <div className="absolute inset-0 z-20 grid place-items-center bg-sky">
           <div className="rounded-card bg-cream px-8 py-6 text-center shadow-lg shadow-ink/10">
             <p className="text-2xl font-bold">Crabby Beach</p>

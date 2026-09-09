@@ -483,8 +483,9 @@ export function GameCanvas() {
               className={`mt-2 min-h-10 self-center rounded-pill px-4 text-sm font-bold ring-2 ${
                 hud.dev ? "bg-coral text-cream ring-coral-deep" : "bg-cream/90 text-ink-soft ring-sand-deep"
               }`}
+              aria-label={hud.dev ? "Turn off dev mode" : "Turn on dev mode"}
             >
-              Dev {hud.dev ? "on" : "off"}
+              {hud.dev ? "Turn off dev mode" : "Turn on dev mode"}
             </button>
             <div className="relative mt-auto flex min-h-[7.5rem] items-end justify-center pt-3">
               <img

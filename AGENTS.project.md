@@ -15,3 +15,8 @@ These override guesswork. Do not “helpfully” ignore them.
 
 ## Preview
 - “Warming up the sand” is the loading overlay. Vite HMR / SSR program reload (while files are being edited) remounts the game and shows it again. That is the preview, not a gameplay bug. Do not watch `public/downloads` (huge zips).
+
+## Dev / intro
+- Dev mode defaults **on** until the user turns it off.
+- Intro video autoplays only the first time, and only when dev is off.
+- Cinema still plays anytime.

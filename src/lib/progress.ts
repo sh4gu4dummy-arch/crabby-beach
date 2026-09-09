@@ -4,28 +4,33 @@ export const MAX_HOURS = 12;
 export type Progress = {
   cleared: number;
   dev: boolean;
+  devChosen: boolean;
   asleep: boolean;
 };
+
+const FRESH: Progress = { cleared: 0, dev: true, devChosen: false, asleep: false };
 
 function clampCleared(n: number) {
   return Math.min(MAX_HOURS, Math.max(0, Math.floor(n)));
 }
 
 export function loadProgress(): Progress {
-  if (typeof window === "undefined") return { cleared: 0, dev: false, asleep: false };
+  if (typeof window === "undefined") return { ...FRESH };
   try {
     const raw = window.localStorage.getItem(KEY);
-    if (!raw) return { cleared: 0, dev: false, asleep: false };
+    if (!raw) return { ...FRESH };
     const parsed = JSON.parse(raw) as Partial<Progress>;
     const cleared = typeof parsed.cleared === "number" ? clampCleared(parsed.cleared) : 0;
     const asleep = parsed.asleep === true || (parsed.asleep == null && cleared >= MAX_HOURS);
+    const chosen = parsed.devChosen === true;
     return {
       cleared,
-      dev: parsed.dev === true,
+      dev: chosen ? parsed.dev === true : true,
+      devChosen: chosen,
       asleep,
     };
   } catch {
-    return { cleared: 0, dev: false, asleep: false };
+    return { ...FRESH };
   }
 }
 
@@ -36,6 +41,7 @@ export function saveProgress(next: Progress) {
     JSON.stringify({
       cleared: clampCleared(next.cleared),
       dev: next.dev === true,
+      devChosen: next.devChosen === true,
       asleep: next.asleep === true,
     }),
   );
@@ -57,7 +63,7 @@ export function loadDev(): boolean {
 
 export function saveDev(dev: boolean) {
   const prev = loadProgress();
-  saveProgress({ ...prev, dev });
+  saveProgress({ ...prev, dev, devChosen: true });
 }
 
 export function loadAsleep(): boolean {

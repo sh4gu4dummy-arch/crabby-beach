@@ -25,7 +25,7 @@ const EMPTY: GameHud = {
   unlocked: 1,
   pen: "swipe",
   finished: false,
-  dev: false,
+  dev: true,
   extrasOpen: false,
   tideBusy: false,
   asleep: false,
@@ -111,7 +111,12 @@ export function GameCanvas() {
   }, [hud.countKey, hud.countPop]);
 
   useEffect(() => {
-    if (hud.asleep && !hud.dev) return;
+    if (hud.phase === "loading") return;
+    if (hud.dev) {
+      setShowIntro(false);
+      return;
+    }
+    if (hud.asleep) return;
     try {
       if (window.localStorage.getItem("crabby-beach-intro-seen-v1") !== "1") {
         setShowIntro(true);
@@ -119,7 +124,7 @@ export function GameCanvas() {
     } catch {
       setShowIntro(true);
     }
-  }, [hud.asleep, hud.dev]);
+  }, [hud.phase, hud.asleep, hud.dev]);
 
   useEffect(() => {
     if (hud.phase === "playing" || hud.phase === "won" || hud.phase === "timesup") {

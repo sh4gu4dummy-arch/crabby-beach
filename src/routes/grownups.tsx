@@ -258,13 +258,13 @@ export function Grownups() {
               label="Off"
               value={"off"}
               current={progress.dev ? "on" : "off"}
-              onPick={() => updateProgress({ dev: false })}
+              onPick={() => updateProgress({ dev: false, devChosen: true })}
             />
             <Choice
               label="On"
               value={"on"}
               current={progress.dev ? "on" : "off"}
-              onPick={() => updateProgress({ dev: true })}
+              onPick={() => updateProgress({ dev: true, devChosen: true })}
             />
           </div>
           <p className="mt-4 text-sm font-semibold">Progress</p>
@@ -272,7 +272,7 @@ export function Grownups() {
             <button
               type="button"
               onClick={() => {
-                saveProgress({ cleared: 12, dev: progress.dev, asleep: true });
+                saveProgress({ ...progress, cleared: 12, asleep: true });
                 setProgress(loadProgress());
               }}
               className="inline-flex min-h-11 items-center justify-center rounded-pill bg-sand px-4 text-sm font-bold text-ink"
@@ -282,7 +282,7 @@ export function Grownups() {
             <button
               type="button"
               onClick={() => {
-                saveProgress({ cleared: 0, dev: progress.dev, asleep: false });
+                saveProgress({ ...progress, cleared: 0, asleep: false });
                 setProgress(loadProgress());
               }}
               className="inline-flex min-h-11 items-center justify-center rounded-pill bg-sand px-4 text-sm font-bold text-ink"

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Check, Home, Lock, Moon, Music2, Palette, Play, RotateCcw, Sun, Timer, UserRound, Volume2, VolumeX } from "lucide-react";
+import { Check, Clapperboard, Home, Lock, Moon, Music2, Palette, Play, RotateCcw, Sun, Timer, UserRound, Volume2, VolumeX } from "lucide-react";
 import { SignedIn, SignedOut, UserButton } from "@/lib/auth/gates";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { loadSettings, saveSettings, applyTheme, type CrabColor, type CrabHat, type PenId } from "@/lib/settings";
@@ -71,6 +71,7 @@ export function GameCanvas() {
   const [dark, setDark] = useState(() => loadSettings().darkMode);
   const [popOn, setPopOn] = useState(false);
   const [loadout, setLoadout] = useState(false);
+  const [cinema, setCinema] = useState(false);
   const [kit, setKit] = useState(() => loadSettings());
   const [showIntro, setShowIntro] = useState(false);
   const [showBedtime, setShowBedtime] = useState(false);
@@ -123,12 +124,12 @@ export function GameCanvas() {
   useEffect(() => {
     if (hud.phase === "playing" || hud.phase === "won" || hud.phase === "timesup") {
       setMusicScene("game");
-    } else if (hud.phase === "sleep" || showBedtime) {
+    } else if (hud.phase === "sleep" || showBedtime || showIntro) {
       setMusicScene("quiet");
     } else {
       setMusicScene("menu");
     }
-  }, [hud.phase, showBedtime]);
+  }, [hud.phase, showBedtime, showIntro]);
 
   useEffect(() => {
     if (hud.phase === "won" && hud.hour >= hud.maxLevel && !hud.dev) {
@@ -150,12 +151,14 @@ export function GameCanvas() {
 
   function goMenu() {
     setLoadout(false);
+    setCinema(false);
     apiRef.current?.goMenu();
   }
 
   function finishBedtime() {
     setShowBedtime(false);
     setParentReady(false);
+    if (cinema) return;
     apiRef.current?.goSleep();
   }
 
@@ -215,7 +218,7 @@ export function GameCanvas() {
       : `${Math.floor(hud.secondsLeft / 60)}:${String(hud.secondsLeft % 60).padStart(2, "0")}`;
 
   const inGame = hud.phase === "playing" || hud.phase === "won" || hud.phase === "timesup";
-  const nightBg = hud.phase === "sleep" || showBedtime ? { background: "#0c1428" } : undefined;
+  const nightBg = hud.phase === "sleep" || showBedtime || cinema ? { background: "#0c1428" } : undefined;
 
   return (
     <div className="flex h-full min-h-[100vh] w-full justify-center overflow-hidden bg-sand" style={inGame ? { background: hud.skyFill } : nightBg}>
@@ -344,7 +347,7 @@ export function GameCanvas() {
         />
       )}
 
-      {hud.phase === "menu" && !loadout && (
+      {hud.phase === "menu" && !loadout && !cinema && (
         <div className="menu-sky absolute inset-0 z-30 flex flex-col overflow-y-auto">
           <div className="menu-sun" aria-hidden="true" />
           <div className="relative z-10 flex items-center justify-between px-4 pt-[max(1.1rem,env(safe-area-inset-top))]">
@@ -437,11 +440,11 @@ export function GameCanvas() {
             </button>
             <button
               type="button"
-              onClick={() => setShowIntro(true)}
+              onClick={() => setCinema(true)}
               className="mt-2 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-pill bg-cream px-6 py-3 text-base font-bold text-ink ring-2 ring-sand-deep"
             >
-              <Play className="size-5" />
-              Watch intro
+              <Clapperboard className="size-5" />
+              Cinema
             </button>
             <button
               type="button"
@@ -460,18 +463,8 @@ export function GameCanvas() {
               <div className="mt-2 grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={() => {
-                    unlockAudio();
-                    setShowBedtime(true);
-                  }}
-                  className="min-h-12 rounded-pill bg-ink px-3 text-sm font-bold text-cream ring-2 ring-ink"
-                >
-                  Bedtime video
-                </button>
-                <button
-                  type="button"
                   onClick={() => apiRef.current?.goSleep()}
-                  className="min-h-12 rounded-pill bg-ink px-3 text-sm font-bold text-cream ring-2 ring-ink"
+                  className="min-h-12 col-span-2 rounded-pill bg-ink px-3 text-sm font-bold text-cream ring-2 ring-ink"
                 >
                   Sleep screen
                 </button>
@@ -512,6 +505,20 @@ export function GameCanvas() {
             </Link>
           </div>
         </div>
+      )}
+
+      {hud.phase === "menu" && cinema && (
+        <CinemaLobby
+          onIntro={() => {
+            unlockAudio();
+            setShowIntro(true);
+          }}
+          onBedtime={() => {
+            unlockAudio();
+            setShowBedtime(true);
+          }}
+          onBack={() => setCinema(false)}
+        />
       )}
 
       {hud.phase === "menu" && loadout && (
@@ -674,6 +681,72 @@ function KitPick<T extends string>({
       {label}
       {locked && <Lock className="size-3.5 opacity-80" />}
     </button>
+  );
+}
+
+function CinemaLobby({
+  onIntro,
+  onBedtime,
+  onBack,
+}: {
+  onIntro: () => void;
+  onBedtime: () => void;
+  onBack: () => void;
+}) {
+  return (
+    <div className="absolute inset-0 z-30 flex flex-col overflow-y-auto bg-[#120c18] text-[#fff6e8]">
+      <div className="pointer-events-none absolute inset-0 opacity-40" aria-hidden="true">
+        <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#3a1020] to-transparent" />
+        <div className="absolute inset-x-8 top-24 h-px bg-[#e8c07a]/40" />
+      </div>
+      <div className="relative z-10 mx-auto flex w-full max-w-sm flex-1 flex-col px-4 pt-[max(1.1rem,env(safe-area-inset-top))] pb-[max(1.1rem,env(safe-area-inset-bottom))]">
+        <p className="text-center text-sm font-semibold tracking-[0.25em] text-[#e8c07a] uppercase">Now showing</p>
+        <h1 className="mt-1 text-center text-4xl font-bold tracking-tight">Cinema</h1>
+        <p className="mt-2 text-center text-sm text-[#d8c4b8]">Pick a picture.</p>
+        <div className="mt-5 grid gap-4">
+          <button
+            type="button"
+            onClick={onIntro}
+            className="overflow-hidden rounded-[1.4rem] bg-[#1c1422] text-left shadow-lg ring-2 ring-[#e8c07a]/50"
+          >
+            <div className="relative aspect-[16/10] overflow-hidden bg-[#2a1c28]">
+              <img src={assetUrl("game/crabby/idle-red-0.png?v=051")} alt="" className="absolute inset-0 m-auto h-[88%] object-contain" />
+              <span className="absolute right-3 bottom-3 grid size-11 place-items-center rounded-full bg-coral text-cream shadow-md">
+                <Play className="size-5" fill="currentColor" />
+              </span>
+            </div>
+            <div className="px-4 py-3">
+              <p className="text-xs font-semibold tracking-wide text-[#e8c07a] uppercase">Short</p>
+              <p className="text-lg font-bold">Meet Crabby</p>
+            </div>
+          </button>
+          <button
+            type="button"
+            onClick={onBedtime}
+            className="overflow-hidden rounded-[1.4rem] bg-[#1c1422] text-left shadow-lg ring-2 ring-[#e8c07a]/50"
+          >
+            <div className="relative aspect-[16/10] overflow-hidden bg-[#0c1428]">
+              <img src={assetUrl("game/crabby-sleep-0.png?v=075")} alt="" className="absolute inset-0 m-auto h-[95%] object-contain" />
+              <span className="absolute right-3 bottom-3 grid size-11 place-items-center rounded-full bg-coral text-cream shadow-md">
+                <Play className="size-5" fill="currentColor" />
+              </span>
+            </div>
+            <div className="px-4 py-3">
+              <p className="text-xs font-semibold tracking-wide text-[#e8c07a] uppercase">Short</p>
+              <p className="text-lg font-bold">Night night</p>
+            </div>
+          </button>
+        </div>
+        <button
+          type="button"
+          onClick={onBack}
+          className="mt-auto inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-pill bg-cream px-6 py-3 text-base font-bold text-ink"
+        >
+          <Home className="size-5" />
+          Back to hours
+        </button>
+      </div>
+    </div>
   );
 }
 

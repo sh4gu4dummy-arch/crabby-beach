@@ -95,13 +95,13 @@ export function hourLabel(hour: number) {
 const CAN_HIT = 56;
 const WATER_WALK = 118;
 const FILL_SECS = 1;
-const TIDE_IN = 19.2;
-const TIDE_OUT = 16.8;
-const TIDE_SHINE_AT = 20.3;
-const TIDE_END = 36;
-const FLOW_PERIOD = 36;
+const TIDE_IN = 6.4;
+const TIDE_OUT = 5.6;
+const TIDE_SHINE_AT = 7.5;
+const TIDE_END = 12;
 const FLOW_IN = 19.2;
 const FLOW_OUT = 16.8;
+const FLOW_PERIOD = FLOW_IN + FLOW_OUT;
 
 type PaintId = "red" | "orange" | "yellow" | "green" | "blue" | "purple" | "pink";
 
@@ -648,16 +648,21 @@ export function createGame(
     return Math.min(vis.y1 + 36, SAND_BOT - 48);
   }
 
+  function flowReachY() {
+    const vis = sandView();
+    const rest = WATER_MAX + 16;
+    const far = Math.min(vis.y1, SAND_BOT - 48);
+    const beach = Math.max(80, far - rest);
+    return rest + beach * 0.85;
+  }
+
   function flowY() {
     const rest = WATER_MAX + 16;
-    const deep = tideReachY();
+    const deep = flowReachY();
     const t = flowT % FLOW_PERIOD;
     if (t <= FLOW_IN) return rest + (deep - rest) * easeInOut(t / FLOW_IN);
-    if (t <= FLOW_IN + FLOW_OUT) {
-      const u = (t - FLOW_IN) / FLOW_OUT;
-      return deep + (rest - deep) * easeInOut(u);
-    }
-    return rest + (deep - rest) * easeInOut(0);
+    const u = (t - FLOW_IN) / FLOW_OUT;
+    return deep + (rest - deep) * easeInOut(u);
   }
 
   function waveFrontY() {
@@ -1019,7 +1024,6 @@ export function createGame(
       if (tideT < TIDE_END) {
         const before = tideT;
         tideT += dt;
-        flowT += dt;
         if (!tideWavePlayed) {
           tideWavePlayed = true;
           playWave();
@@ -1049,7 +1053,7 @@ export function createGame(
       } else if (phase === "playing") {
         flowT += dt;
         const cycle = Math.floor(flowT / FLOW_PERIOD);
-        if (cycle !== flowPlayed && flowT % FLOW_PERIOD < FLOW_IN) {
+        if (cycle !== flowPlayed && (flowT % FLOW_PERIOD) < FLOW_IN) {
           flowPlayed = cycle;
           playWave();
         }

@@ -95,13 +95,13 @@ export function hourLabel(hour: number) {
 const CAN_HIT = 56;
 const WATER_WALK = 118;
 const FILL_SECS = 1;
-const TIDE_IN = 6.4;
-const TIDE_OUT = 5.6;
-const TIDE_SHINE_AT = 7.5;
-const TIDE_END = 12.75;
-const FLOW_PERIOD = 18.2;
-const FLOW_IN = TIDE_IN;
-const FLOW_OUT = TIDE_OUT;
+const TIDE_IN = 19.2;
+const TIDE_OUT = 16.8;
+const TIDE_SHINE_AT = 20.3;
+const TIDE_END = 36;
+const FLOW_PERIOD = 36;
+const FLOW_IN = 19.2;
+const FLOW_OUT = 16.8;
 
 type PaintId = "red" | "orange" | "yellow" | "green" | "blue" | "purple" | "pink";
 
@@ -657,7 +657,7 @@ export function createGame(
       const u = (t - FLOW_IN) / FLOW_OUT;
       return deep + (rest - deep) * easeInOut(u);
     }
-    return rest;
+    return rest + (deep - rest) * easeInOut(0);
   }
 
   function waveFrontY() {
@@ -669,10 +669,7 @@ export function createGame(
   }
 
   function waveRushing() {
-    if (phase !== "playing") return false;
-    if (tideT <= TIDE_END) return true;
-    const t = flowT % FLOW_PERIOD;
-    return t < FLOW_IN + FLOW_OUT;
+    return phase === "playing";
   }
 
   function inWater(y = crab.y) {
@@ -1019,9 +1016,10 @@ export function createGame(
     time += dt;
     if (phase === "playing") {
       playElapsed += dt;
-      if (tideT < TIDE_END + 0.4) {
+      if (tideT < TIDE_END) {
         const before = tideT;
         tideT += dt;
+        flowT += dt;
         if (!tideWavePlayed) {
           tideWavePlayed = true;
           playWave();
@@ -1462,13 +1460,12 @@ export function createGame(
   function shoreY() {
     if (phase === "playing" && tideT <= TIDE_END) return waveFrontY();
     if (phase === "playing") return flowY();
-    return WATER_MAX + 18 + Math.sin(time * 1.05) * 7;
+    return WATER_MAX + 18 + Math.sin(time * 0.35) * 7;
   }
 
   function drawOcean() {
     const night = nightGlow();
     const yFront = shoreY();
-    const surge = waveRushing() ? 1.55 : 1;
     const deep = night > 0.55 ? "#16345f" : "#2498b8";
     const mid = night > 0.55 ? "#2a538c" : "#3ec4d6";
     const lite = night > 0.55 ? "#9ad0ff" : "#d9f7ff";
@@ -1480,7 +1477,7 @@ export function createGame(
     ctx.lineTo(WORLD_W, 0);
     for (let x = WORLD_W; x >= 0; x -= 14) {
       const w =
-        Math.sin(x * 0.011 + time * 2.1 * surge) * 11 + Math.sin(x * 0.037 + time * 3.3 * surge) * 7;
+        Math.sin(x * 0.011 + time * 0.7) * 11 + Math.sin(x * 0.037 + time * 1.1) * 7;
       ctx.lineTo(x, yFront + w);
     }
     ctx.closePath();
@@ -1492,7 +1489,7 @@ export function createGame(
     ctx.fill();
 
     for (let i = 0; i < 4; i++) {
-      const u = (time * 0.16 * surge + i / 4) % 1;
+      const u = (time * 0.055 + i / 4) % 1;
       const y = 20 + u * Math.max(36, yFront - 40);
       ctx.globalAlpha = 0.08 + u * 0.16;
       ctx.strokeStyle = lite;
@@ -1500,7 +1497,7 @@ export function createGame(
       ctx.beginPath();
       ctx.moveTo(0, y);
       for (let x = 0; x <= WORLD_W; x += 20) {
-        ctx.lineTo(x, y + Math.sin(x * 0.014 + time * 2.2 * surge + i) * (6 + u * 10));
+        ctx.lineTo(x, y + Math.sin(x * 0.014 + time * 0.73 + i) * (6 + u * 10));
       }
       ctx.stroke();
     }
@@ -1510,7 +1507,7 @@ export function createGame(
       ctx.fillStyle = foam;
       ctx.beginPath();
       for (let x = 0; x <= WORLD_W; x += 10) {
-        const w = Math.sin(x * 0.028 + time * 3.2 * surge) * 9 + Math.sin(x * 0.07 + time * 5.4 * surge) * 4;
+        const w = Math.sin(x * 0.028 + time * 1.05) * 9 + Math.sin(x * 0.07 + time * 1.8) * 4;
         const yy = yFront + w;
         if (x === 0) ctx.moveTo(x, yy - 6);
         else ctx.lineTo(x, yy - 6);
@@ -1524,9 +1521,9 @@ export function createGame(
     ctx.globalAlpha = night > 0.55 ? 0.28 : 0.4;
     ctx.fillStyle = "#fff";
     for (let i = 0; i < 22; i++) {
-      const x = (i * 173 + time * 55 * surge) % WORLD_W;
+      const x = (i * 173 + time * 18) % WORLD_W;
       const span = Math.max(36, yFront - 28);
-      const y = 18 + ((i * 89 + time * 70 * surge) % span);
+      const y = 18 + ((i * 89 + time * 23) % span);
       ctx.beginPath();
       ctx.arc(x, y, 1.4 + (i % 3) * 0.7, 0, Math.PI * 2);
       ctx.fill();

@@ -831,13 +831,13 @@ function CinemaLobby({
 function skinSrc(color: CrabColor) {
   if (color === "blue") return assetUrl("game/crabby/blue/idle-0.png?v=098");
   if (color === "yellow") return assetUrl("game/crabby/yellow/idle-0.png?v=101");
-  if (color === "green") return assetUrl("game/crabby/green/idle-0.png?v=108");
+  if (color === "green") return assetUrl("game/crabby/green/idle-0.png?v=109");
   return assetUrl("game/crabby/idle-red-0.png?v=051");
 }
 
 function lookSrc(color: CrabColor, hat: CrabHat) {
   if (hat === "none") return skinSrc(color);
-  return assetUrl(`game/crabby/looks/${color}/${hat}/idle-0.png?v=108`);
+  return assetUrl(`game/crabby/looks/${color}/${hat}/idle-0.png?v=109`);
 }
 
 function CrabLook({

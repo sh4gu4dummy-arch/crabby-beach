@@ -223,17 +223,17 @@ async function loadAssets(): Promise<Assets> {
   ]);
   const skinIds = ["blue", "yellow", "green"] as const;
   const skinFiles = skinIds.flatMap((id) => [
-    loadImage(assetUrl(`game/crabby/${id}/idle-0.png?v=108`)),
-    loadImage(assetUrl(`game/crabby/${id}/idle-1.png?v=108`)),
-    ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crabby/${id}/walk-${i}.png?v=108`))),
+    loadImage(assetUrl(`game/crabby/${id}/idle-0.png?v=109`)),
+    loadImage(assetUrl(`game/crabby/${id}/idle-1.png?v=109`)),
+    ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crabby/${id}/walk-${i}.png?v=109`))),
   ]);
   const lookColors: CrabColor[] = ["red", "blue", "yellow", "green"];
   const lookHats: Array<Exclude<CrabHat, "none">> = ["bow", "bucket", "sailor"];
   const lookFiles = lookColors.flatMap((color) =>
     lookHats.flatMap((hat) => [
-      loadImage(assetUrl(`game/crabby/looks/${color}/${hat}/idle-0.png?v=108`)),
-      loadImage(assetUrl(`game/crabby/looks/${color}/${hat}/idle-1.png?v=108`)),
-      ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crabby/looks/${color}/${hat}/walk-${i}.png?v=108`))),
+      loadImage(assetUrl(`game/crabby/looks/${color}/${hat}/idle-0.png?v=109`)),
+      loadImage(assetUrl(`game/crabby/looks/${color}/${hat}/idle-1.png?v=109`)),
+      ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crabby/looks/${color}/${hat}/walk-${i}.png?v=109`))),
     ]),
   );
   const [beach, ...rest] = await Promise.all([

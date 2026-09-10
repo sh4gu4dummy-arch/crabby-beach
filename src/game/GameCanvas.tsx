@@ -433,7 +433,6 @@ export function GameCanvas() {
 
       {hud.phase === "menu" && !loadout && !cinema && (
         <div className="menu-sky absolute inset-0 z-30 flex flex-col overflow-y-auto">
-          <div className="menu-sun" aria-hidden="true" />
           <div className="relative z-10 flex items-center justify-between px-4 pt-[max(1.1rem,env(safe-area-inset-top))]">
             <p className="rounded-pill bg-cream px-3 py-1 text-sm font-bold tracking-wide text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft">
               {APP_VERSION}{hud.dev ? " · DEV" : ""}
@@ -841,7 +840,6 @@ function LoadoutCard({
 }) {
   return (
     <div className="menu-sky absolute inset-0 z-30 overflow-y-auto px-4 pt-[max(1.1rem,env(safe-area-inset-top))] pb-[max(1.1rem,env(safe-area-inset-bottom))]">
-      <div className="menu-sun" aria-hidden="true" />
       <div className="relative z-10 mx-auto w-full max-w-sm text-center">
         <p className="text-sky-deep text-sm font-semibold tracking-wide uppercase">Your kit</p>
         <h2 className="mt-1 text-3xl font-bold tracking-tight text-coral">Loadout</h2>

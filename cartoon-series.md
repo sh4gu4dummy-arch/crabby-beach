@@ -1,5 +1,5 @@
 # Crabby Cartoons — plan v.003
-Product: **Crabby Beach v.111**
+Product: **Crabby Beach v.113**
 
 Status: **ep 1.1 beat A in progress**. Later beats wait for look lock.
 
@@ -27,7 +27,7 @@ Beat A is the look lock. Later beats copy this crab, not a new one.
 - Sunny beach, same world as the game
 - He fits in the lower half of the frame with room around him
 
-**How we keep him the same crab:** composite the original sprite onto a 16:9 beach still, then image-to-video. Do not text-to-video a new character for 1.1.
+**How we keep him the same crab:** Imagine **reference-to-video** from `idle-red-0.png` (he can be in a real cartoon scene). Do **not** paste the PNG on `beach.jpg` and image-to-video that still — that is junk.
 
 ## How a clip is made
 

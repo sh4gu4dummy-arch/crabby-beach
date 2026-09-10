@@ -11,25 +11,25 @@ export const EXPORTS: Record<ExportKind, ExportFile | null> = {
   "codebase": {
     "version": "v.089",
     "file": "crabby-beach-v.089-codebase.zip",
-    "bytes": 43388694,
-    "mtime": "2026-09-10T07:24:05.000Z"
+    "bytes": 43388681,
+    "mtime": "2026-09-10T12:46:34.948Z"
   },
   "portable": {
     "version": "v.089",
     "file": "crabby-beach-v.089-portable.zip",
     "bytes": 19024985,
-    "mtime": "2026-09-10T07:24:02.144Z"
+    "mtime": "2026-09-10T12:46:32.100Z"
   },
   "android": {
     "version": "v.089",
     "file": "crabby-beach-v.089-android.zip",
     "bytes": 19127277,
-    "mtime": "2026-09-10T07:24:02.776Z"
+    "mtime": "2026-09-10T12:46:32.644Z"
   },
   "apk": {
     "version": "v.089",
     "file": "crabby-beach-v.089.apk",
     "bytes": 19968417,
-    "mtime": "2026-09-10T07:24:26.300Z"
+    "mtime": "2026-09-10T12:46:55.200Z"
   }
 };

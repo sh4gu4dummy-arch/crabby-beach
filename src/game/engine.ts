@@ -913,16 +913,15 @@ export function createGame(
   }
 
   function standByShell(item: Find): Vec {
-    const src = tideT < TIDE_IN ? { x: item.homeX, y: item.homeY } : item;
     const vis = sandView();
     const spots = [
-      { x: src.x, y: src.y + 58 },
-      { x: src.x, y: src.y - 58 },
-      { x: src.x + 58, y: src.y },
-      { x: src.x - 58, y: src.y },
+      { x: item.x, y: item.y + 58 },
+      { x: item.x, y: item.y - 58 },
+      { x: item.x + 58, y: item.y },
+      { x: item.x - 58, y: item.y },
     ];
     const fit = spots.find((p) => p.x >= vis.x0 && p.x <= vis.x1 && p.y >= vis.y0 && p.y <= vis.y1);
-    return clampToPlay(fit ?? { x: src.x, y: src.y + 40 }, false);
+    return clampToPlay(fit ?? { x: item.x, y: item.y + 40 }, false);
   }
 
   function goTo(world: Vec, id: number | null, canId: PaintId | null = null) {
@@ -1135,6 +1134,10 @@ export function createGame(
     }
 
     if (crab.target) {
+      if (crab.targetId != null) {
+        const riding = finds.find((s) => s.id === crab.targetId);
+        if (riding && !riding.painted) crab.target = standByShell(riding);
+      }
       const dx = crab.target.x - crab.x;
       const dy = crab.target.y - crab.y;
       const d = Math.hypot(dx, dy);

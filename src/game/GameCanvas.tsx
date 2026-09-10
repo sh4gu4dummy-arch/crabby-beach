@@ -834,9 +834,9 @@ function skinSrc(color: CrabColor) {
   return assetUrl("game/crabby/idle-red-0.png?v=051");
 }
 
-function hatSrc(hat: CrabHat) {
-  if (hat === "none") return null;
-  return assetUrl(`game/crabby/hat-${hat}.png?v=098`);
+function lookSrc(color: CrabColor, hat: CrabHat) {
+  if (hat === "none") return skinSrc(color);
+  return assetUrl(`game/crabby/looks/${color}/${hat}/idle-0.png?v=099`);
 }
 
 function CrabLook({
@@ -850,23 +850,9 @@ function CrabLook({
   className?: string;
   size?: number;
 }) {
-  const src = hatSrc(hat);
   return (
     <div className={`relative ${className}`} style={{ width: size, height: size }}>
-      <img src={skinSrc(color)} alt="" className="h-full w-full object-contain drop-shadow-md" />
-      {src && (
-        <img
-          src={src}
-          alt=""
-          className="pointer-events-none absolute left-1/2 object-contain"
-          style={{
-            width: size * 0.5,
-            height: size * 0.5,
-            top: hat === "bow" ? "2%" : hat === "sailor" ? "0%" : "-2%",
-            transform: "translateX(-50%)",
-          }}
-        />
-      )}
+      <img src={lookSrc(color, hat)} alt="" className="h-full w-full object-contain drop-shadow-md" />
     </div>
   );
 }
@@ -954,7 +940,7 @@ function LoadoutCard({
           ] as const).map(([value, label]) => {
             const locked = value !== "none" && !extrasOpen;
             const on = kit.hat === value && !locked;
-            const src = hatSrc(value);
+            const src = lookSrc(kit.color, value);
             return (
               <button
                 key={value}
@@ -966,11 +952,7 @@ function LoadoutCard({
                 }`}
                 aria-label={locked ? `${label} locked` : label}
               >
-                {src ? (
-                  <img src={src} alt="" className="h-10 w-10 object-contain" />
-                ) : (
-                  <span className="grid h-10 w-10 place-items-center text-lg font-bold text-ink-soft">×</span>
-                )}
+                <img src={src} alt="" className="h-12 w-12 object-contain" />
                 <span className="text-[11px] font-bold">{label}</span>
                 {locked && <Lock className="absolute top-1 right-1 size-3.5 opacity-70" />}
               </button>

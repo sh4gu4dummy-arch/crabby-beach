@@ -200,7 +200,7 @@ type Assets = {
   pebble: HTMLImageElement;
   crab: Record<PaintId, CrabFrames>;
   skins: Record<Exclude<CrabColor, "red">, CrabFrames>;
-  hats: Partial<Record<CrabHat, HTMLImageElement>>;
+  looks: Record<CrabColor, Record<Exclude<CrabHat, "none">, CrabFrames>>;
 };
 
 function loadImage(src: string) {
@@ -226,8 +226,14 @@ async function loadAssets(): Promise<Assets> {
     loadImage(assetUrl(`game/crabby/${id}/idle-1.png?v=098`)),
     ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crabby/${id}/walk-${i}.png?v=098`))),
   ]);
-  const hatFiles = (["bow", "bucket", "sailor"] as const).map((h) =>
-    loadImage(assetUrl(`game/crabby/hat-${h}.png?v=098`)),
+  const lookColors: CrabColor[] = ["red", "blue", "yellow"];
+  const lookHats: Array<Exclude<CrabHat, "none">> = ["bow", "bucket", "sailor"];
+  const lookFiles = lookColors.flatMap((color) =>
+    lookHats.flatMap((hat) => [
+      loadImage(assetUrl(`game/crabby/looks/${color}/${hat}/idle-0.png?v=099`)),
+      loadImage(assetUrl(`game/crabby/looks/${color}/${hat}/idle-1.png?v=099`)),
+      ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crabby/looks/${color}/${hat}/walk-${i}.png?v=099`))),
+    ]),
   );
   const [beach, ...rest] = await Promise.all([
     loadImage(assetUrl("game/beach.jpg?v=070")),
@@ -240,7 +246,7 @@ async function loadAssets(): Promise<Assets> {
     loadImage(assetUrl("game/prop-pebble.png?v=topdown2")),
     ...crabFiles,
     ...skinFiles,
-    ...hatFiles,
+    ...lookFiles,
   ]);
   const crabImgs = rest.slice(19, 19 + paintIds.length * 6) as HTMLImageElement[];
   const crab = {} as Record<PaintId, CrabFrames>;
@@ -262,11 +268,17 @@ async function loadAssets(): Promise<Assets> {
     skins[id] = { idle: [idle0, idle1, idle0, idle1], walk: slice.slice(2, 6) };
     o += 6;
   }
-  const hats: Partial<Record<CrabHat, HTMLImageElement>> = {
-    bow: rest[o] as HTMLImageElement,
-    bucket: rest[o + 1] as HTMLImageElement,
-    sailor: rest[o + 2] as HTMLImageElement,
-  };
+  const looks = {} as Record<CrabColor, Record<Exclude<CrabHat, "none">, CrabFrames>>;
+  for (const color of lookColors) {
+    looks[color] = {} as Record<Exclude<CrabHat, "none">, CrabFrames>;
+    for (const hat of lookHats) {
+      const slice = rest.slice(o, o + 6) as HTMLImageElement[];
+      const idle0 = slice[0]!;
+      const idle1 = slice[1]!;
+      looks[color][hat] = { idle: [idle0, idle1, idle0, idle1], walk: slice.slice(2, 6) };
+      o += 6;
+    }
+  }
   return {
     beach,
     walk: rest.slice(0, 4),
@@ -278,7 +290,7 @@ async function loadAssets(): Promise<Assets> {
     pebble: rest[18] as HTMLImageElement,
     crab,
     skins,
-    hats,
+    looks,
   };
 }
 
@@ -1417,15 +1429,6 @@ export function createGame(
     ctx.restore();
   }
 
-  function drawHat(x: number, y: number, size: number, hat: CrabHat, flip: boolean) {
-    if (hat === "none" || !assets) return;
-    const img = assets.hats[hat];
-    if (!img) return;
-    const s = size * (hat === "bow" ? 0.52 : hat === "sailor" ? 0.5 : 0.56);
-    const head = y - size * 0.2;
-    drawCentered(img, x, head - s * 0.4, s, s, flip, 0);
-  }
-
   function shoreY() {
     if (phase === "playing" && tideT <= TIDE_END) return waveFrontY();
     if (phase === "playing") return flowY();
@@ -1699,10 +1702,13 @@ export function createGame(
       }
 
       const body = crabColor();
+      const hat = crabHat();
       const kit =
-        body === "red"
-          ? (assets.crab[crab.paint] ?? assets.crab.green)
-          : assets.skins[body];
+        hat === "none"
+          ? body === "red"
+            ? (assets.crab[crab.paint] ?? assets.crab.green)
+            : assets.skins[body]
+          : assets.looks[body][hat];
       const frames = crab.state === "walk" ? kit.walk : kit.idle;
       const img = frames[crab.frame]!;
       const waveRot = crab.wave > 0 ? Math.sin(crab.wave * 22) * 0.18 : 0;
@@ -1721,7 +1727,6 @@ export function createGame(
             ctx.fill();
             ctx.restore();
           }
-          drawHat(crab.x, crab.y, CRAB_SIZE, crabHat(), crab.facing < 0);
         },
       });
     }

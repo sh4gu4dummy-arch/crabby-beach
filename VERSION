@@ -1,6 +1,6 @@
-Crabby Beach v.098
+Crabby Beach v.099
 
 Local git + GitHub: every version. Do not ask.
 Zip/APK: only when asked. Labels = files on disk.
 Publish: user clicks it.
-Checkerboard boxed around blue/yellow crab is gone.
+Each color+hat look is its own drawn sprite, like the brushes.

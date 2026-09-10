@@ -3,33 +3,33 @@ export type ExportKind = "codeOnly" | "codebase" | "portable" | "android" | "apk
 export type ExportFile = { version: string; file: string; bytes: number; mtime: string };
 export const EXPORTS: Record<ExportKind, ExportFile | null> = {
   "codeOnly": {
-    "version": "v.089",
-    "file": "crabby-beach-v.089-code.md",
-    "bytes": 178994,
-    "mtime": "2026-09-10T07:23:12.232Z"
+    "version": "v.090",
+    "file": "crabby-beach-v.090-code.md",
+    "bytes": 180073,
+    "mtime": "2026-09-10T14:04:44.704Z"
   },
   "codebase": {
-    "version": "v.089",
-    "file": "crabby-beach-v.089-codebase.zip",
-    "bytes": 43388681,
-    "mtime": "2026-09-10T12:46:34.948Z"
+    "version": "v.090",
+    "file": "crabby-beach-v.090-codebase.zip",
+    "bytes": 43436366,
+    "mtime": "2026-09-10T14:04:50.088Z"
   },
   "portable": {
-    "version": "v.089",
-    "file": "crabby-beach-v.089-portable.zip",
-    "bytes": 19024985,
-    "mtime": "2026-09-10T12:46:32.100Z"
+    "version": "v.090",
+    "file": "crabby-beach-v.090-portable.zip",
+    "bytes": 19025270,
+    "mtime": "2026-09-10T14:04:47.256Z"
   },
   "android": {
-    "version": "v.089",
-    "file": "crabby-beach-v.089-android.zip",
-    "bytes": 19127277,
-    "mtime": "2026-09-10T12:46:32.644Z"
+    "version": "v.090",
+    "file": "crabby-beach-v.090-android.zip",
+    "bytes": 19127837,
+    "mtime": "2026-09-10T14:04:47.816Z"
   },
   "apk": {
-    "version": "v.089",
-    "file": "crabby-beach-v.089.apk",
-    "bytes": 19968417,
-    "mtime": "2026-09-10T12:46:55.200Z"
+    "version": "v.090",
+    "file": "crabby-beach-v.090.apk",
+    "bytes": 19969497,
+    "mtime": "2026-09-10T14:05:08.312Z"
   }
 };

@@ -6,6 +6,7 @@ import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { loadSettings, saveSettings, applyTheme, type CrabColor, type CrabHat, type PenId } from "@/lib/settings";
 import { APP_VERSION } from "@/lib/version";
 import { assetUrl } from "@/lib/asset";
+import { installAppBack, pushBack } from "@/lib/app-back";
 import { isMuted, setMuted, setMusicEnabled, setMusicScene, unlockAudio } from "./audio";
 import { createGame, HOUR_SKIES, hourLabel, type GameApi, type GameHud } from "./engine";
 
@@ -108,6 +109,10 @@ export function GameCanvas() {
   const [slowLoad, setSlowLoad] = useState(false);
 
   useEffect(() => {
+    installAppBack();
+  }, []);
+
+  useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const api = createGame(canvas, {
@@ -122,6 +127,36 @@ export function GameCanvas() {
       apiRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    return pushBack(() => {
+      if (showIntro) {
+        finishIntro();
+        return true;
+      }
+      if (showBedtime) {
+        finishBedtime();
+        return true;
+      }
+      if (loadout) {
+        setLoadout(false);
+        return true;
+      }
+      if (cinema) {
+        setCinema(false);
+        return true;
+      }
+      if (hud.phase === "playing" || hud.phase === "won" || hud.phase === "timesup") {
+        goMenu();
+        return true;
+      }
+      if (hud.phase === "sleep" && hud.dev) {
+        apiRef.current?.wake();
+        return true;
+      }
+      return false;
+    });
+  }, [showIntro, showBedtime, loadout, cinema, hud.phase, hud.dev]);
 
   useEffect(() => {
     if (hud.phase !== "loading") {

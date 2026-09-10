@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, FileText, FolderArchive, Package, Smartphone } from "lucide-react";
 import {
   loadSettings,
@@ -12,6 +12,7 @@ import {
 import { loadProgress, saveProgress } from "@/lib/progress";
 import { APP_NAME, APP_VERSION } from "@/lib/version";
 import { EXPORTS, type ExportFile } from "@/lib/exports";
+import { pushBack } from "@/lib/app-back";
 
 export const Route = createFileRoute("/grownups")({ component: Grownups });
 
@@ -93,8 +94,16 @@ function Choice<T extends string | number>({
 }
 
 export function Grownups() {
+  const navigate = useNavigate();
   const [settings, setSettings] = useState<GrownupSettings>(() => loadSettings());
   const [progress, setProgress] = useState(() => loadProgress());
+
+  useEffect(() => {
+    return pushBack(() => {
+      void navigate({ to: "/" });
+      return true;
+    });
+  }, [navigate]);
 
   function update(patch: Partial<GrownupSettings>) {
     const next = { ...settings, ...patch };

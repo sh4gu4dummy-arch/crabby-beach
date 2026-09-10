@@ -827,6 +827,17 @@ function CinemaLobby({
   );
 }
 
+function skinSrc(color: CrabColor) {
+  if (color === "blue") return assetUrl("game/crabby/blue/idle-0.png?v=096");
+  if (color === "yellow") return assetUrl("game/crabby/yellow/idle-0.png?v=096");
+  return assetUrl("game/crabby/idle-red-0.png?v=051");
+}
+
+function hatSrc(hat: CrabHat) {
+  if (hat === "none") return null;
+  return assetUrl(`game/crabby/hat-${hat}.png?v=096`);
+}
+
 function LoadoutCard({
   extrasOpen,
   kit,
@@ -868,64 +879,77 @@ function LoadoutCard({
           Swipe paints the shell. Auto fill paints it when Crabby touches it.
         </p>
 
+        <div className="relative mx-auto mt-4 h-36 w-36">
+          <img src={skinSrc(kit.color)} alt="" className="h-full w-full object-contain drop-shadow-md" />
+          {hatSrc(kit.hat) && (
+            <img
+              src={hatSrc(kit.hat)!}
+              alt=""
+              className="pointer-events-none absolute top-1 left-1/2 h-14 w-14 -translate-x-1/2 object-contain"
+            />
+          )}
+        </div>
+
         <p className="mt-4 text-left text-sm font-bold">Crabby</p>
-        <div className="mt-2 flex flex-wrap gap-2">
-          <KitPick
-            label="Red"
-            value={"red" as CrabColor}
-            current={kit.color}
-            locked={false}
-            onPick={(color) => onEquip({ color })}
-            swatch="bg-coral"
-          />
-          <KitPick
-            label="Blue"
-            value={"blue" as CrabColor}
-            current={kit.color}
-            locked={!extrasOpen}
-            onPick={(color) => onEquip({ color })}
-            swatch="bg-sky-deep"
-          />
-          <KitPick
-            label="Yellow"
-            value={"yellow" as CrabColor}
-            current={kit.color}
-            locked={!extrasOpen}
-            onPick={(color) => onEquip({ color })}
-            swatch="bg-sand-deep"
-          />
+        <div className="mt-2 grid grid-cols-3 gap-2">
+          {([
+            ["red", "Red"],
+            ["blue", "Blue"],
+            ["yellow", "Yellow"],
+          ] as const).map(([value, label]) => {
+            const locked = value !== "red" && !extrasOpen;
+            const on = kit.color === value && !locked;
+            return (
+              <button
+                key={value}
+                type="button"
+                disabled={locked}
+                onClick={() => onEquip({ color: value })}
+                className={`relative flex min-h-24 flex-col items-center justify-end rounded-2xl bg-cream p-1 shadow-sm ring-2 disabled:cursor-not-allowed ${
+                  on ? "ring-coral" : "ring-cream-soft"
+                }`}
+                aria-label={locked ? `${label} locked` : label}
+              >
+                <img src={skinSrc(value)} alt="" className="h-16 w-16 object-contain" />
+                <span className="text-xs font-bold">{label}</span>
+                {locked && <Lock className="absolute top-1 right-1 size-3.5 opacity-70" />}
+              </button>
+            );
+          })}
         </div>
 
         <p className="mt-4 text-left text-sm font-bold">Hats</p>
-        <div className="mt-2 flex flex-wrap gap-2">
-          <KitPick
-            label="None"
-            value={"none" as CrabHat}
-            current={kit.hat}
-            locked={false}
-            onPick={(hat) => onEquip({ hat })}
-          />
-          <KitPick
-            label="Bow"
-            value={"bow" as CrabHat}
-            current={kit.hat}
-            locked={!extrasOpen}
-            onPick={(hat) => onEquip({ hat })}
-          />
-          <KitPick
-            label="Bucket"
-            value={"bucket" as CrabHat}
-            current={kit.hat}
-            locked={!extrasOpen}
-            onPick={(hat) => onEquip({ hat })}
-          />
-          <KitPick
-            label="Sailor"
-            value={"sailor" as CrabHat}
-            current={kit.hat}
-            locked={!extrasOpen}
-            onPick={(hat) => onEquip({ hat })}
-          />
+        <div className="mt-2 grid grid-cols-4 gap-2">
+          {([
+            ["none", "None"],
+            ["bow", "Bow"],
+            ["bucket", "Bucket"],
+            ["sailor", "Sailor"],
+          ] as const).map(([value, label]) => {
+            const locked = value !== "none" && !extrasOpen;
+            const on = kit.hat === value && !locked;
+            const src = hatSrc(value);
+            return (
+              <button
+                key={value}
+                type="button"
+                disabled={locked}
+                onClick={() => onEquip({ hat: value })}
+                className={`relative flex min-h-20 flex-col items-center justify-end rounded-2xl bg-cream p-1 shadow-sm ring-2 disabled:cursor-not-allowed ${
+                  on ? "ring-coral" : "ring-cream-soft"
+                }`}
+                aria-label={locked ? `${label} locked` : label}
+              >
+                {src ? (
+                  <img src={src} alt="" className="h-10 w-10 object-contain" />
+                ) : (
+                  <span className="grid h-10 w-10 place-items-center text-lg font-bold text-ink-soft">×</span>
+                )}
+                <span className="text-[11px] font-bold">{label}</span>
+                {locked && <Lock className="absolute top-1 right-1 size-3.5 opacity-70" />}
+              </button>
+            );
+          })}
         </div>
 
         <button

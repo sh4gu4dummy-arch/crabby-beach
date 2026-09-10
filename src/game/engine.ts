@@ -187,6 +187,8 @@ type Crab = {
   wave: number;
 };
 
+type CrabFrames = { idle: HTMLImageElement[]; walk: HTMLImageElement[] };
+
 type Assets = {
   beach: HTMLImageElement;
   walk: HTMLImageElement[];
@@ -196,10 +198,10 @@ type Assets = {
   starfish: HTMLImageElement;
   bucket: HTMLImageElement;
   pebble: HTMLImageElement;
-  crab: Record<PaintId, { idle: HTMLImageElement[]; walk: HTMLImageElement[] }>;
+  crab: Record<PaintId, CrabFrames>;
+  skins: Record<Exclude<CrabColor, "red">, CrabFrames>;
+  hats: Partial<Record<CrabHat, HTMLImageElement>>;
 };
-
-type TintCache = WeakMap<CanvasImageSource, HTMLCanvasElement>;
 
 function loadImage(src: string) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
@@ -218,6 +220,15 @@ async function loadAssets(): Promise<Assets> {
     loadImage(assetUrl(`game/crabby/idle-${id}-1.png?v=051`)),
     ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crabby/walk-${id}-${i}.png?v=051`))),
   ]);
+  const skinIds = ["blue", "yellow"] as const;
+  const skinFiles = skinIds.flatMap((id) => [
+    loadImage(assetUrl(`game/crabby/${id}/idle-0.png?v=096`)),
+    loadImage(assetUrl(`game/crabby/${id}/idle-1.png?v=096`)),
+    ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crabby/${id}/walk-${i}.png?v=096`))),
+  ]);
+  const hatFiles = (["bow", "bucket", "sailor"] as const).map((h) =>
+    loadImage(assetUrl(`game/crabby/hat-${h}.png?v=096`)),
+  );
   const [beach, ...rest] = await Promise.all([
     loadImage(assetUrl("game/beach.jpg?v=070")),
     ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crab-walk-${i}.png?v=topdown2`))),
@@ -228,9 +239,11 @@ async function loadAssets(): Promise<Assets> {
     loadImage(assetUrl("game/prop-bucket.png?v=topdown2")),
     loadImage(assetUrl("game/prop-pebble.png?v=topdown2")),
     ...crabFiles,
+    ...skinFiles,
+    ...hatFiles,
   ]);
-  const crabImgs = rest.slice(19) as HTMLImageElement[];
-  const crab = {} as Record<PaintId, { idle: HTMLImageElement[]; walk: HTMLImageElement[] }>;
+  const crabImgs = rest.slice(19, 19 + paintIds.length * 6) as HTMLImageElement[];
+  const crab = {} as Record<PaintId, CrabFrames>;
   paintIds.forEach((id, i) => {
     const slice = crabImgs.slice(i * 6, i * 6 + 6);
     const idle0 = slice[0]!;
@@ -240,6 +253,20 @@ async function loadAssets(): Promise<Assets> {
       walk: slice.slice(2, 6),
     };
   });
+  let o = 19 + paintIds.length * 6;
+  const skins = {} as Record<Exclude<CrabColor, "red">, CrabFrames>;
+  for (const id of skinIds) {
+    const slice = rest.slice(o, o + 6) as HTMLImageElement[];
+    const idle0 = slice[0]!;
+    const idle1 = slice[1]!;
+    skins[id] = { idle: [idle0, idle1, idle0, idle1], walk: slice.slice(2, 6) };
+    o += 6;
+  }
+  const hats: Partial<Record<CrabHat, HTMLImageElement>> = {
+    bow: rest[o] as HTMLImageElement,
+    bucket: rest[o + 1] as HTMLImageElement,
+    sailor: rest[o + 2] as HTMLImageElement,
+  };
   return {
     beach,
     walk: rest.slice(0, 4),
@@ -250,6 +277,8 @@ async function loadAssets(): Promise<Assets> {
     bucket: rest[17] as HTMLImageElement,
     pebble: rest[18] as HTMLImageElement,
     crab,
+    skins,
+    hats,
   };
 }
 
@@ -293,40 +322,6 @@ function planKinds(n: number): Kind[] {
   return kinds;
 }
 
-function tintImage(src: CanvasImageSource, color: CrabColor, cache: TintCache) {
-  if (color === "red") return src;
-  const hit = cache.get(src);
-  if (hit) return hit;
-  const w = "width" in src ? Number(src.width) : 128;
-  const h = "height" in src ? Number(src.height) : 128;
-  const c = document.createElement("canvas");
-  c.width = Math.max(1, w);
-  c.height = Math.max(1, h);
-  const x = c.getContext("2d");
-  if (!x) return src;
-  x.drawImage(src, 0, 0);
-  const img = x.getImageData(0, 0, c.width, c.height);
-  const d = img.data;
-  for (let i = 0; i < d.length; i += 4) {
-    if ((d[i + 3] ?? 0) < 12) continue;
-    const r = d[i] ?? 0;
-    const g = d[i + 1] ?? 0;
-    const b = d[i + 2] ?? 0;
-    if (color === "blue") {
-      d[i] = Math.min(255, g * 0.45 + b * 0.35 + 20);
-      d[i + 1] = Math.min(255, g * 0.7 + 50);
-      d[i + 2] = Math.min(255, r * 0.82 + 40);
-    } else {
-      d[i] = Math.min(255, r * 1.05 + 10);
-      d[i + 1] = Math.min(255, Math.max(g, r * 0.88) + 8);
-      d[i + 2] = Math.min(255, b * 0.42);
-    }
-  }
-  x.putImageData(img, 0, 0);
-  cache.set(src, c);
-  return c;
-}
-
 export function createGame(
   canvas: HTMLCanvasElement,
   hooks: { onHud: (hud: GameHud) => void; getSettings: () => GrownupSettings },
@@ -364,7 +359,6 @@ export function createGame(
   const brush = { down: false, swiping: false, x: 800, y: 520, lastX: 800, lastY: 520 };
   let cans: Array<{ id: PaintId; hex: string; x: number; y: number }> = [];
   const paintCache = new Map<string, HTMLCanvasElement>();
-  const tintCache: TintCache = new WeakMap();
   let settings: GrownupSettings = DEFAULT_SETTINGS;
 
   const crab: Crab = {
@@ -1424,49 +1418,12 @@ export function createGame(
   }
 
   function drawHat(x: number, y: number, size: number, hat: CrabHat, flip: boolean) {
-    if (hat === "none") return;
-    ctx.save();
-    ctx.translate(x, y - size * 0.4);
-    if (flip) ctx.scale(-1, 1);
-    if (hat === "bow") {
-      ctx.fillStyle = "#f4a4c8";
-      ctx.beginPath();
-      ctx.moveTo(-16, 0);
-      ctx.lineTo(-2, -8);
-      ctx.lineTo(-2, 8);
-      ctx.closePath();
-      ctx.moveTo(16, 0);
-      ctx.lineTo(2, -8);
-      ctx.lineTo(2, 8);
-      ctx.closePath();
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(0, 0, 4, 0, Math.PI * 2);
-      ctx.fill();
-    } else if (hat === "bucket") {
-      ctx.fillStyle = "#ffe27a";
-      ctx.beginPath();
-      ctx.moveTo(-14, -2);
-      ctx.lineTo(-10, 12);
-      ctx.lineTo(10, 12);
-      ctx.lineTo(14, -2);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "#7ec8e3";
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.arc(0, -2, 11, Math.PI, 0);
-      ctx.stroke();
-    } else {
-      ctx.fillStyle = "#fff6e8";
-      ctx.beginPath();
-      ctx.ellipse(0, 6, 20, 5, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillRect(-10, -8, 20, 14);
-      ctx.fillStyle = "#4ea8c9";
-      ctx.fillRect(-10, 0, 20, 4);
-    }
-    ctx.restore();
+    if (hat === "none" || !assets) return;
+    const img = assets.hats[hat];
+    if (!img) return;
+    const s = size * (hat === "bow" ? 0.46 : hat === "sailor" ? 0.5 : 0.48);
+    const oy = hat === "bow" ? -size * 0.4 : -size * 0.48;
+    drawCentered(img, x, y + oy, s, s, flip, 0);
   }
 
   function shoreY() {
@@ -1741,7 +1698,11 @@ export function createGame(
         });
       }
 
-      const kit = assets.crab[crab.paint] ?? assets.crab.green;
+      const body = crabColor();
+      const kit =
+        body === "red"
+          ? (assets.crab[crab.paint] ?? assets.crab.green)
+          : assets.skins[body];
       const frames = crab.state === "walk" ? kit.walk : kit.idle;
       const img = frames[crab.frame]!;
       const waveRot = crab.wave > 0 ? Math.sin(crab.wave * 22) * 0.18 : 0;
@@ -1754,7 +1715,7 @@ export function createGame(
           if (crab.blink > 0) {
             ctx.save();
             ctx.globalAlpha = 0.85;
-            ctx.fillStyle = "#e85d4c";
+            ctx.fillStyle = body === "blue" ? "#4ea8c9" : body === "yellow" ? "#e8c04a" : "#e85d4c";
             ctx.beginPath();
             ctx.ellipse(crab.x + crab.facing * 8, crab.y - 10, 10, 3, 0, 0, Math.PI * 2);
             ctx.fill();

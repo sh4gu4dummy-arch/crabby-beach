@@ -683,7 +683,7 @@ export function createGame(
   }
 
   function inWater(y = crab.y) {
-    return y + 10 < shoreY();
+    return y < shoreY() + 22;
   }
 
   function worldFromEvent(ev: PointerEvent): Vec {
@@ -1174,8 +1174,8 @@ export function createGame(
         if (stepAcc > (wet ? 22 : 28)) {
           stepAcc = 0;
           if (phase === "playing") {
+            playSandPat();
             if (wet) playSplash();
-            else playSandPat();
           }
         }
         if (puffAcc > (wet ? 0.07 : 0.09)) {

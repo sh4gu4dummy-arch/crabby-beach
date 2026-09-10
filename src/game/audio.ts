@@ -255,24 +255,26 @@ export function playSandPat() {
 }
 
 export function playSplash() {
-  if (!ctx || !sfxBus || !noiseBuffer || muted) return;
+  if (!ctx || !sfxBus || muted) return;
   const at = tNow();
-  const src = ctx.createBufferSource();
-  src.buffer = noiseBuffer;
-  src.playbackRate.value = 1.35 + Math.random() * 0.3;
-  const filter = ctx.createBiquadFilter();
-  filter.type = "bandpass";
-  filter.frequency.value = 980 + Math.random() * 220;
-  filter.Q.value = 1.1;
-  const g = ctx.createGain();
-  env(g, 0.06, 0.01, 0.11, at);
-  src.connect(filter);
-  filter.connect(g);
-  g.connect(sfxBus);
-  src.start(at);
-  src.stop(at + 0.13);
-  beep(480 + Math.random() * 40, 0.08, "sine", 0.04, at, 240);
-  beep(820, 0.05, "sine", 0.025, at + 0.03, 500);
+  const buf = brushBuffer ?? noiseBuffer;
+  if (buf) {
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.playbackRate.value = 0.62 + Math.random() * 0.18;
+    const low = ctx.createBiquadFilter();
+    low.type = "lowpass";
+    low.frequency.value = 780 + Math.random() * 120;
+    const g = ctx.createGain();
+    env(g, 0.14, 0.01, 0.18, at);
+    src.connect(low);
+    low.connect(g);
+    g.connect(sfxBus);
+    src.start(at);
+    src.stop(at + 0.2);
+  }
+  beep(210 + Math.random() * 30, 0.1, "sine", 0.07, at, 130);
+  beep(360 + Math.random() * 40, 0.08, "triangle", 0.05, at + 0.035, 190);
 }
 
 export function playScuttle() {

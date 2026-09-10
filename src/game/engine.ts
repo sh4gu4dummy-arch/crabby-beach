@@ -602,11 +602,13 @@ export function createGame(
     const left = Math.max(SAND_LEFT, x0);
     const right = Math.min(SAND_RIGHT, x1);
     const n = PAINTS.length;
+    const top = -view.y / view.scale;
+    const y = top + 236 / Math.max(0.4, view.scale);
     cans = PAINTS.map((p, i) => ({
       id: p.id,
       hex: p.hex,
       x: left + ((i + 0.5) / n) * (right - left),
-      y: 148,
+      y: Math.min(WATER_MAX + 24, Math.max(WATER_MAX - 8, y)),
     }));
   }
 

@@ -302,37 +302,39 @@ export function GameCanvas() {
       />
 
       {inGame && (
-      <header className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-2 px-3 pb-3 pt-[max(0.7rem,env(safe-area-inset-top))]">
-        <div className="flex flex-col items-start gap-1.5">
-          <div className="flex items-center gap-2 rounded-pill bg-cream/90 py-1.5 pr-4 pl-1.5 shadow-md shadow-ink/10 ring-2 ring-cream-soft">
-            <AnalogClock hour={hud.hour} numbered className="size-20 shrink-0" />
-            <div>
-              <p className="text-xs font-semibold tracking-wide text-ink-soft uppercase">{hourLabel(hud.hour)}</p>
-              <p className="text-lg leading-none font-bold tabular-nums">
-                {hud.level}
-                <span className="text-ink-soft"> / {hud.maxLevel}</span>
-              </p>
-              {hud.phase === "playing" || hud.phase === "won" ? (
-                <p className="text-[11px] font-bold tracking-wide text-ink-soft uppercase">
-                  {hud.painted >= hud.total ? "All colored" : `${hud.total - hud.painted} left`}
+      <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex flex-col gap-1.5 px-3 pb-2 pt-[max(0.55rem,env(safe-area-inset-top))]">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex min-w-0 flex-col items-start gap-1">
+            <div className="flex items-center gap-2 rounded-pill bg-cream/90 py-1 pr-3 pl-1 shadow-md shadow-ink/10 ring-2 ring-cream-soft">
+              <AnalogClock hour={hud.hour} numbered className="size-14 shrink-0" />
+              <div>
+                <p className="text-xs font-semibold tracking-wide text-ink-soft uppercase">{hourLabel(hud.hour)}</p>
+                <p className="text-base leading-none font-bold tabular-nums">
+                  {hud.level}
+                  <span className="text-ink-soft"> / {hud.maxLevel}</span>
                 </p>
-              ) : null}
+                {hud.phase === "playing" || hud.phase === "won" ? (
+                  <p className="text-[11px] font-bold tracking-wide text-ink-soft uppercase">
+                    {hud.painted >= hud.total ? "All colored" : `${hud.total - hud.painted} left`}
+                  </p>
+                ) : null}
+              </div>
             </div>
+            {hud.phase === "playing" && (
+              <button
+                type="button"
+                onClick={() => apiRef.current?.setWaves(!hud.wavesOn)}
+                className="pointer-events-auto inline-flex min-h-9 items-center gap-1.5 rounded-pill bg-cream/90 px-3 text-sm font-bold text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft"
+                aria-pressed={hud.wavesOn}
+                aria-label={hud.wavesOn ? "Turn waves off" : "Turn waves on"}
+              >
+                <Waves className="size-4" />
+                {hud.wavesOn ? "Waves on" : "Waves off"}
+              </button>
+            )}
           </div>
-          {hud.phase === "playing" && (
-            <button
-              type="button"
-              onClick={() => apiRef.current?.setWaves(!hud.wavesOn)}
-              className="pointer-events-auto inline-flex min-h-10 items-center gap-1.5 rounded-pill bg-cream/90 px-3 text-sm font-bold text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft"
-              aria-pressed={hud.wavesOn}
-              aria-label={hud.wavesOn ? "Turn waves off" : "Turn waves on"}
-            >
-              <Waves className="size-4" />
-              {hud.wavesOn ? "Waves on" : "Waves off"}
-            </button>
-          )}
-        </div>
-        <div className="pointer-events-auto flex items-center gap-2">
+          <div className="pointer-events-auto flex flex-col items-end gap-1">
+            <div className="flex items-center gap-1.5">
           {timerLabel && (
             <div className="flex items-center gap-1 rounded-pill bg-cream/90 px-3 py-2 text-sm font-bold shadow-md shadow-ink/10 ring-2 ring-cream-soft">
               <Timer className="size-4" />
@@ -342,7 +344,7 @@ export function GameCanvas() {
           <button
             type="button"
             onClick={toggleDark}
-            className="grid size-12 place-items-center rounded-pill bg-cream/90 text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft"
+            className="grid size-11 place-items-center rounded-pill bg-cream/90 text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft"
             aria-label={dark ? "Turn dark mode off" : "Turn dark mode on"}
           >
             {dark ? <Sun className="size-5" /> : <Moon className="size-5" />}
@@ -350,7 +352,7 @@ export function GameCanvas() {
           <button
             type="button"
             onClick={toggleMute}
-            className="grid size-12 place-items-center rounded-pill bg-cream/90 text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft"
+            className="grid size-11 place-items-center rounded-pill bg-cream/90 text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft"
             aria-label={muted ? "Unmute sounds" : "Mute sounds"}
           >
             {muted ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
@@ -359,14 +361,29 @@ export function GameCanvas() {
             <button
               type="button"
               onClick={goMenu}
-              className="grid size-12 place-items-center rounded-pill bg-cream/90 text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft"
+              className="grid size-11 place-items-center rounded-pill bg-cream/90 text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft"
               aria-label="Back to menu"
             >
               <Home className="size-5" />
             </button>
           )}
           <AuthChip />
+            </div>
+            <p className="rounded-pill bg-cream/90 px-2.5 py-0.5 text-xs font-bold tracking-wide text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft">
+              {APP_VERSION}{hud.dev ? " · DEV" : ""}
+            </p>
+          </div>
         </div>
+        {(hud.phase === "playing" || hud.phase === "won") && (
+          <div className="sky-bar relative h-2 overflow-hidden rounded-pill bg-cream/80 shadow-sm ring-1 ring-cream-soft">
+            <div
+              className="sky-bar-clip absolute inset-y-0 left-0 overflow-hidden rounded-pill"
+              style={{ width: `${hud.total ? (hud.painted / hud.total) * 100 : 0}%` }}
+            >
+              <div className="sky-bar-fill" />
+            </div>
+          </div>
+        )}
       </header>
       )}
 
@@ -376,22 +393,6 @@ export function GameCanvas() {
           className="count-pop pointer-events-none absolute top-1/3 left-1/2 z-30 -translate-x-1/2 text-7xl font-bold text-cream drop-shadow-md sm:text-8xl"
         >
           {hud.countPop}
-        </div>
-      )}
-
-      {(hud.phase === "playing" || hud.phase === "won") && (
-        <div
-          className="pointer-events-none absolute left-3 right-3 z-20"
-          style={{ top: "max(8.6rem, calc(env(safe-area-inset-top) + 7.2rem))" }}
-        >
-          <div className="sky-bar relative h-2 overflow-hidden rounded-pill bg-cream/80 shadow-sm ring-1 ring-cream-soft">
-            <div
-              className="sky-bar-clip absolute inset-y-0 left-0 overflow-hidden rounded-pill"
-              style={{ width: `${hud.total ? (hud.painted / hud.total) * 100 : 0}%` }}
-            >
-              <div className="sky-bar-fill" />
-            </div>
-          </div>
         </div>
       )}
 
@@ -708,12 +709,6 @@ export function GameCanvas() {
             </div>
           </div>
         </div>
-      )}
-
-      {inGame && (
-      <p className="pointer-events-none absolute top-[4.6rem] right-3 z-10 rounded-pill bg-cream px-3 py-1 text-sm font-bold tracking-wide text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft">
-        {APP_VERSION}{hud.dev ? " · DEV" : ""}
-      </p>
       )}
 
       {showIntro && !hud.asleep && (

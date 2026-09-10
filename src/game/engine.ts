@@ -84,9 +84,9 @@ const SKY_TINTS = [
   { fill: "#5a3a78", multiply: "#4a3a78", alpha: 0.56 },
   { fill: "#243056", multiply: "#1e2a4a", alpha: 0.64 },
   { fill: "#0c1428", multiply: "#0a1224", alpha: 0.74 },
-  { fill: "#090f20", multiply: "#070c18", alpha: 0.80 },
-  { fill: "#070a16", multiply: "#050810", alpha: 0.86 },
-  { fill: "#04060e", multiply: "#03040a", alpha: 0.92 },
+  { fill: "#1a2c58", multiply: "#4a68a0", alpha: 0.52 },
+  { fill: "#16264e", multiply: "#3e5c94", alpha: 0.56 },
+  { fill: "#122044", multiply: "#345488", alpha: 0.58 },
 ] as const;
 
 export const HOUR_SKIES = SKY_TINTS.map((s) => s.fill);
@@ -1520,6 +1520,36 @@ export function createGame(
     ctx.restore();
   }
 
+  function drawMoonlight() {
+    const x = WORLD_W - 210;
+    const y = 96;
+    ctx.save();
+    const halo = ctx.createRadialGradient(x, y, 18, x, y, 220);
+    halo.addColorStop(0, "rgba(220,235,255,0.55)");
+    halo.addColorStop(0.4, "rgba(170,200,255,0.16)");
+    halo.addColorStop(1, "rgba(170,200,255,0)");
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.arc(x, y, 220, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#eef4ff";
+    ctx.beginPath();
+    ctx.arc(x, y, 36, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(190,210,240,0.55)";
+    ctx.beginPath();
+    ctx.arc(x + 11, y - 8, 12, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalCompositeOperation = "screen";
+    ctx.globalAlpha = 0.2;
+    const wash = ctx.createRadialGradient(x, y, 40, WORLD_W * 0.42, WORLD_H * 0.5, 980);
+    wash.addColorStop(0, "#d4e4ff");
+    wash.addColorStop(1, "#000000");
+    ctx.fillStyle = wash;
+    ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+    ctx.restore();
+  }
+
   function drawSkyMood() {
     const tint = skyTint();
     ctx.save();
@@ -1530,6 +1560,7 @@ export function createGame(
     ctx.restore();
 
     const glow = nightGlow();
+    if (hour() >= 10) drawMoonlight();
     if (glow > 0.45) {
       ctx.save();
       ctx.globalAlpha = (glow - 0.45) * 1.4;

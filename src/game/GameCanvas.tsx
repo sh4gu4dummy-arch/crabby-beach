@@ -105,6 +105,7 @@ export function GameCanvas() {
   const [kit, setKit] = useState(() => loadSettings());
   const [showIntro, setShowIntro] = useState(false);
   const [showBedtime, setShowBedtime] = useState(false);
+  const [showCartoon, setShowCartoon] = useState<string | null>(null);
   const [parentReady, setParentReady] = useState(false);
   const [slowLoad, setSlowLoad] = useState(false);
 
@@ -130,6 +131,10 @@ export function GameCanvas() {
 
   useEffect(() => {
     return pushBack(() => {
+      if (showCartoon) {
+        setShowCartoon(null);
+        return true;
+      }
       if (showIntro) {
         finishIntro();
         return true;
@@ -156,7 +161,7 @@ export function GameCanvas() {
       }
       return false;
     });
-  }, [showIntro, showBedtime, loadout, cinema, hud.phase, hud.dev]);
+  }, [showIntro, showBedtime, showCartoon, loadout, cinema, hud.phase, hud.dev]);
 
   useEffect(() => {
     if (hud.phase !== "loading") {
@@ -193,12 +198,12 @@ export function GameCanvas() {
   useEffect(() => {
     if (hud.phase === "playing" || hud.phase === "won" || hud.phase === "timesup") {
       setMusicScene("game");
-    } else if (hud.phase === "sleep" || showBedtime || showIntro) {
+    } else if (hud.phase === "sleep" || showBedtime || showIntro || showCartoon) {
       setMusicScene("quiet");
     } else {
       setMusicScene("menu");
     }
-  }, [hud.phase, showBedtime, showIntro]);
+  }, [hud.phase, showBedtime, showIntro, showCartoon]);
 
   useEffect(() => {
     if (hud.phase === "won" && hud.hour >= hud.maxLevel && !hud.dev) {
@@ -601,6 +606,10 @@ export function GameCanvas() {
             unlockAudio();
             setShowBedtime(true);
           }}
+          onCartoon={(id) => {
+            unlockAudio();
+            setShowCartoon(id);
+          }}
           onBack={() => setCinema(false)}
         />
       )}
@@ -711,6 +720,14 @@ export function GameCanvas() {
         </div>
       )}
 
+      {showCartoon && (
+        <CartoonOverlay
+          src={assetUrl("game/cinema/s01e01a.mp4?v=111")}
+          muted={muted}
+          onMute={toggleMute}
+          onDone={() => setShowCartoon(null)}
+        />
+      )}
       {showIntro && !hud.asleep && (
         <IntroOverlay muted={muted} onMute={toggleMute} onDone={finishIntro} />
       )}
@@ -765,10 +782,12 @@ function KitPick<T extends string>({
 function CinemaLobby({
   onIntro,
   onBedtime,
+  onCartoon,
   onBack,
 }: {
   onIntro: () => void;
   onBedtime: () => void;
+  onCartoon: (id: string) => void;
   onBack: () => void;
 }) {
   return (
@@ -782,6 +801,22 @@ function CinemaLobby({
         <h1 className="mt-1 text-center text-4xl font-bold tracking-tight">Cinema</h1>
         <p className="mt-2 text-center text-sm text-[#d8c4b8]">Pick a picture.</p>
         <div className="mt-5 grid gap-4">
+          <button
+            type="button"
+            onClick={() => onCartoon("s01e01a")}
+            className="overflow-hidden rounded-[1.4rem] bg-[#1c1422] text-left shadow-lg ring-2 ring-[#e8c07a]/50"
+          >
+            <div className="relative aspect-[16/10] overflow-hidden bg-[#2a1c28]">
+              <img src={assetUrl("game/cinema/s01e01a.jpg?v=111")} alt="" className="absolute inset-0 h-full w-full object-cover" />
+              <span className="absolute right-3 bottom-3 grid size-11 place-items-center rounded-full bg-coral text-cream shadow-md">
+                <Play className="size-5" fill="currentColor" />
+              </span>
+            </div>
+            <div className="px-4 py-3">
+              <p className="text-xs font-semibold tracking-wide text-[#e8c07a] uppercase">Ep 1.1 · Part 1</p>
+              <p className="text-lg font-bold">Hi, I'm Crabby</p>
+            </div>
+          </button>
           <button
             type="button"
             onClick={onIntro}
@@ -974,6 +1009,75 @@ function LoadoutCard({
           Back to hours
         </button>
       </div>
+    </div>
+  );
+}
+
+function CartoonOverlay({
+  src,
+  muted,
+  onMute,
+  onDone,
+}: {
+  src: string;
+  muted: boolean;
+  onMute: () => void;
+  onDone: () => void;
+}) {
+  const ref = useRef<HTMLVideoElement>(null);
+  const [playing, setPlaying] = useState(false);
+
+  useEffect(() => {
+    const v = ref.current;
+    if (v) v.muted = muted;
+  }, [muted]);
+
+  function start() {
+    unlockAudio();
+    const v = ref.current;
+    if (!v) return;
+    v.muted = muted;
+    void v.play();
+    setPlaying(true);
+  }
+
+  return (
+    <div className="absolute inset-0 z-50 bg-ink">
+      <video
+        ref={ref}
+        src={src}
+        playsInline
+        className="h-full w-full object-contain bg-ink"
+        onEnded={onDone}
+      />
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-start justify-between px-3 pt-[max(0.8rem,env(safe-area-inset-top))]">
+        <p className="rounded-pill bg-cream px-3 py-1 text-sm font-bold text-ink shadow-md">{APP_VERSION}</p>
+        <button
+          type="button"
+          onClick={onMute}
+          className="pointer-events-auto grid size-12 place-items-center rounded-pill bg-cream text-ink shadow-md"
+          aria-label={muted ? "Unmute sounds" : "Mute sounds"}
+        >
+          {muted ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
+        </button>
+      </div>
+      {!playing && (
+        <button
+          type="button"
+          onClick={start}
+          className="absolute inset-0 z-10 grid place-items-center bg-ink/25"
+          aria-label="Play cartoon"
+        >
+          <span className="rounded-pill bg-coral px-8 py-4 text-xl font-bold text-cream shadow-lg">Tap to play</span>
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={onDone}
+        className="absolute inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-20 min-h-12 rounded-pill bg-cream/90 text-sm font-bold text-ink shadow-md"
+      >
+        Back
+      </button>
     </div>
   );
 }

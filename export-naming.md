@@ -1,6 +1,6 @@
-# export-naming.md — v.111
+# export-naming.md — v.112
 
-Current product version: **v.110** (Crabby Beach)
+Current product version: **v.111** (Crabby Beach)
 
 ## How filenames work
 
@@ -31,5 +31,5 @@ Older files keep their names (`v.001` stays `v.001`). New exports use the curren
 ## Version numbers
 
 - Product versions increment `v.001`, `v.002`, `v.003`, …
-- This naming document started at `v.001` and is now **v.111**.
+- This naming document started at `v.001` and is now **v.112**.
 - Never skip or reuse a number. A new version is a new number.

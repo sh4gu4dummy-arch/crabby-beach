@@ -112,9 +112,7 @@
   background: linear-gradient(180deg, #6ec7e6 0%, #b7e5f4 38%, #fff6e8 68%, #f6d7a0 100%);
 }
 
-.menu-sky {
-  background: linear-gradient(180deg, #6ec7e6 0%, #b7e5f4 38%, #fff6e8 68%, #f6d7a0 100%);
-}
+.menu-crab {
   animation: menu-bob 2.6s ease-in-out infinite;
 }
 
@@ -163,10 +161,6 @@ html.dark {
 
 html.dark body {
   background: #121018;
-}
-
-html.dark .menu-sky {
-  background: linear-gradient(180deg, #0c1428 0%, #1a2744 42%, #243044 74%, #16141c 100%);
 }
 
 html.dark .menu-sky {

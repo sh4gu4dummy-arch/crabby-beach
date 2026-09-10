@@ -1025,21 +1025,19 @@ function CartoonOverlay({
   onDone: () => void;
 }) {
   const ref = useRef<HTMLVideoElement>(null);
-  const [playing, setPlaying] = useState(false);
+
+  useEffect(() => {
+    const v = ref.current;
+    if (!v) return;
+    v.muted = muted;
+    unlockAudio();
+    void v.play();
+  }, []);
 
   useEffect(() => {
     const v = ref.current;
     if (v) v.muted = muted;
   }, [muted]);
-
-  function start() {
-    unlockAudio();
-    const v = ref.current;
-    if (!v) return;
-    v.muted = muted;
-    void v.play();
-    setPlaying(true);
-  }
 
   return (
     <div className="absolute inset-0 z-50 bg-ink">
@@ -1047,6 +1045,7 @@ function CartoonOverlay({
         ref={ref}
         src={src}
         playsInline
+        autoPlay
         className="h-full w-full object-contain bg-ink"
         onEnded={onDone}
       />
@@ -1061,16 +1060,6 @@ function CartoonOverlay({
           {muted ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
         </button>
       </div>
-      {!playing && (
-        <button
-          type="button"
-          onClick={start}
-          className="absolute inset-0 z-10 grid place-items-center bg-ink/25"
-          aria-label="Play cartoon"
-        >
-          <span className="rounded-pill bg-coral px-8 py-4 text-xl font-bold text-cream shadow-lg">Tap to play</span>
-        </button>
-      )}
       <button
         type="button"
         onClick={onDone}

@@ -9,27 +9,27 @@ export const EXPORTS: Record<ExportKind, ExportFile | null> = {
     "mtime": "2026-09-10T07:23:12.232Z"
   },
   "codebase": {
-    "version": "v.080",
-    "file": "crabby-beach-v.080-codebase.zip",
-    "bytes": 42976783,
-    "mtime": "2026-09-08T05:25:14.701Z"
+    "version": "v.089",
+    "file": "crabby-beach-v.089-codebase.zip",
+    "bytes": 43388694,
+    "mtime": "2026-09-10T07:24:05.000Z"
   },
   "portable": {
-    "version": "v.080",
-    "file": "crabby-beach-v.080-portable.zip",
-    "bytes": 19023613,
-    "mtime": "2026-09-08T05:25:11.909Z"
+    "version": "v.089",
+    "file": "crabby-beach-v.089-portable.zip",
+    "bytes": 19024985,
+    "mtime": "2026-09-10T07:24:02.144Z"
   },
   "android": {
-    "version": "v.080",
-    "file": "crabby-beach-v.080-android.zip",
-    "bytes": 19125905,
-    "mtime": "2026-09-08T05:25:12.449Z"
+    "version": "v.089",
+    "file": "crabby-beach-v.089-android.zip",
+    "bytes": 19127277,
+    "mtime": "2026-09-10T07:24:02.776Z"
   },
   "apk": {
-    "version": "v.080",
-    "file": "crabby-beach-v.080.apk",
-    "bytes": 19966685,
-    "mtime": "2026-09-08T05:25:35.713Z"
+    "version": "v.089",
+    "file": "crabby-beach-v.089.apk",
+    "bytes": 19968417,
+    "mtime": "2026-09-10T07:24:26.300Z"
   }
 };

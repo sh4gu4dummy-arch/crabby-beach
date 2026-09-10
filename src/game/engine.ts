@@ -71,6 +71,7 @@ const SAND_RIGHT = 1470;
 const CRAB_SPEED = 300;
 const HIT = 72;
 const CRAB_SIZE = 112;
+const CRAB_SIZE_GREEN = 138;
 const FIND_SIZE = 68;
 const PAINT_RES = 256;
 const SKY_TINTS = [
@@ -220,19 +221,19 @@ async function loadAssets(): Promise<Assets> {
     loadImage(assetUrl(`game/crabby/idle-${id}-1.png?v=051`)),
     ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crabby/walk-${id}-${i}.png?v=051`))),
   ]);
-  const skinIds = ["blue", "yellow"] as const;
+  const skinIds = ["blue", "yellow", "green"] as const;
   const skinFiles = skinIds.flatMap((id) => [
     loadImage(assetUrl(`game/crabby/${id}/idle-0.png?v=098`)),
     loadImage(assetUrl(`game/crabby/${id}/idle-1.png?v=098`)),
     ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crabby/${id}/walk-${i}.png?v=098`))),
   ]);
-  const lookColors: CrabColor[] = ["red", "blue", "yellow"];
+  const lookColors: CrabColor[] = ["red", "blue", "yellow", "green"];
   const lookHats: Array<Exclude<CrabHat, "none">> = ["bow", "bucket", "sailor"];
   const lookFiles = lookColors.flatMap((color) =>
     lookHats.flatMap((hat) => [
-      loadImage(assetUrl(`game/crabby/looks/${color}/${hat}/idle-0.png?v=099`)),
-      loadImage(assetUrl(`game/crabby/looks/${color}/${hat}/idle-1.png?v=099`)),
-      ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crabby/looks/${color}/${hat}/walk-${i}.png?v=099`))),
+      loadImage(assetUrl(`game/crabby/looks/${color}/${hat}/idle-0.png?v=100`)),
+      loadImage(assetUrl(`game/crabby/looks/${color}/${hat}/idle-1.png?v=100`)),
+      ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crabby/looks/${color}/${hat}/walk-${i}.png?v=100`))),
     ]),
   );
   const [beach, ...rest] = await Promise.all([
@@ -462,6 +463,10 @@ export function createGame(
 
   function crabColor(): CrabColor {
     return extrasOpen() ? settings.color : "red";
+  }
+
+  function crabDrawSize() {
+    return crabColor() === "green" ? CRAB_SIZE_GREEN : CRAB_SIZE;
   }
 
   function crabHat(): CrabHat {
@@ -1717,11 +1722,12 @@ export function createGame(
         z: 2,
         draw: () => {
           drawShadow(crab.x, crab.y, 28, 10);
-          drawCentered(img, crab.x, crab.y, CRAB_SIZE, CRAB_SIZE, crab.facing < 0, waveRot);
+          drawCentered(img, crab.x, crab.y, crabDrawSize(), crabDrawSize(), crab.facing < 0, waveRot);
           if (crab.blink > 0) {
             ctx.save();
             ctx.globalAlpha = 0.85;
-            ctx.fillStyle = body === "blue" ? "#4ea8c9" : body === "yellow" ? "#e8c04a" : "#e85d4c";
+            ctx.fillStyle =
+              body === "blue" ? "#4ea8c9" : body === "yellow" ? "#e8c04a" : body === "green" ? "#2ee86a" : "#e85d4c";
             ctx.beginPath();
             ctx.ellipse(crab.x + crab.facing * 8, crab.y - 10, 10, 3, 0, 0, Math.PI * 2);
             ctx.fill();

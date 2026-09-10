@@ -167,6 +167,13 @@ export function Grownups() {
               onPick={(color) => update({ color })}
               swatch="bg-sand-deep"
             />
+            <Choice
+              label="Green"
+              value={"green" as CrabColor}
+              current={settings.color}
+              onPick={(color) => update({ color })}
+              swatch="bg-mint"
+            />
           </div>
           <p className="mt-4 text-sm font-semibold">Hat</p>
           <div className="mt-2 flex flex-wrap gap-2">

@@ -1,4 +1,4 @@
-export type CrabColor = "red" | "blue" | "yellow";
+export type CrabColor = "red" | "blue" | "yellow" | "green";
 export type CrabHat = "none" | "bow" | "bucket" | "sailor";
 export type TimerMinutes = 0 | 3 | 5 | 10;
 export type BeachTheme = "sunny" | "sunset";
@@ -31,7 +31,7 @@ export const DEFAULT_SETTINGS: GrownupSettings = {
 };
 
 function isColor(v: unknown): v is CrabColor {
-  return v === "red" || v === "blue" || v === "yellow";
+  return v === "red" || v === "blue" || v === "yellow" || v === "green";
 }
 function isHat(v: unknown): v is CrabHat {
   return v === "none" || v === "bow" || v === "bucket" || v === "sailor";

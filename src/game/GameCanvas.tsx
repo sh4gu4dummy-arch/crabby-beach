@@ -577,7 +577,7 @@ export function GameCanvas() {
               <CrabLook
                 color={hud.extrasOpen ? kit.color : "red"}
                 hat={hud.extrasOpen ? kit.hat : "none"}
-                size={120}
+                size={hud.extrasOpen && kit.color === "green" ? 148 : 120}
                 className="menu-crab z-10"
               />
             </div>
@@ -831,12 +831,13 @@ function CinemaLobby({
 function skinSrc(color: CrabColor) {
   if (color === "blue") return assetUrl("game/crabby/blue/idle-0.png?v=098");
   if (color === "yellow") return assetUrl("game/crabby/yellow/idle-0.png?v=098");
+  if (color === "green") return assetUrl("game/crabby/green/idle-0.png?v=100");
   return assetUrl("game/crabby/idle-red-0.png?v=051");
 }
 
 function lookSrc(color: CrabColor, hat: CrabHat) {
   if (hat === "none") return skinSrc(color);
-  return assetUrl(`game/crabby/looks/${color}/${hat}/idle-0.png?v=099`);
+  return assetUrl(`game/crabby/looks/${color}/${hat}/idle-0.png?v=100`);
 }
 
 function CrabLook({
@@ -899,15 +900,16 @@ function LoadoutCard({
         </p>
 
         <div className="mx-auto mt-4">
-          <CrabLook color={kit.color} hat={kit.hat} size={148} className="mx-auto" />
+          <CrabLook color={kit.color} hat={kit.hat} size={kit.color === "green" ? 176 : 148} className="mx-auto" />
         </div>
 
         <p className="mt-4 text-left text-sm font-bold">Crabby</p>
-        <div className="mt-2 grid grid-cols-3 gap-2">
+        <div className="mt-2 grid grid-cols-2 gap-2">
           {([
             ["red", "Red"],
             ["blue", "Blue"],
             ["yellow", "Yellow"],
+            ["green", "Green"],
           ] as const).map(([value, label]) => {
             const locked = value !== "red" && !extrasOpen;
             const on = kit.color === value && !locked;
@@ -922,8 +924,12 @@ function LoadoutCard({
                 }`}
                 aria-label={locked ? `${label} locked` : label}
               >
-                <img src={skinSrc(value)} alt="" className="h-16 w-16 object-contain" />
-                <span className="text-xs font-bold">{label}</span>
+                <img
+                  src={skinSrc(value)}
+                  alt=""
+                  className={`object-contain ${value === "green" ? "h-20 w-20" : "h-16 w-16"}`}
+                />
+                <span className="text-xs font-bold">{label}{value === "green" ? " ★" : ""}</span>
                 {locked && <Lock className="absolute top-1 right-1 size-3.5 opacity-70" />}
               </button>
             );

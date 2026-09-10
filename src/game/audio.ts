@@ -11,8 +11,10 @@ let musicOn = true;
 let musicScene: "menu" | "game" | "quiet" = "menu";
 let oceanSrc: AudioBufferSourceNode | null = null;
 let noiseBuffer: AudioBuffer | null = null;
+let brushBuffer: AudioBuffer | null = null;
 let voiceSrc: AudioBufferSourceNode | null = null;
 let brushSrc: AudioBufferSourceNode | null = null;
+let brushGain: GainNode | null = null;
 let musicTimer: number | null = null;
 const voiceBufs = new Map<string, AudioBuffer>();
 let voicesLoading: Promise<void> | null = null;
@@ -64,6 +66,15 @@ function ensureGraph() {
   noiseBuffer = ctx.createBuffer(1, n, ctx.sampleRate);
   const data = noiseBuffer.getChannelData(0);
   for (let i = 0; i < n; i++) data[i] = Math.random() * 2 - 1;
+
+  const bn = Math.floor(ctx.sampleRate * 1.6);
+  brushBuffer = ctx.createBuffer(1, bn, ctx.sampleRate);
+  const brush = brushBuffer.getChannelData(0);
+  let acc = 0;
+  for (let i = 0; i < bn; i++) {
+    acc = acc * 0.985 + (Math.random() * 2 - 1) * 0.015;
+    brush[i] = acc * 4.2;
+  }
 }
 
 function resume() {
@@ -276,32 +287,51 @@ export function playDip() {
 }
 
 export function startBrush() {
-  if (!ctx || !sfxBus || !noiseBuffer || muted || brushSrc) return;
+  if (!ctx || !sfxBus || !brushBuffer || muted || brushSrc) return;
   const src = ctx.createBufferSource();
-  src.buffer = noiseBuffer;
+  src.buffer = brushBuffer;
   src.loop = true;
-  src.playbackRate.value = 0.92;
-  const filter = ctx.createBiquadFilter();
-  filter.type = "bandpass";
-  filter.frequency.value = 1650;
-  filter.Q.value = 1.4;
+  src.playbackRate.value = 0.55;
+  const low = ctx.createBiquadFilter();
+  low.type = "lowpass";
+  low.frequency.value = 380;
+  low.Q.value = 0.4;
   const g = ctx.createGain();
-  g.gain.value = 0.04;
-  src.connect(filter);
-  filter.connect(g);
+  const now = ctx.currentTime;
+  g.gain.setValueAtTime(0, now);
+  g.gain.linearRampToValueAtTime(0.022, now + 0.09);
+  src.connect(low);
+  low.connect(g);
   g.connect(sfxBus);
   src.start();
   brushSrc = src;
+  brushGain = g;
 }
 
 export function stopBrush() {
-  if (brushSrc) {
-    try {
-      brushSrc.stop();
-    } catch {
-      /* already ended */
-    }
-    brushSrc = null;
+  const src = brushSrc;
+  const g = brushGain;
+  brushSrc = null;
+  brushGain = null;
+  if (!src) return;
+  if (g && ctx) {
+    const now = ctx.currentTime;
+    g.gain.cancelScheduledValues(now);
+    g.gain.setValueAtTime(Math.max(0.0001, g.gain.value), now);
+    g.gain.linearRampToValueAtTime(0.0001, now + 0.14);
+    window.setTimeout(() => {
+      try {
+        src.stop();
+      } catch {
+        /* already ended */
+      }
+    }, 160);
+    return;
+  }
+  try {
+    src.stop();
+  } catch {
+    /* already ended */
   }
 }
 

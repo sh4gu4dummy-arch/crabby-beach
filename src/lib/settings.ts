@@ -13,6 +13,7 @@ export type GrownupSettings = {
   darkModeChosen: boolean;
   timerMinutes: TimerMinutes;
   pen: PenId;
+  waves: boolean;
 };
 
 const KEY = "crabby-beach-settings-v1";
@@ -26,6 +27,7 @@ export const DEFAULT_SETTINGS: GrownupSettings = {
   darkModeChosen: false,
   timerMinutes: 0,
   pen: "swipe",
+  waves: true,
 };
 
 function isColor(v: unknown): v is CrabColor {
@@ -56,6 +58,7 @@ export function loadSettings(): GrownupSettings {
       darkModeChosen: parsed.darkModeChosen === true,
       timerMinutes: isTimer(parsed.timerMinutes) ? parsed.timerMinutes : 0,
       pen: isPen(parsed.pen) ? parsed.pen : DEFAULT_SETTINGS.pen,
+      waves: parsed.waves !== false,
     };
   } catch {
     return DEFAULT_SETTINGS;

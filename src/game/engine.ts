@@ -1,5 +1,5 @@
 import type { BeachTheme, CrabColor, CrabHat, GrownupSettings, PenId } from "@/lib/settings";
-import { DEFAULT_SETTINGS } from "@/lib/settings";
+import { DEFAULT_SETTINGS, saveSettings } from "@/lib/settings";
 import { loadAsleep, loadCleared, loadDev, loadoutUnlocked, saveAsleep, saveCleared, saveDev, unlockedFrom } from "@/lib/progress";
 import { assetUrl } from "@/lib/asset";
 import {
@@ -41,6 +41,7 @@ export type GameHud = {
   extrasOpen: boolean;
   tideBusy: boolean;
   asleep: boolean;
+  wavesOn: boolean;
 };
 
 export type GameApi = {
@@ -51,6 +52,7 @@ export type GameApi = {
   goSleep: () => void;
   wake: () => void;
   setDev: (on: boolean) => void;
+  setWaves: (on: boolean) => void;
   resetProgress: () => void;
   addTime: (seconds: number) => void;
   destroy: () => void;
@@ -481,6 +483,7 @@ export function createGame(
       extrasOpen: extrasOpen(),
       tideBusy: phase === "playing" && tideT < TIDE_END,
       asleep,
+      wavesOn: settings.waves !== false,
     });
   }
 
@@ -1049,7 +1052,7 @@ export function createGame(
           }
         }
         if (before < TIDE_END && tideT >= TIDE_END) emitHud();
-      } else if (phase === "playing") {
+      } else if (phase === "playing" && settings.waves !== false) {
         flowT += dt;
         const cycle = Math.floor(flowT / FLOW_PERIOD);
         if (cycle !== flowPlayed && (flowT % FLOW_PERIOD) < FLOW_IN) {
@@ -1953,6 +1956,11 @@ export function createGame(
       saveDev(on);
       if (dev && phase === "sleep") phase = "menu";
       else if (!dev && asleep && (phase === "menu" || phase === "playing")) phase = "sleep";
+      emitHud();
+    },
+    setWaves(on: boolean) {
+      settings = { ...hooks.getSettings(), waves: on };
+      saveSettings(settings);
       emitHud();
     },
     resetProgress() {

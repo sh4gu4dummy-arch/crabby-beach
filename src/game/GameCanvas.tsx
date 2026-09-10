@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Check, Clapperboard, Home, Lock, Moon, Music2, Palette, Play, RotateCcw, Sun, Timer, UserRound, Volume2, VolumeX } from "lucide-react";
+import { Check, Clapperboard, Home, Lock, Moon, Music2, Palette, Play, RotateCcw, Sun, Timer, UserRound, Volume2, VolumeX, Waves } from "lucide-react";
 import { SignedIn, SignedOut, UserButton } from "@/lib/auth/gates";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { loadSettings, saveSettings, applyTheme, type CrabColor, type CrabHat, type PenId } from "@/lib/settings";
@@ -29,35 +29,64 @@ const EMPTY: GameHud = {
   extrasOpen: false,
   tideBusy: false,
   asleep: false,
+  wavesOn: true,
 };
 
-function AnalogClock({ hour, className = "size-10 shrink-0" }: { hour: number; className?: string }) {
+function AnalogClock({
+  hour,
+  className = "size-10 shrink-0",
+  numbered = false,
+}: {
+  hour: number;
+  className?: string;
+  numbered?: boolean;
+}) {
   const deg = (hour % 12) * 30;
   const rad = ((deg - 90) * Math.PI) / 180;
-  const hx = 20 + Math.cos(rad) * 9;
-  const hy = 20 + Math.sin(rad) * 9;
+  const hx = 50 + Math.cos(rad) * 22;
+  const hy = 50 + Math.sin(rad) * 22;
+  const nums = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
   return (
-    <svg viewBox="0 0 40 40" className={className} aria-hidden="true">
-      <circle cx="20" cy="20" r="18" fill="#fff6e8" stroke="#e8c07a" strokeWidth="2.6" />
-      {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((n) => {
-        const a = ((n * 30 - 90) * Math.PI) / 180;
-        const inner = n % 3 === 0 ? 13 : 15;
-        return (
-          <line
-            key={n}
-            x1={20 + Math.cos(a) * inner}
-            y1={20 + Math.sin(a) * inner}
-            x2={20 + Math.cos(a) * 16.5}
-            y2={20 + Math.sin(a) * 16.5}
-            stroke="#6b5348"
-            strokeWidth={n % 3 === 0 ? 1.8 : 1}
-            strokeLinecap="round"
-          />
-        );
-      })}
-      <line x1="20" y1="20" x2="20" y2="8.5" stroke="#3a2a22" strokeWidth="1.6" strokeLinecap="round" />
-      <line x1="20" y1="20" x2={hx} y2={hy} stroke="#e85d4c" strokeWidth="2.6" strokeLinecap="round" />
-      <circle cx="20" cy="20" r="2.2" fill="#3a2a22" />
+    <svg viewBox="0 0 100 100" className={className} aria-hidden="true">
+      <circle cx="50" cy="50" r="46" fill="#fff6e8" stroke="#e8c07a" strokeWidth="5" />
+      {numbered
+        ? nums.map((n, i) => {
+            const a = ((i * 30 - 90) * Math.PI) / 180;
+            return (
+              <text
+                key={n}
+                x={50 + Math.cos(a) * 33}
+                y={50 + Math.sin(a) * 33}
+                textAnchor="middle"
+                dominantBaseline="central"
+                fill="#3a2a22"
+                fontSize={n % 3 === 0 ? 13 : 10}
+                fontWeight={700}
+                fontFamily="Fredoka, ui-rounded, sans-serif"
+              >
+                {n}
+              </text>
+            );
+          })
+        : nums.map((_, n) => {
+            const a = ((n * 30 - 90) * Math.PI) / 180;
+            const inner = n % 3 === 0 ? 32 : 37;
+            return (
+              <line
+                key={n}
+                x1={50 + Math.cos(a) * inner}
+                y1={50 + Math.sin(a) * inner}
+                x2={50 + Math.cos(a) * 41}
+                y2={50 + Math.sin(a) * 41}
+                stroke="#6b5348"
+                strokeWidth={n % 3 === 0 ? 4 : 2.2}
+                strokeLinecap="round"
+              />
+            );
+          })}
+      <line x1="50" y1="50" x2="50" y2="22" stroke="#3a2a22" strokeWidth="3.2" strokeLinecap="round" />
+      <line x1="50" y1="50" x2={hx} y2={hy} stroke="#e85d4c" strokeWidth="5" strokeLinecap="round" />
+      <circle cx="50" cy="50" r="4.5" fill="#3a2a22" />
     </svg>
   );
 }
@@ -239,20 +268,34 @@ export function GameCanvas() {
 
       {inGame && (
       <header className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-2 px-3 pb-3 pt-[max(0.7rem,env(safe-area-inset-top))]">
-        <div className="flex items-center gap-2 rounded-pill bg-cream/90 py-1.5 pr-4 pl-1.5 shadow-md shadow-ink/10 ring-2 ring-cream-soft">
-          <AnalogClock hour={hud.hour} />
-          <div>
-            <p className="text-xs font-semibold tracking-wide text-ink-soft uppercase">{hourLabel(hud.hour)}</p>
-            <p className="text-lg leading-none font-bold tabular-nums">
-              {hud.level}
-              <span className="text-ink-soft"> / {hud.maxLevel}</span>
-            </p>
-            {hud.phase === "playing" || hud.phase === "won" ? (
-              <p className="text-[11px] font-bold tracking-wide text-ink-soft uppercase">
-                {hud.painted >= hud.total ? "All colored" : `${hud.total - hud.painted} left`}
+        <div className="flex flex-col items-start gap-1.5">
+          <div className="flex items-center gap-2 rounded-pill bg-cream/90 py-1.5 pr-4 pl-1.5 shadow-md shadow-ink/10 ring-2 ring-cream-soft">
+            <AnalogClock hour={hud.hour} numbered className="size-20 shrink-0" />
+            <div>
+              <p className="text-xs font-semibold tracking-wide text-ink-soft uppercase">{hourLabel(hud.hour)}</p>
+              <p className="text-lg leading-none font-bold tabular-nums">
+                {hud.level}
+                <span className="text-ink-soft"> / {hud.maxLevel}</span>
               </p>
-            ) : null}
+              {hud.phase === "playing" || hud.phase === "won" ? (
+                <p className="text-[11px] font-bold tracking-wide text-ink-soft uppercase">
+                  {hud.painted >= hud.total ? "All colored" : `${hud.total - hud.painted} left`}
+                </p>
+              ) : null}
+            </div>
           </div>
+          {hud.phase === "playing" && (
+            <button
+              type="button"
+              onClick={() => apiRef.current?.setWaves(!hud.wavesOn)}
+              className="pointer-events-auto inline-flex min-h-10 items-center gap-1.5 rounded-pill bg-cream/90 px-3 text-sm font-bold text-ink shadow-md shadow-ink/10 ring-2 ring-cream-soft"
+              aria-pressed={hud.wavesOn}
+              aria-label={hud.wavesOn ? "Turn waves off" : "Turn waves on"}
+            >
+              <Waves className="size-4" />
+              {hud.wavesOn ? "Waves on" : "Waves off"}
+            </button>
+          )}
         </div>
         <div className="pointer-events-auto flex items-center gap-2">
           {timerLabel && (
@@ -304,7 +347,7 @@ export function GameCanvas() {
       {(hud.phase === "playing" || hud.phase === "won") && (
         <div
           className="pointer-events-none absolute left-3 right-3 z-20"
-          style={{ top: "max(4.85rem, calc(env(safe-area-inset-top) + 3.5rem))" }}
+          style={{ top: "max(8.6rem, calc(env(safe-area-inset-top) + 7.2rem))" }}
         >
           <div className="sky-bar relative h-2 overflow-hidden rounded-pill bg-cream/80 shadow-sm ring-1 ring-cream-soft">
             <div

@@ -829,14 +829,14 @@ function CinemaLobby({
 }
 
 function skinSrc(color: CrabColor) {
-  if (color === "blue") return assetUrl("game/crabby/blue/idle-0.png?v=096");
-  if (color === "yellow") return assetUrl("game/crabby/yellow/idle-0.png?v=096");
+  if (color === "blue") return assetUrl("game/crabby/blue/idle-0.png?v=098");
+  if (color === "yellow") return assetUrl("game/crabby/yellow/idle-0.png?v=098");
   return assetUrl("game/crabby/idle-red-0.png?v=051");
 }
 
 function hatSrc(hat: CrabHat) {
   if (hat === "none") return null;
-  return assetUrl(`game/crabby/hat-${hat}.png?v=097`);
+  return assetUrl(`game/crabby/hat-${hat}.png?v=098`);
 }
 
 function CrabLook({

@@ -222,12 +222,12 @@ async function loadAssets(): Promise<Assets> {
   ]);
   const skinIds = ["blue", "yellow"] as const;
   const skinFiles = skinIds.flatMap((id) => [
-    loadImage(assetUrl(`game/crabby/${id}/idle-0.png?v=096`)),
-    loadImage(assetUrl(`game/crabby/${id}/idle-1.png?v=096`)),
-    ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crabby/${id}/walk-${i}.png?v=096`))),
+    loadImage(assetUrl(`game/crabby/${id}/idle-0.png?v=098`)),
+    loadImage(assetUrl(`game/crabby/${id}/idle-1.png?v=098`)),
+    ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crabby/${id}/walk-${i}.png?v=098`))),
   ]);
   const hatFiles = (["bow", "bucket", "sailor"] as const).map((h) =>
-    loadImage(assetUrl(`game/crabby/hat-${h}.png?v=097`)),
+    loadImage(assetUrl(`game/crabby/hat-${h}.png?v=098`)),
   );
   const [beach, ...rest] = await Promise.all([
     loadImage(assetUrl("game/beach.jpg?v=070")),

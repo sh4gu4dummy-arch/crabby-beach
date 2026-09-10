@@ -574,10 +574,11 @@ export function GameCanvas() {
                 alt=""
                 className="absolute right-8 bottom-8 w-11 rotate-[22deg] drop-shadow-md"
               />
-              <img
-                src={assetUrl("game/crabby/idle-green-0.png?v=051")}
-                alt=""
-                className="menu-crab relative z-10 w-28 drop-shadow-md"
+              <CrabLook
+                color={hud.extrasOpen ? kit.color : "red"}
+                hat={hud.extrasOpen ? kit.hat : "none"}
+                size={120}
+                className="menu-crab z-10"
               />
             </div>
             <Link
@@ -835,7 +836,39 @@ function skinSrc(color: CrabColor) {
 
 function hatSrc(hat: CrabHat) {
   if (hat === "none") return null;
-  return assetUrl(`game/crabby/hat-${hat}.png?v=096`);
+  return assetUrl(`game/crabby/hat-${hat}.png?v=097`);
+}
+
+function CrabLook({
+  color,
+  hat,
+  className = "",
+  size = 112,
+}: {
+  color: CrabColor;
+  hat: CrabHat;
+  className?: string;
+  size?: number;
+}) {
+  const src = hatSrc(hat);
+  return (
+    <div className={`relative ${className}`} style={{ width: size, height: size }}>
+      <img src={skinSrc(color)} alt="" className="h-full w-full object-contain drop-shadow-md" />
+      {src && (
+        <img
+          src={src}
+          alt=""
+          className="pointer-events-none absolute left-1/2 object-contain"
+          style={{
+            width: size * 0.5,
+            height: size * 0.5,
+            top: hat === "bow" ? "2%" : hat === "sailor" ? "0%" : "-2%",
+            transform: "translateX(-50%)",
+          }}
+        />
+      )}
+    </div>
+  );
 }
 
 function LoadoutCard({
@@ -879,15 +912,8 @@ function LoadoutCard({
           Swipe paints the shell. Auto fill paints it when Crabby touches it.
         </p>
 
-        <div className="relative mx-auto mt-4 h-36 w-36">
-          <img src={skinSrc(kit.color)} alt="" className="h-full w-full object-contain drop-shadow-md" />
-          {hatSrc(kit.hat) && (
-            <img
-              src={hatSrc(kit.hat)!}
-              alt=""
-              className="pointer-events-none absolute top-1 left-1/2 h-14 w-14 -translate-x-1/2 object-contain"
-            />
-          )}
+        <div className="mx-auto mt-4">
+          <CrabLook color={kit.color} hat={kit.hat} size={148} className="mx-auto" />
         </div>
 
         <p className="mt-4 text-left text-sm font-bold">Crabby</p>

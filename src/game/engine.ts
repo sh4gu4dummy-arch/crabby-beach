@@ -227,7 +227,7 @@ async function loadAssets(): Promise<Assets> {
     ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crabby/${id}/walk-${i}.png?v=096`))),
   ]);
   const hatFiles = (["bow", "bucket", "sailor"] as const).map((h) =>
-    loadImage(assetUrl(`game/crabby/hat-${h}.png?v=096`)),
+    loadImage(assetUrl(`game/crabby/hat-${h}.png?v=097`)),
   );
   const [beach, ...rest] = await Promise.all([
     loadImage(assetUrl("game/beach.jpg?v=070")),
@@ -1421,9 +1421,9 @@ export function createGame(
     if (hat === "none" || !assets) return;
     const img = assets.hats[hat];
     if (!img) return;
-    const s = size * (hat === "bow" ? 0.46 : hat === "sailor" ? 0.5 : 0.48);
-    const oy = hat === "bow" ? -size * 0.4 : -size * 0.48;
-    drawCentered(img, x, y + oy, s, s, flip, 0);
+    const s = size * (hat === "bow" ? 0.52 : hat === "sailor" ? 0.5 : 0.56);
+    const head = y - size * 0.2;
+    drawCentered(img, x, head - s * 0.4, s, s, flip, 0);
   }
 
   function shoreY() {

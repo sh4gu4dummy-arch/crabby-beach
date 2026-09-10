@@ -422,8 +422,20 @@ export function createGame(
     return Math.min(MAX_LEVELS, Math.max(1, level));
   }
 
+  function levelT() {
+    return (hour() - 1) / Math.max(1, MAX_LEVELS - 1);
+  }
+
+  function walkMul() {
+    return 1 + 0.5 * levelT();
+  }
+
+  function paintMul() {
+    return 1 + 0.5 * levelT();
+  }
+
   function nightGlow() {
-    return (hour() - 1) / (MAX_LEVELS - 1);
+    return levelT();
   }
 
   /** Luminescent shells start at 6pm, full from 9pm through midnight. */
@@ -784,7 +796,7 @@ export function createGame(
     if (!px) return;
     px.imageSmoothingEnabled = true;
     px.imageSmoothingQuality = "high";
-    const r = PAINT_RES * 0.12;
+    const r = PAINT_RES * 0.12 * paintMul();
     const hex = paintHex(crab.paint);
     px.fillStyle = hex;
     px.beginPath();
@@ -1176,7 +1188,7 @@ export function createGame(
       } else {
         crab.state = "walk";
         const wet = inWater();
-        const step = Math.min(d, CRAB_SPEED * (wet ? 0.62 : 1) * dt);
+        const step = Math.min(d, CRAB_SPEED * walkMul() * (wet ? 0.62 : 1) * dt);
         crab.x += (dx / d) * step;
         crab.y += (dy / d) * step;
         if (Math.abs(dx) > 3) crab.facing = dx >= 0 ? 1 : -1;

@@ -1,5 +1,5 @@
 # Crabby Cartoons — plan v.003
-Product: **Crabby Beach v.123**
+Product: **Crabby Beach v.124**
 
 Status: **ep 1.1 beat A in progress**. Later beats wait for look lock.
 
@@ -68,6 +68,14 @@ Until B+C exist, the poster plays **part 1 (beat A)** only — do not label it t
 First-run `intro.mp4` stays until 1.1 is approved.
 
 **Not in 1.1:** hats, other colors, night, counting, bedtime.
+
+## Episode 1.2 — Red meets Green
+
+One 10s R2V take. Refs: `idle-red-0.png` + `green/idle-0.png`. Imagine audio. No mux.
+
+They run, bump, high-five, splash. Red Crabby: “Hiii! I'm Red Crabby!” Green Crabby: “I'm Green Crabby! Let's play!”
+
+Cinema title: `Red meets Green`. Tag `Ep 1.2`.
 
 ## Season 1 (rest)
 

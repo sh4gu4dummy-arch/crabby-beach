@@ -722,7 +722,7 @@ export function GameCanvas() {
 
       {showCartoon && (
         <CartoonOverlay
-          src={assetUrl("game/cinema/s01e01.mp4?v=118")}
+          src={assetUrl("game/cinema/s01e01.mp4?v=119")}
           muted={muted}
           onMute={toggleMute}
           onDone={() => setShowCartoon(null)}

@@ -231,9 +231,9 @@ async function loadAssets(): Promise<Assets> {
   const lookHats: Array<Exclude<CrabHat, "none">> = ["bow", "bucket", "sailor"];
   const lookFiles = lookColors.flatMap((color) =>
     lookHats.flatMap((hat) => [
-      loadImage(assetUrl(`game/crabby/looks/${color}/${hat}/idle-0.png?v=109`)),
-      loadImage(assetUrl(`game/crabby/looks/${color}/${hat}/idle-1.png?v=109`)),
-      ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crabby/looks/${color}/${hat}/walk-${i}.png?v=109`))),
+      loadImage(assetUrl(`game/crabby/looks/${color}/${hat}/idle-0.png?v=123`)),
+      loadImage(assetUrl(`game/crabby/looks/${color}/${hat}/idle-1.png?v=123`)),
+      ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crabby/looks/${color}/${hat}/walk-${i}.png?v=123`))),
     ]),
   );
   const [beach, ...rest] = await Promise.all([

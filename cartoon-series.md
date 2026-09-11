@@ -1,5 +1,5 @@
 # Crabby Cartoons — plan v.003
-Product: **Crabby Beach v.113**
+Product: **Crabby Beach v.114**
 
 Status: **ep 1.1 beat A in progress**. Later beats wait for look lock.
 
@@ -36,7 +36,7 @@ Imagine often cannot write `/workspace/artifacts`. Same as stills.
 1. Still: original crab on `beach.jpg` → `public/game/cinema/stills/s01e01a.png`
 2. `python3 scripts/imagine-video.py --image that.png --seconds 6 --out public/game/cinema/raw/s01e01a.mp4`  
    (JWT → `POST /v1/videos/generations` → download `vidgen.x.ai` **this turn**.)
-3. Prompt the picture **silent** (no talking, no captions). Mouth motion is a bonus; we mux voice after.
+3. Prompt him **talking** (mouth opens and closes). Strip Imagine’s audio. Mux the canon kid voice so it lines up with the talking.
 4. `ffmpeg` → 480p 24fps yuv420p, no Imagine audio.
 5. Bake the line with `scripts/make-crabby-voice.py`, mux, pad to 6s.
 6. Register in `public/game/cinema/series.json`.

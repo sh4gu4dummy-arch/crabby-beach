@@ -722,7 +722,7 @@ export function GameCanvas() {
 
       {showCartoon && (
         <CartoonOverlay
-          src={assetUrl("game/cinema/s01e01a.mp4?v=113")}
+          src={assetUrl("game/cinema/s01e01a.mp4?v=114")}
           muted={muted}
           onMute={toggleMute}
           onDone={() => setShowCartoon(null)}
@@ -807,7 +807,7 @@ function CinemaLobby({
             className="overflow-hidden rounded-[1.4rem] bg-[#1c1422] text-left shadow-lg ring-2 ring-[#e8c07a]/50"
           >
             <div className="relative aspect-[16/10] overflow-hidden bg-[#2a1c28]">
-              <img src={assetUrl("game/cinema/s01e01a.jpg?v=113")} alt="" className="absolute inset-0 h-full w-full object-cover" />
+              <img src={assetUrl("game/cinema/s01e01a.jpg?v=114")} alt="" className="absolute inset-0 h-full w-full object-cover" />
               <span className="absolute right-3 bottom-3 grid size-11 place-items-center rounded-full bg-coral text-cream shadow-md">
                 <Play className="size-5" fill="currentColor" />
               </span>

@@ -200,8 +200,8 @@ type Assets = {
   bucket: HTMLImageElement;
   pebble: HTMLImageElement;
   crab: Record<PaintId, CrabFrames>;
-  skins: Record<Exclude<CrabColor, "red">, CrabFrames>;
-  looks: Record<CrabColor, Record<Exclude<CrabHat, "none">, CrabFrames>>;
+  skins: Record<Exclude<CrabColor, "red">, Record<PaintId, CrabFrames>>;
+  looks: Record<CrabColor, Record<Exclude<CrabHat, "none">, Record<PaintId, CrabFrames>>>;
 };
 
 function loadImage(src: string) {
@@ -222,19 +222,25 @@ async function loadAssets(): Promise<Assets> {
     ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crabby/walk-${id}-${i}.png?v=051`))),
   ]);
   const skinIds = ["blue", "yellow", "green"] as const;
-  const skinFiles = skinIds.flatMap((id) => [
-    loadImage(assetUrl(`game/crabby/${id}/idle-0.png?v=109`)),
-    loadImage(assetUrl(`game/crabby/${id}/idle-1.png?v=109`)),
-    ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crabby/${id}/walk-${i}.png?v=109`))),
-  ]);
+  const skinFiles = skinIds.flatMap((id) =>
+    paintIds.flatMap((paint) => [
+      loadImage(assetUrl(`game/crabby/${id}/idle-${paint}-0.png?v=127`)),
+      loadImage(assetUrl(`game/crabby/${id}/idle-${paint}-1.png?v=127`)),
+      ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crabby/${id}/walk-${paint}-${i}.png?v=127`))),
+    ]),
+  );
   const lookColors: CrabColor[] = ["red", "blue", "yellow", "green"];
   const lookHats: Array<Exclude<CrabHat, "none">> = ["bow", "bucket", "sailor"];
   const lookFiles = lookColors.flatMap((color) =>
-    lookHats.flatMap((hat) => [
-      loadImage(assetUrl(`game/crabby/looks/${color}/${hat}/idle-0.png?v=123`)),
-      loadImage(assetUrl(`game/crabby/looks/${color}/${hat}/idle-1.png?v=123`)),
-      ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crabby/looks/${color}/${hat}/walk-${i}.png?v=123`))),
-    ]),
+    lookHats.flatMap((hat) =>
+      paintIds.flatMap((paint) => [
+        loadImage(assetUrl(`game/crabby/looks/${color}/${hat}/idle-${paint}-0.png?v=127`)),
+        loadImage(assetUrl(`game/crabby/looks/${color}/${hat}/idle-${paint}-1.png?v=127`)),
+        ...[1, 2, 3, 4].map((i) =>
+          loadImage(assetUrl(`game/crabby/looks/${color}/${hat}/walk-${paint}-${i}.png?v=127`)),
+        ),
+      ]),
+    ),
   );
   const [beach, ...rest] = await Promise.all([
     loadImage(assetUrl("game/beach.jpg?v=070")),
@@ -261,23 +267,29 @@ async function loadAssets(): Promise<Assets> {
     };
   });
   let o = 19 + paintIds.length * 6;
-  const skins = {} as Record<Exclude<CrabColor, "red">, CrabFrames>;
+  const skins = {} as Record<Exclude<CrabColor, "red">, Record<PaintId, CrabFrames>>;
   for (const id of skinIds) {
-    const slice = rest.slice(o, o + 6) as HTMLImageElement[];
-    const idle0 = slice[0]!;
-    const idle1 = slice[1]!;
-    skins[id] = { idle: [idle0, idle1, idle0, idle1], walk: slice.slice(2, 6) };
-    o += 6;
-  }
-  const looks = {} as Record<CrabColor, Record<Exclude<CrabHat, "none">, CrabFrames>>;
-  for (const color of lookColors) {
-    looks[color] = {} as Record<Exclude<CrabHat, "none">, CrabFrames>;
-    for (const hat of lookHats) {
+    skins[id] = {} as Record<PaintId, CrabFrames>;
+    for (const paint of paintIds) {
       const slice = rest.slice(o, o + 6) as HTMLImageElement[];
       const idle0 = slice[0]!;
       const idle1 = slice[1]!;
-      looks[color][hat] = { idle: [idle0, idle1, idle0, idle1], walk: slice.slice(2, 6) };
+      skins[id][paint] = { idle: [idle0, idle1, idle0, idle1], walk: slice.slice(2, 6) };
       o += 6;
+    }
+  }
+  const looks = {} as Record<CrabColor, Record<Exclude<CrabHat, "none">, Record<PaintId, CrabFrames>>>;
+  for (const color of lookColors) {
+    looks[color] = {} as Record<Exclude<CrabHat, "none">, Record<PaintId, CrabFrames>>;
+    for (const hat of lookHats) {
+      looks[color][hat] = {} as Record<PaintId, CrabFrames>;
+      for (const paint of paintIds) {
+        const slice = rest.slice(o, o + 6) as HTMLImageElement[];
+        const idle0 = slice[0]!;
+        const idle1 = slice[1]!;
+        looks[color][hat][paint] = { idle: [idle0, idle1, idle0, idle1], walk: slice.slice(2, 6) };
+        o += 6;
+      }
     }
   }
   return {
@@ -1291,124 +1303,6 @@ export function createGame(
     return c;
   }
 
-  function rgbOf(hex: string): [number, number, number] {
-    const n = parseInt(hex.replace("#", ""), 16);
-    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-  }
-
-  function spriteCanvas(src: CanvasImageSource): HTMLCanvasElement | null {
-    const w = src instanceof HTMLImageElement || src instanceof HTMLCanvasElement ? src.width : 0;
-    const h = src instanceof HTMLImageElement || src instanceof HTMLCanvasElement ? src.height : 0;
-    if (w < 8 || h < 8) return null;
-    if (src instanceof HTMLImageElement && !src.complete) return null;
-    const c = document.createElement("canvas");
-    c.width = w;
-    c.height = h;
-    const x = c.getContext("2d");
-    if (!x) return null;
-    x.drawImage(src, 0, 0);
-    return c;
-  }
-
-  function isWood(r: number, g: number, b: number) {
-    const mx = Math.max(r, g, b);
-    const mn = Math.min(r, g, b);
-    const sat = mx === 0 ? 0 : (mx - mn) / mx;
-    return r > 60 && r < 210 && g > 40 && g < 170 && b < 120 && r > g && g >= b - 15 && sat < 0.7;
-  }
-
-  function isBodyHue(r: number, g: number, b: number, body: CrabColor) {
-    if (body === "green") return g > r + 18 && g > b + 10 && g > 80;
-    if (body === "blue") return b > r + 20 && b > 80 && b >= g - 30;
-    if (body === "yellow") return r > 160 && g > 120 && b < 140;
-    return r > g + 18 && r > b + 18 && r > 70 && b < 160;
-  }
-
-  function recolorRedBody(src: CanvasImageSource, body: Exclude<CrabColor, "red">) {
-    const key = `body-${body}-${src instanceof HTMLImageElement ? src.src : "c"}`;
-    const hit = paintCache.get(key);
-    if (hit) return hit;
-    const c = spriteCanvas(src);
-    if (!c) return src;
-    const x = c.getContext("2d");
-    if (!x) return src;
-    let data: ImageData;
-    try {
-      data = x.getImageData(0, 0, c.width, c.height);
-    } catch {
-      return src;
-    }
-    const target = body === "yellow" ? [248, 208, 38] : body === "blue" ? [80, 190, 250] : [46, 200, 90];
-    const px = data.data;
-    for (let i = 0; i < px.length; i += 4) {
-      if (px[i + 3]! < 40) continue;
-      const r = px[i]!, g = px[i + 1]!, b = px[i + 2]!;
-      if (!(r > g + 18 && r > b + 18 && r > 70 && b < 160)) continue;
-      const lum = (r * 0.35 + g * 0.4 + b * 0.25) / 255;
-      const k = 0.5 + lum * 0.75;
-      px[i] = Math.min(255, Math.round(target[0]! * k));
-      px[i + 1] = Math.min(255, Math.round(target[1]! * k));
-      px[i + 2] = Math.min(255, Math.round(target[2]! * k));
-    }
-    x.putImageData(data, 0, 0);
-    paintCache.set(key, c);
-    return c;
-  }
-
-  function tintBrush(src: CanvasImageSource, paint: PaintId, body: CrabColor) {
-    const key = `brush-${body}-${paint}-${src instanceof HTMLImageElement ? src.src : "c"}`;
-    const hit = paintCache.get(key);
-    if (hit) return hit;
-    const c = spriteCanvas(src);
-    if (!c) return src;
-    const x = c.getContext("2d");
-    if (!x) return src;
-    let data: ImageData;
-    try {
-      data = x.getImageData(0, 0, c.width, c.height);
-    } catch {
-      return src;
-    }
-    const px = data.data;
-    const w = c.width;
-    const h = c.height;
-    let hx = 0;
-    let hy = 0;
-    let hn = 0;
-    for (let i = 0, p = 0; i < px.length; i += 4, p++) {
-      if (px[i + 3]! < 40) continue;
-      if (!isWood(px[i]!, px[i + 1]!, px[i + 2]!)) continue;
-      hx += p % w;
-      hy += Math.floor(p / w);
-      hn++;
-    }
-    const [tr, tg, tb] = rgbOf(paintHex(paint));
-    const rad = Math.max(w, h) * 0.24;
-    const rad2 = rad * rad;
-    const cx = hn ? hx / hn : w * 0.7;
-    const cy = hn ? hy / hn : h * 0.62;
-    for (let i = 0, p = 0; i < px.length; i += 4, p++) {
-      if (px[i + 3]! < 40) continue;
-      const col = p % w;
-      const row = Math.floor(p / w);
-      if ((col - cx) * (col - cx) + (row - cy) * (row - cy) > rad2) continue;
-      const r = px[i]!, g = px[i + 1]!, b = px[i + 2]!;
-      if (isWood(r, g, b) || isBodyHue(r, g, b, body)) continue;
-      const mx = Math.max(r, g, b);
-      const mn = Math.min(r, g, b);
-      const sat = mx === 0 ? 0 : (mx - mn) / mx;
-      if (sat < 0.2 || mx < 80) continue;
-      const lum = (r * 0.3 + g * 0.5 + b * 0.2) / 255;
-      const k = 0.5 + lum * 0.65;
-      px[i] = Math.min(255, Math.round(tr * k));
-      px[i + 1] = Math.min(255, Math.round(tg * k));
-      px[i + 2] = Math.min(255, Math.round(tb * k));
-    }
-    x.putImageData(data, 0, 0);
-    paintCache.set(key, c);
-    return c;
-  }
-
   function crabFrame(): CanvasImageSource {
     const a = assets;
     if (!a) return document.createElement("canvas");
@@ -1416,23 +1310,13 @@ export function createGame(
     const hat = crabHat();
     const paint = crab.paint;
     const moving = crab.state === "walk";
-    if (hat === "none" && (body === "red" || body === "yellow")) {
-      const kit = a.crab[paint] ?? a.crab.green;
-      const src = (moving ? kit.walk : kit.idle)[crab.frame]!;
-      return body === "yellow" ? recolorRedBody(src, "yellow") : src;
-    }
-    if (hat === "none") {
-      if (body === "green" || body === "blue") {
-        const kit = a.skins[body];
-        const src = (moving ? kit.walk : kit.idle)[crab.frame]!;
-        return tintBrush(src, paint, body);
-      }
-      const kit = a.crab[paint] ?? a.crab.green;
-      return (moving ? kit.walk : kit.idle)[crab.frame]!;
-    }
-    const kit = a.looks[body][hat];
-    const src = (moving ? kit.walk : kit.idle)[crab.frame]!;
-    return tintBrush(src, paint, body);
+    const kit =
+      hat === "none"
+        ? body === "red"
+          ? (a.crab[paint] ?? a.crab.green)
+          : a.skins[body][paint]
+        : a.looks[body][hat][paint];
+    return (moving ? kit.walk : kit.idle)[crab.frame]!;
   }
 
   function drawPaintCan(can: { hex: string; x: number; y: number; id: PaintId }) {

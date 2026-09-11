@@ -53,7 +53,8 @@ def post_start(prompt: str, seconds: int, image_url: str | None) -> dict:
         "aspect_ratio": "16:9",
     }
     if image_url:
-        body["image_url"] = image_url
+        body["image"] = {"url": image_url}
+        body.pop("aspect_ratio", None)
     req = urllib.request.Request(API, data=json.dumps(body).encode(), method="POST", headers=headers())
     try:
         with urllib.request.urlopen(req, timeout=180) as res:

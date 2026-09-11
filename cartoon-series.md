@@ -1,5 +1,5 @@
 # Crabby Cartoons — plan v.003
-Product: **Crabby Beach v.121**
+Product: **Crabby Beach v.122**
 
 Status: **ep 1.1 beat A in progress**. Later beats wait for look lock.
 
@@ -36,7 +36,7 @@ Imagine often cannot write `/workspace/artifacts`. Same as stills.
 1. Still: original crab on `beach.jpg` → `public/game/cinema/stills/s01e01a.png`
 2. `python3 scripts/imagine-video.py --image that.png --seconds 6 --out public/game/cinema/raw/s01e01a.mp4`  
    (JWT → `POST /v1/videos/generations` → download `vidgen.x.ai` **this turn**.)
-3. Put Crabby's voice IN THE PROMPT from `public/voice/crabby/canon.json` notes: high-pitched squeaky American little-boy, about six, helium-squeaky, goofy, bouncy, silly, exaggerated happy intonation, light and airy not deep, US kid, Saturday-morning cartoon crab. NOT British. NOT a woman. NOT a mom. NOT an adult man. NOT a narrator. Green brush, paints the shell red. Keep Imagine's audio. **Do not mux TTS on top.**
+3. Put Crabby's voice IN THE PROMPT from `public/voice/crabby/canon.json` notes: high-pitched squeaky American little-boy, about six, helium-squeaky, goofy, bouncy, silly, exaggerated happy intonation, light and airy not deep, US kid, Saturday-morning cartoon crab. NOT British. NOT a woman. NOT a mom. NOT an adult man. NOT a narrator. Brush color matches paint color (green brush → green shell). Keep Imagine's audio. **Do not mux TTS on top.**
 4. `ffmpeg` → 480p 24fps yuv420p, **keep the Imagine audio track**.
 5. Register in `public/game/cinema/series.json`.
 

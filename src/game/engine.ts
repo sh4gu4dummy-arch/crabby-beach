@@ -224,9 +224,9 @@ async function loadAssets(): Promise<Assets> {
   const skinIds = ["blue", "yellow", "green"] as const;
   const skinFiles = skinIds.flatMap((id) =>
     paintIds.flatMap((paint) => [
-      loadImage(assetUrl(`game/crabby/${id}/idle-${paint}-0.png?v=127`)),
-      loadImage(assetUrl(`game/crabby/${id}/idle-${paint}-1.png?v=127`)),
-      ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crabby/${id}/walk-${paint}-${i}.png?v=127`))),
+      loadImage(assetUrl(`game/crabby/${id}/idle-${paint}-0.png?v=128`)),
+      loadImage(assetUrl(`game/crabby/${id}/idle-${paint}-1.png?v=128`)),
+      ...[1, 2, 3, 4].map((i) => loadImage(assetUrl(`game/crabby/${id}/walk-${paint}-${i}.png?v=128`))),
     ]),
   );
   const lookColors: CrabColor[] = ["red", "blue", "yellow", "green"];

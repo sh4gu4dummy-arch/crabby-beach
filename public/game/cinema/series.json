@@ -1,13 +1,13 @@
 {
   "episodes": [
     {
-      "id": "s01e01a",
+      "id": "s01e01",
       "title": "Hi, I'm Crabby",
-      "tag": "Ep 1.1 · Part 1",
-      "file": "game/cinema/s01e01a.mp4",
+      "tag": "Ep 1.1",
+      "file": "game/cinema/s01e01.mp4",
       "poster": "game/cinema/s01e01a.jpg",
-      "seconds": 6,
-      "note": "Beat A look lock. B and C not shot yet."
+      "seconds": 12,
+      "note": "Beat A hi + beat B paint a shell red."
     }
   ]
 }

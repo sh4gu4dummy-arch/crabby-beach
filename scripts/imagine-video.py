@@ -14,6 +14,7 @@ import urllib.request
 from pathlib import Path
 
 API = "https://api.x.ai/v1/videos/generations"
+POLL = "https://api.x.ai/v1/videos"
 MODEL = "grok-imagine-video"
 
 
@@ -75,13 +76,16 @@ def pick_url(payload: dict) -> str | None:
 
 
 def poll(request_id: str) -> str:
-    url = f"{API}/{request_id}"
-    for _ in range(60):
-        req = urllib.request.Request(url, headers=headers())
+    url = f"{POLL}/{request_id}"
+    for _ in range(80):
+        req = urllib.request.Request(url, headers={"Authorization": f"Bearer {jwt()}"})
         try:
             with urllib.request.urlopen(req, timeout=60) as res:
                 payload = json.loads(res.read().decode())
         except urllib.error.HTTPError as e:
+            if e.code in (202, 409):
+                time.sleep(3)
+                continue
             sys.exit(f"poll HTTP {e.code}")
         got = pick_url(payload)
         if got:

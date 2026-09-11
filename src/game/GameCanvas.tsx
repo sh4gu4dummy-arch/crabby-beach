@@ -722,7 +722,7 @@ export function GameCanvas() {
 
       {showCartoon && (
         <CartoonOverlay
-          src={assetUrl("game/cinema/s01e01a.mp4?v=114")}
+          src={assetUrl("game/cinema/s01e01.mp4?v=115")}
           muted={muted}
           onMute={toggleMute}
           onDone={() => setShowCartoon(null)}
@@ -813,7 +813,7 @@ function CinemaLobby({
               </span>
             </div>
             <div className="px-4 py-3">
-              <p className="text-xs font-semibold tracking-wide text-[#e8c07a] uppercase">Ep 1.1 · Part 1</p>
+              <p className="text-xs font-semibold tracking-wide text-[#e8c07a] uppercase">Ep 1.1</p>
               <p className="text-lg font-bold">Hi, I'm Crabby</p>
             </div>
           </button>

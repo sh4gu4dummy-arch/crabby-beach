@@ -7,7 +7,7 @@
   "rate": "+8%",
   "pitch": "+30Hz",
   "ffmpeg": "highshelf=f=3500:g=2,loudnorm=I=-14:LRA=9:TP=-1.2,afade=t=in:d=0.04",
-  "notes": "Squeaky American kid. Intro clip may be rebaked to match a new video; keep the same voice spec. Do not pitch-shift after bake.",
+  "notes": "Squeaky American kid. Imagine prompt: high-pitched squeaky American little-boy cartoon voice, about six years old, helium-squeaky, goofy, bouncy, silly, exaggerated happy intonation, light and airy not deep, US accent, Saturday-morning cartoon crab. NOT British. NOT a woman. NOT a mom. NOT an adult man. NOT a narrator. Do not mux TTS over Imagine clips.",
   "lines": {
     "intro": "Hiii! I'm Crabby! Tap a white shell! Whoooosh! I will walk over! Paint it with your finger! Yaaay! Let's play!",
     "yay": "Yay!",

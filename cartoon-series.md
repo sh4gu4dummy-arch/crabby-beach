@@ -1,5 +1,5 @@
 # Crabby Cartoons — plan v.003
-Product: **Crabby Beach v.119**
+Product: **Crabby Beach v.120**
 
 Status: **ep 1.1 beat A in progress**. Later beats wait for look lock.
 
@@ -36,10 +36,9 @@ Imagine often cannot write `/workspace/artifacts`. Same as stills.
 1. Still: original crab on `beach.jpg` → `public/game/cinema/stills/s01e01a.png`
 2. `python3 scripts/imagine-video.py --image that.png --seconds 6 --out public/game/cinema/raw/s01e01a.mp4`  
    (JWT → `POST /v1/videos/generations` → download `vidgen.x.ai` **this turn**.)
-3. Prompt him **talking** (mouth opens and closes). Strip Imagine’s audio. Mux the canon kid voice so it lines up with the talking.
-4. `ffmpeg` → 480p 24fps yuv420p, no Imagine audio.
-5. Bake the line with `scripts/make-crabby-voice.py`, mux, pad to 6s.
-6. Register in `public/game/cinema/series.json`.
+3. Put Crabby's voice IN THE PROMPT: squeaky high-pitched American little-boy cartoon, goofy, bouncy. NOT British, NOT a woman, NOT a mom. Keep Imagine's audio. **Do not mux TTS on top.**
+4. `ffmpeg` → 480p 24fps yuv420p, **keep the Imagine audio track**.
+5. Register in `public/game/cinema/series.json`.
 
 Do not remount artifacts. Do not loop the Imagine tool if there is no path.
 

@@ -7,7 +7,7 @@
       "file": "game/cinema/s01e01.mp4",
       "poster": "game/cinema/s01e01a.jpg",
       "seconds": 10,
-      "note": "10s I2V picture. Locked Crabby kid voice, not Imagine speech."
+      "note": "10s I2V. Imagine audio. Voice is in the prompt. Do not mux TTS."
     }
   ]
 }

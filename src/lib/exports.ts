@@ -27,9 +27,9 @@ export const EXPORTS: Record<ExportKind, ExportFile | null> = {
     "mtime": "2026-09-10T14:04:47.816Z"
   },
   "apk": {
-    "version": "v.090",
-    "file": "crabby-beach-v.090.apk",
-    "bytes": 19969497,
-    "mtime": "2026-09-10T14:05:08.312Z"
+    "version": "v.126",
+    "file": "crabby-beach-v.126.apk",
+    "bytes": 54797263,
+    "mtime": "2026-09-11T09:06:42.585Z"
   }
 };

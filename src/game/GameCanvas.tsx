@@ -723,9 +723,13 @@ export function GameCanvas() {
       {showCartoon && (
         <CartoonOverlay
           src={assetUrl(
-            showCartoon.startsWith("s01e02")
-              ? "game/cinema/s01e02.mp4?v=124"
-              : "game/cinema/s01e01.mp4?v=122",
+            showCartoon.startsWith("s01e04")
+              ? "game/cinema/s01e04.mp4?v=125"
+              : showCartoon.startsWith("s01e03")
+                ? "game/cinema/s01e03.mp4?v=125"
+                : showCartoon.startsWith("s01e02")
+                  ? "game/cinema/s01e02.mp4?v=124"
+                  : "game/cinema/s01e01.mp4?v=122",
           )}
           muted={muted}
           onMute={toggleMute}
@@ -835,6 +839,38 @@ function CinemaLobby({
             <div className="px-4 py-3">
               <p className="text-xs font-semibold tracking-wide text-[#e8c07a] uppercase">Ep 1.2</p>
               <p className="text-lg font-bold">Red meets Green</p>
+            </div>
+          </button>
+          <button
+            type="button"
+            onClick={() => onCartoon("s01e03")}
+            className="overflow-hidden rounded-[1.4rem] bg-[#1c1422] text-left shadow-lg ring-2 ring-[#e8c07a]/50"
+          >
+            <div className="relative aspect-[16/10] overflow-hidden bg-[#2a1c28]">
+              <img src={assetUrl("game/cinema/s01e03.jpg?v=125")} alt="" className="absolute inset-0 h-full w-full object-cover" />
+              <span className="absolute right-3 bottom-3 grid size-11 place-items-center rounded-full bg-coral text-cream shadow-md">
+                <Play className="size-5" fill="currentColor" />
+              </span>
+            </div>
+            <div className="px-4 py-3">
+              <p className="text-xs font-semibold tracking-wide text-[#e8c07a] uppercase">Ep 1.3</p>
+              <p className="text-lg font-bold">Red meets Yellow</p>
+            </div>
+          </button>
+          <button
+            type="button"
+            onClick={() => onCartoon("s01e04")}
+            className="overflow-hidden rounded-[1.4rem] bg-[#1c1422] text-left shadow-lg ring-2 ring-[#e8c07a]/50"
+          >
+            <div className="relative aspect-[16/10] overflow-hidden bg-[#2a1c28]">
+              <img src={assetUrl("game/cinema/s01e04.jpg?v=125")} alt="" className="absolute inset-0 h-full w-full object-cover" />
+              <span className="absolute right-3 bottom-3 grid size-11 place-items-center rounded-full bg-coral text-cream shadow-md">
+                <Play className="size-5" fill="currentColor" />
+              </span>
+            </div>
+            <div className="px-4 py-3">
+              <p className="text-xs font-semibold tracking-wide text-[#e8c07a] uppercase">Ep 1.4</p>
+              <p className="text-lg font-bold">Red meets Blue</p>
             </div>
           </button>
           <button

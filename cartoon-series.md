@@ -1,5 +1,5 @@
 # Crabby Cartoons — plan v.003
-Product: **Crabby Beach v.124**
+Product: **Crabby Beach v.125**
 
 Status: **ep 1.1 beat A in progress**. Later beats wait for look lock.
 
@@ -76,6 +76,12 @@ One 10s R2V take. Refs: `idle-red-0.png` + `green/idle-0.png`. Imagine audio. No
 They run, bump, high-five, splash. Red Crabby: “Hiii! I'm Red Crabby!” Green Crabby: “I'm Green Crabby! Let's play!”
 
 Cinema title: `Red meets Green`. Tag `Ep 1.2`.
+
+## Episode 1.3 — Red meets Yellow
+One 10s R2V. Refs: red + yellow idle. Same energy as 1.2. Imagine audio. No mux.
+
+## Episode 1.4 — Red meets Blue
+One 10s R2V. Refs: red + blue idle. Same energy as 1.2. Imagine audio. No mux.
 
 ## Season 1 (rest)
 

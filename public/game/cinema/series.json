@@ -6,8 +6,7 @@
       "tag": "Ep 1.1",
       "file": "game/cinema/s01e01.mp4",
       "poster": "game/cinema/s01e01a.jpg",
-      "seconds": 10,
-      "note": "10s I2V. Imagine audio. Canon kid voice in prompt. Green brush paints green. No mux."
+      "seconds": 10
     },
     {
       "id": "s01e02",
@@ -15,8 +14,23 @@
       "tag": "Ep 1.2",
       "file": "game/cinema/s01e02.mp4",
       "poster": "game/cinema/s01e02.jpg",
-      "seconds": 10,
-      "note": "R2V both crabs. They introduce themselves. Imagine audio. No mux."
+      "seconds": 10
+    },
+    {
+      "id": "s01e03",
+      "title": "Red meets Yellow",
+      "tag": "Ep 1.3",
+      "file": "game/cinema/s01e03.mp4",
+      "poster": "game/cinema/s01e03.jpg",
+      "seconds": 10
+    },
+    {
+      "id": "s01e04",
+      "title": "Red meets Blue",
+      "tag": "Ep 1.4",
+      "file": "game/cinema/s01e04.mp4",
+      "poster": "game/cinema/s01e04.jpg",
+      "seconds": 10
     }
   ]
 }

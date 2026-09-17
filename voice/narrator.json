@@ -1,0 +1,9 @@
+{
+  "id": "narrator-ava-v1",
+  "role": "counts and win lines, not Crabby",
+  "engine": "edge-tts",
+  "voice": "en-US-AvaNeural",
+  "rate": "-8%",
+  "pitch": "+12Hz",
+  "notes": "Soft, light, airy young woman. Do not use Crabby's kid voice for these."
+}

@@ -35,10 +35,22 @@ function run(cmd, args) {
 
 function rewriteBase(html, toBase) {
   if (toBase === "/") return html;
-  return html
-    .replaceAll(`href="/`, `href="${toBase}`)
-    .replaceAll(`src="/`, `src="${toBase}`)
-    .replaceAll(`content="/`, `content="${toBase}`);
+  const basePath = toBase.endsWith("/") ? toBase : `${toBase}/`;
+  const root = basePath.slice(0, -1); // e.g. /crabby-beach
+  const esc = root.slice(1).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  // Only prefix root-absolute URLs that are not already under this base.
+  const prefixAttr = (attr) =>
+    html.replace(
+      new RegExp(`${attr}="/(?!${esc}/)`, "g"),
+      `${attr}="${basePath}`,
+    );
+  html = prefixAttr("href");
+  html = prefixAttr("src");
+  html = prefixAttr("content");
+  // Collapse accidental doubles from earlier bad rewrites: /base/base/ -> /base/
+  const doubled = `${root}/${root.slice(1)}/`;
+  html = html.split(doubled).join(basePath);
+  return html;
 }
 
 function copyDistSlim() {
@@ -46,8 +58,14 @@ function copyDistSlim() {
   fs.rmSync(outDir, { recursive: true, force: true });
   fs.cpSync(path.join(root, "dist"), outDir, {
     recursive: true,
-    filter: (src) => !/\.(zip|apk)$/i.test(src),
+    filter: (src) => {
+      if (/\.(zip|apk)$/i.test(src)) return false;
+      // Keep raw cinema sources off Pages artifacts (size).
+      if (src.includes(`${path.sep}cinema${path.sep}raw`)) return false;
+      return true;
+    },
   });
+  fs.writeFileSync(path.join(outDir, ".nojekyll"), "");
 }
 
 function findAsset(prefix) {

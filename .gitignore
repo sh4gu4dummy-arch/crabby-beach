@@ -12,3 +12,5 @@ screenshots
 .grok
 AGENTS.md
 .node_modules.lock
+__pycache__/
+*.pyc

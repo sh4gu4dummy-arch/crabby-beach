@@ -25,7 +25,7 @@ jobs:
           node-version: "22"
           cache: npm
       - name: Install
-        run: npm install
+        run: npm ci
       - name: Build static Pages artifact
         run: node scripts/build-pages.mjs github
       - uses: actions/upload-pages-artifact@v3

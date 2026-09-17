@@ -3,10 +3,10 @@ export type ExportKind = "codeOnly" | "codebase" | "portable" | "android" | "apk
 export type ExportFile = { version: string; file: string; bytes: number; mtime: string };
 export const EXPORTS: Record<ExportKind, ExportFile | null> = {
   "codeOnly": {
-    "version": "v.130",
-    "file": "crabby-beach-v.130-code.md",
-    "bytes": 193845,
-    "mtime": "2026-09-17T02:06:59.354Z"
+    "version": "v.131",
+    "file": "crabby-beach-v.131-code.md",
+    "bytes": 194019,
+    "mtime": "2026-09-17T02:09:18.214Z"
   },
   "codebase": {
     "version": "v.090",

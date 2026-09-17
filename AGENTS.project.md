@@ -3,7 +3,8 @@
 **Other Grok bots and humans: read this.**  
 Root `AGENTS.md` in some sandboxes is **platform-only** (gitignored). Do **not** copy App Builder preview / port / `startup.sh` rules into this repo.
 
-Current product: see `VERSION` and `src/lib/version.ts` (now **v.130**).
+Current product: see `VERSION` and `src/lib/version.ts` (now **v.131**).
+Handoff from Grok Build → other bots: [`GROK-BUILDER-NOTES.md`](GROK-BUILDER-NOTES.md).
 
 ---
 
@@ -40,6 +41,7 @@ Repo: `github.com/sh4gu4dummy-arch/crabby-beach` (private).
 
 | Path | What |
 | --- | --- |
+| `GROK-BUILDER-NOTES.md` | Grok Build → other bots handoff. Read it. Update it. |
 | `src/game/engine.ts` | Gameplay loop, crab, shells, paint cans, waves |
 | `src/game/GameCanvas.tsx` | UI: menu, loadout, cinema, grown-ups |
 | `src/game/audio.ts` | SFX / music |

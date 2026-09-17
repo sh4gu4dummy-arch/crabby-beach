@@ -19,3 +19,6 @@ __pycache__/
 dist-pages/
 dist-static/
 .wrangler/
+
+# Build artifacts — rebuild instead of committing
+public/downloads/*.apk

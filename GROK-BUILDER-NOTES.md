@@ -21,7 +21,7 @@ Do **not** put App Builder preview / port / `startup.sh` contracts in `AGENTS.pr
 
 | | |
 | --- | --- |
-| Product | **v.131** |
+| Product | **v.132** |
 | GitHub | `github.com/sh4gu4dummy-arch/crabby-beach` private, branch `master` |
 | Last APK on disk | **v.126** — do not label it v.131 |
 | Last zips on disk | **v.090** codebase / portable / android |
@@ -58,6 +58,13 @@ Git: push **every** product version. Zip/APK **only when asked**.
 - “Warming up the sand” is the loading overlay on remount, not a sand/wave bug.
 
 ---
+
+
+### Hosting (v.132)
+- GitHub Pages: Actions workflow on push to **master** → https://sh4gu4dummy-arch.github.io/crabby-beach/
+- Cloudflare Pages: project crabby-beach, production branch **public** → https://crabby-beach.pages.dev
+- Build: node scripts/build-pages.mjs github|cloudflare → dist-pages/
+- Promote Cloudflare only when Ash says. Do not auto-merge master→public.
 
 ## Open / next (as of 2026-09-17)
 

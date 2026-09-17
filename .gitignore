@@ -22,3 +22,4 @@ dist-static/
 
 # Build artifacts — rebuild instead of committing
 public/downloads/*.apk
+public/downloads/*.zip

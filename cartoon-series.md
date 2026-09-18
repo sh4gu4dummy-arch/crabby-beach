@@ -1,5 +1,5 @@
 # Crabby Cartoons — plan v.003
-Product: **Crabby Beach v.131**
+Product: **Crabby Beach v.133**
 
 Status: **ep 1.1 beat A in progress**. Later beats wait for look lock.
 
@@ -68,6 +68,17 @@ Until B+C exist, the poster plays **part 1 (beat A)** only — do not label it t
 First-run `intro.mp4` stays until 1.1 is approved.
 
 **Not in 1.1:** hats, other colors, night, counting, bedtime.
+
+## Clock hour lines (splice sources, not in Cinema yet)
+
+Two 15s 480p Imagine clips with native audio. Do not mux TTS.
+
+| File | He says |
+| --- | --- |
+| `public/game/cinema/clock-1-6.mp4` | It's one … six o'clock |
+| `public/game/cinema/clock-7-12.mp4` | It's seven … twelve o'clock |
+
+Raws: `public/game/cinema/raw/clock-1-6.mp4`, `raw/clock-7-12.mp4`. User will splice later.
 
 ## Episode 1.2 — Red meets Green
 

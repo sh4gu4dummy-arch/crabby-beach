@@ -2,7 +2,7 @@
 
 Handoff log from **Grok Build** (App Builder session) → **other Grok bots**.
 
-Standing rules live in [`AGENTS.project.md`](AGENTS.project.md). Put **session / “tell the other bot”** stuff here. Update this file when you ship something they would otherwise miss.
+Standing rules live in `AGENTS.project.md`. Put session / “tell the other bot” stuff here. Update this file when you ship something they would otherwise miss.
 
 Do **not** put App Builder preview / port / `startup.sh` contracts in `AGENTS.project.md`. If the other bot needs a sandbox warning, write it here.
 
@@ -10,21 +10,21 @@ Do **not** put App Builder preview / port / `startup.sh` contracts in `AGENTS.pr
 
 ## Read first
 
-1. [`AGENTS.project.md`](AGENTS.project.md) — product rules
+1. `AGENTS.project.md` — product rules
 2. This file — current handoff
 3. `VERSION` / `src/lib/version.ts` — actual product number
 4. `src/lib/exports.ts` — what download files actually exist
 
 ---
 
-## Current (v.131)
+## Current (v.133)
 
 | | |
 | --- | --- |
-| Product | **v.132** |
+| Product | **v.133** |
 | GitHub | `github.com/sh4gu4dummy-arch/crabby-beach` private, branch `master` |
-| Last APK on disk | **v.126** — do not label it v.131 |
-| Last zips on disk | **v.090** codebase / portable / android |
+| Last APK on disk | **v.126** — do not label it v.133 |
+| Last zips on disk | **v.090** codebase / portable / android (zips/apks may be untracked now — rebuild when asked) |
 | Code-only `.md` | rebuilt every version |
 | User | ash aug (`dummySh4Gu4`). Other humans/bots will work this repo. |
 
@@ -57,19 +57,25 @@ Git: push **every** product version. Zip/APK **only when asked**.
 - Download page labels = files on disk (`write-download-manifest.mjs`).
 - “Warming up the sand” is the loading overlay on remount, not a sand/wave bug.
 
----
-
-
 ### Hosting (v.132)
 - GitHub Pages: Actions workflow on push to **master** → https://sh4gu4dummy-arch.github.io/crabby-beach/
 - Cloudflare Pages: project crabby-beach, production branch **public** → https://crabby-beach.pages.dev
-- Build: node scripts/build-pages.mjs github|cloudflare → dist-pages/
+- Build: `node scripts/build-pages.mjs github|cloudflare` → `dist-pages/`
 - Promote Cloudflare only when Ash says. Do not auto-merge master→public.
 
-## Open / next (as of 2026-09-17)
+### Clock clips (v.133)
+- `public/game/cinema/clock-1-6.mp4` and `clock-7-12.mp4` — 15s, 854×480, Imagine audio, **not in the game yet**.
+- I2V from `idle-red-0.png`. Do not mux TTS. User will splice later.
+- Sampled frames: same red crab, beach, analog clock, mouth moving. I did not hear the take — user QC the voice.
+- Raws: `public/game/cinema/raw/clock-1-6.mp4`, `raw/clock-7-12.mp4`.
+
+---
+
+## Open / next (as of 2026-09-18)
 
 - Green no-hat brushes: Imagine swap is in. Hats / blue / yellow no-hat still may be old tint or mixed art — check before claiming they work.
 - APK not rebuilt since v.126. Zips not rebuilt since v.090.
+- Clock clips exist; not spliced into gameplay/cinema UI yet.
 - User may bring other Grok bots onto this repo. Leave notes here instead of only in chat.
 
 ---

@@ -23,3 +23,6 @@ dist-static/
 # Build artifacts — rebuild instead of committing
 public/downloads/*.apk
 public/downloads/*.zip
+
+# Code-only markdown archives — regenerate with scripts/export-code-only.mjs if needed
+public/downloads/*-code.md

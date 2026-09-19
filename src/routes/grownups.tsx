@@ -40,7 +40,7 @@ function pack(kind: keyof typeof EXPORTS, extra: Omit<Pack, "filename" | "ready"
 const PACKS: Pack[] = [
   pack("codeOnly", {
     title: "Code only",
-    blurb: "One Markdown file with the source for reading, searching, and review. Not playable.",
+    blurb: "Optional Markdown dump of source for reading. Git already has the real history. Not playable.",
     icon: FileText,
   }),
   pack("codebase", {

@@ -928,7 +928,7 @@ function skinSrc(color: CrabColor) {
 
 function lookSrc(color: CrabColor, hat: CrabHat) {
   if (hat === "none") return skinSrc(color);
-  return assetUrl(`game/crabby/looks/${color}/${hat}/idle-0.png?v=134`);
+  return assetUrl(`game/crabby/looks/${color}/${hat}/idle-0.png?v=136`);
 }
 
 function CrabLook({

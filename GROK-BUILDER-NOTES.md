@@ -17,13 +17,13 @@ Do **not** put App Builder preview / port / `startup.sh` contracts in `AGENTS.pr
 
 ---
 
-## Current (v.135)
+## Current (v.136)
 
 | | |
 | --- | --- |
-| Product | **v.135** |
+| Product | **v.136** |
 | GitHub | `github.com/sh4gu4dummy-arch/crabby-beach` private, branch `master` |
-| Last APK on disk | **v.126** — do not label it v.135 |
+| Last APK on disk | **v.126** — do not label it v.136 |
 | Last zips on disk | **v.090** codebase / portable / android (zips/apks may be untracked now — rebuild when asked) |
 | Code-only `.md` | rebuilt every version |
 | User | ash aug (`dummySh4Gu4`). Other humans/bots will work this repo. |
@@ -75,6 +75,7 @@ Git: push **every** product version. Zip/APK **only when asked**.
 - v.134 put bow, bucket, and sailor **on** the red shell, but copied one green-brush picture onto every `idle-{paint}-*.png`. Paint cans stopped changing the brush.
 - v.135: Imagine still per brush color for those three hats. Do not copy one file across paints. Guide: `scripts/loadout-brush.md`.
 - Yellow hats (v.129) still have that same copy bug. Not fixed in v.135.
+- v.136: yellow bow / bucket / sailor also have one Imagine still per brush. Hats stay on the shell.
 
 ## Open / next (as of 2026-09-24)
 

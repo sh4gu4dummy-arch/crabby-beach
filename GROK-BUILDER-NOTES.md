@@ -17,13 +17,13 @@ Do **not** put App Builder preview / port / `startup.sh` contracts in `AGENTS.pr
 
 ---
 
-## Current (v.142)
+## Current (v.143)
 
 | | |
 | --- | --- |
-| Product | **v.142** |
+| Product | **v.143** |
 | GitHub | `github.com/sh4gu4dummy-arch/crabby-beach` private, branch `master` |
-| Last APK on disk | **v.126** — do not label it v.142 |
+| Last APK on disk | **v.126** — do not label it v.143 |
 | Last zips on disk | **v.090** codebase / portable / android (zips/apks may be untracked now — rebuild when asked) |
 | Code-only `.md` | rebuilt every version |
 | User | ash aug (`dummySh4Gu4`). Other humans/bots will work this repo. |
@@ -79,8 +79,8 @@ Git: push **every** product version. Zip/APK **only when asked**.
 
 ### Clock splices
 - Ash says "N ok" = confirm hour N, move it into the game, and cut N+1 into `clock-splices/` for review.
-- Confirmed: `public/game/clock/1.mp4` and `2.mp4`. `HOUR_INTRO_READY` is 1 and 2.
-- Waiting: `clock-splices/3-oclock.mp4` (4.68s–6.55s). Trimmed so it is only "It's three o'clock." The longer cut had the start of four.
+- Confirmed: `public/game/clock/1.mp4`, `2.mp4`, and `3.mp4`. `HOUR_INTRO_READY` is 1, 2, and 3.
+- Waiting: `clock-splices/4-oclock.mp4` (8.50s–9.90s, "It's four o'clock" only).
 
 ## Open / next (as of 2026-09-24)
 

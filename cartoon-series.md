@@ -1,5 +1,5 @@
 # Crabby Cartoons — plan v.003
-Product: **Crabby Beach v.142**
+Product: **Crabby Beach v.143**
 
 Status: **ep 1.1 beat A in progress**. Later beats wait for look lock.
 

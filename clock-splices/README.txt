@@ -8,4 +8,5 @@ When Ash says "N ok":
 
 1 — moved to public/game/clock/1.mp4. Plays at 1 o'clock.
 2 — moved to public/game/clock/2.mp4. Plays at 2 o'clock.
-3-oclock.mp4 — waiting. Cut 4.68s–6.55s of clock-1-6.mp4. "It's three o'clock" only. The old cut included the start of four.
+3 — moved to public/game/clock/3.mp4. Plays at 3 o'clock.
+4-oclock.mp4 — waiting. Cut 8.50s–9.90s of clock-1-6.mp4. "It's four o'clock" only.

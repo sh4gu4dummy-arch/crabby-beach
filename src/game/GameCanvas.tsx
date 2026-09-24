@@ -10,7 +10,7 @@ import { installAppBack, pushBack } from "@/lib/app-back";
 import { isMuted, setMuted, setMusicEnabled, setMusicScene, unlockAudio } from "./audio";
 import { createGame, HOUR_SKIES, hourLabel, type GameApi, type GameHud } from "./engine";
 
-const HOUR_INTRO_READY = new Set([1, 2, 3]);
+const HOUR_INTRO_READY = new Set([1, 2, 3, 4]);
 
 const EMPTY: GameHud = {
   phase: "loading",
@@ -1168,7 +1168,7 @@ function HourLineIntro({ hour, muted, onDone }: { hour: number; muted: boolean; 
     <div className="absolute inset-0 z-50 bg-ink">
       <video
         ref={ref}
-        src={assetUrl(`game/clock/${hour}.mp4?v=143`)}
+        src={assetUrl(`game/clock/${hour}.mp4?v=145`)}
         playsInline
         autoPlay
         className="h-full w-full object-contain bg-sand"

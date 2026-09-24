@@ -17,13 +17,13 @@ Do **not** put App Builder preview / port / `startup.sh` contracts in `AGENTS.pr
 
 ---
 
-## Current (v.144)
+## Current (v.145)
 
 | | |
 | --- | --- |
-| Product | **v.144** |
+| Product | **v.145** |
 | GitHub | `github.com/sh4gu4dummy-arch/crabby-beach` private, branch `master` |
-| Last APK on disk | **v.126** — do not label it v.144 |
+| Last APK on disk | **v.126** — do not label it v.145 |
 | Last zips on disk | **v.090** codebase / portable / android (zips/apks may be untracked now — rebuild when asked) |
 | Code-only `.md` | rebuilt every version |
 | User | ash aug (`dummySh4Gu4`). Other humans/bots will work this repo. |
@@ -79,9 +79,9 @@ Git: push **every** product version. Zip/APK **only when asked**.
 
 ### Clock splices
 - Ash says "N ok" = confirm hour N, move it into the game, and cut N+1 into `clock-splices/` for review.
-- Confirmed: `public/game/clock/1.mp4`, `2.mp4`, and `3.mp4`. `HOUR_INTRO_READY` is 1, 2, and 3.
-- Full source for review: `clock-splices/clock-1-6-original.mp4` (same bytes as `public/game/cinema/clock-1-6.mp4`).
-- "It's time to…" was Whisper on a chopped clip (source ~6.8s–7.8s). On the full file that stretch is a messy early "four o'clock," then a cleaner one at ~8.5s–9.9s. I did not hear it.
+- Confirmed: `public/game/clock/1.mp4` through `4.mp4`. `HOUR_INTRO_READY` is 1–4.
+- Waiting: `clock-splices/5-oclock.mp4` (9.92s–11.45s, "It's five o'clock" only).
+- Full source for review: `clock-splices/clock-1-6-original.mp4`.
 
 ## Open / next (as of 2026-09-24)
 

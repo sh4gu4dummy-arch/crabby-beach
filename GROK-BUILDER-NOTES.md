@@ -17,13 +17,13 @@ Do **not** put App Builder preview / port / `startup.sh` contracts in `AGENTS.pr
 
 ---
 
-## Current (v.149)
+## Current (v.150)
 
 | | |
 | --- | --- |
-| Product | **v.149** |
+| Product | **v.150** |
 | GitHub | `github.com/sh4gu4dummy-arch/crabby-beach` private, branch `master` |
-| Last APK on disk | **v.126** — do not label it v.149 |
+| Last APK on disk | **v.126** — do not label it v.150 |
 | Last zips on disk | **v.090** codebase / portable / android (zips/apks may be untracked now — rebuild when asked) |
 | Code-only `.md` | rebuilt every version |
 | User | ash aug (`dummySh4Gu4`). Other humans/bots will work this repo. |
@@ -79,8 +79,8 @@ Git: push **every** product version. Zip/APK **only when asked**.
 
 ### Clock splices
 - Ash says "N ok" = confirm hour N, move it into the game, and cut N+1 into `clock-splices/` for review.
-- Confirmed: `public/game/clock/1.mp4` through `8.mp4`. `HOUR_INTRO_READY` is 1–8.
-- Waiting: `clock-splices/9-oclock.mp4` (4.40s–6.15s of clock-7-12, "It's nine o'clock" only).
+- Confirmed: `public/game/clock/1.mp4` through `9.mp4`. `HOUR_INTRO_READY` is 1–9.
+- Waiting: `clock-splices/10-oclock.mp4` (6.20s–9.15s of clock-7-12). Whisper does not hear a clean "It's ten o'clock." Ash should listen before confirming.
 - Full source for review: `clock-splices/clock-1-6-original.mp4`.
 
 ## Open / next (as of 2026-09-24)

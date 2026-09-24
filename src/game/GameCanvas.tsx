@@ -10,6 +10,8 @@ import { installAppBack, pushBack } from "@/lib/app-back";
 import { isMuted, setMuted, setMusicEnabled, setMusicScene, unlockAudio } from "./audio";
 import { createGame, HOUR_SKIES, hourLabel, type GameApi, type GameHud } from "./engine";
 
+const HOUR_INTRO_READY = new Set([2]);
+
 const EMPTY: GameHud = {
   phase: "loading",
   painted: 0,
@@ -104,6 +106,7 @@ export function GameCanvas() {
   const [cinema, setCinema] = useState(false);
   const [kit, setKit] = useState(() => loadSettings());
   const [showIntro, setShowIntro] = useState(false);
+  const [hourIntro, setHourIntro] = useState<number | null>(null);
   const [showBedtime, setShowBedtime] = useState(false);
   const [showCartoon, setShowCartoon] = useState<string | null>(null);
   const [parentReady, setParentReady] = useState(false);
@@ -131,6 +134,10 @@ export function GameCanvas() {
 
   useEffect(() => {
     return pushBack(() => {
+      if (hourIntro != null) {
+        setHourIntro(null);
+        return true;
+      }
       if (showCartoon) {
         setShowCartoon(null);
         return true;
@@ -161,7 +168,7 @@ export function GameCanvas() {
       }
       return false;
     });
-  }, [showIntro, showBedtime, showCartoon, loadout, cinema, hud.phase, hud.dev]);
+  }, [showIntro, showBedtime, showCartoon, hourIntro, loadout, cinema, hud.phase, hud.dev]);
 
   useEffect(() => {
     if (hud.phase !== "loading") {
@@ -198,12 +205,12 @@ export function GameCanvas() {
   useEffect(() => {
     if (hud.phase === "playing" || hud.phase === "won" || hud.phase === "timesup") {
       setMusicScene("game");
-    } else if (hud.phase === "sleep" || showBedtime || showIntro || showCartoon) {
+    } else if (hud.phase === "sleep" || showBedtime || showIntro || showCartoon || hourIntro != null) {
       setMusicScene("quiet");
     } else {
       setMusicScene("menu");
     }
-  }, [hud.phase, showBedtime, showIntro, showCartoon]);
+  }, [hud.phase, showBedtime, showIntro, showCartoon, hourIntro]);
 
   useEffect(() => {
     if (hud.phase === "won" && hud.hour >= hud.maxLevel && !hud.dev) {
@@ -211,21 +218,28 @@ export function GameCanvas() {
     }
   }, [hud.phase, hud.hour, hud.maxLevel, hud.dev]);
 
+  function beginHour(n: number) {
+    setHourIntro(HOUR_INTRO_READY.has(n) ? n : null);
+  }
+
   function play() {
     unlockAudio();
     setMusicEnabled(loadSettings().music);
+    beginHour(hud.unlocked);
     apiRef.current?.start();
   }
 
   function playHour(n: number) {
     unlockAudio();
     setMusicEnabled(loadSettings().music);
+    beginHour(n);
     apiRef.current?.playLevel(n);
   }
 
   function goMenu() {
     setLoadout(false);
     setCinema(false);
+    setHourIntro(null);
     apiRef.current?.goMenu();
   }
 
@@ -257,6 +271,8 @@ export function GameCanvas() {
   function replay(opts?: { theme?: "sunny" | "sunset"; advance?: boolean; restart?: boolean }) {
     unlockAudio();
     setMusicEnabled(loadSettings().music);
+    const next = opts?.restart ? 1 : opts?.advance ? Math.min(hud.unlocked, hud.hour + 1) : hud.hour;
+    beginHour(next);
     apiRef.current?.replay(opts);
   }
 
@@ -736,6 +752,9 @@ export function GameCanvas() {
           onDone={() => setShowCartoon(null)}
         />
       )}
+      {hourIntro != null && (
+        <HourLineIntro hour={hourIntro} muted={muted} onDone={() => setHourIntro(null)} />
+      )}
       {showIntro && !hud.asleep && (
         <IntroOverlay muted={muted} onMute={toggleMute} onDone={finishIntro} />
       )}
@@ -1122,6 +1141,46 @@ function CartoonOverlay({
         className="absolute inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-20 min-h-12 rounded-pill bg-cream/90 text-sm font-bold text-ink shadow-md"
       >
         Back
+      </button>
+    </div>
+  );
+}
+
+function HourLineIntro({ hour, muted, onDone }: { hour: number; muted: boolean; onDone: () => void }) {
+  const ref = useRef<HTMLVideoElement>(null);
+
+  const done = useRef(onDone);
+  done.current = onDone;
+
+  useEffect(() => {
+    const v = ref.current;
+    if (!v) return;
+    v.muted = muted;
+  }, [muted]);
+
+  useEffect(() => {
+    const v = ref.current;
+    if (!v) return;
+    void v.play().catch(() => done.current());
+  }, [hour]);
+
+  return (
+    <div className="absolute inset-0 z-50 bg-ink">
+      <video
+        ref={ref}
+        src={assetUrl(`game/clock/${hour}.mp4?v=140`)}
+        playsInline
+        autoPlay
+        className="h-full w-full object-contain bg-sand"
+        onEnded={onDone}
+        onError={onDone}
+      />
+      <button
+        type="button"
+        onClick={onDone}
+        className="absolute inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-20 min-h-12 rounded-pill bg-cream/90 text-sm font-bold text-ink shadow-md"
+      >
+        Skip
       </button>
     </div>
   );

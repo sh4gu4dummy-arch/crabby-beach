@@ -1,4 +1,5 @@
-Crabby Beach v.139
+Crabby Beach v.140
 
-Clock review clips stay in clock-splices until Ash confirms.
-Then move to public/game/clock/<hour>.mp4 and play once at that hour's start.
+2 o'clock intro is in the game: public/game/clock/2.mp4
+3 o'clock is waiting in clock-splices/3-oclock.mp4
+"N ok" confirms N and the next splice goes in clock-splices.

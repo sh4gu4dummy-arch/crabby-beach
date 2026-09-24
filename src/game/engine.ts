@@ -234,10 +234,10 @@ async function loadAssets(): Promise<Assets> {
   const lookFiles = lookColors.flatMap((color) =>
     lookHats.flatMap((hat) =>
       paintIds.flatMap((paint) => [
-        loadImage(assetUrl(`game/crabby/looks/${color}/${hat}/idle-${paint}-0.png?v=134`)),
-        loadImage(assetUrl(`game/crabby/looks/${color}/${hat}/idle-${paint}-1.png?v=134`)),
+        loadImage(assetUrl(`game/crabby/looks/${color}/${hat}/idle-${paint}-0.png?v=135`)),
+        loadImage(assetUrl(`game/crabby/looks/${color}/${hat}/idle-${paint}-1.png?v=135`)),
         ...[1, 2, 3, 4].map((i) =>
-          loadImage(assetUrl(`game/crabby/looks/${color}/${hat}/walk-${paint}-${i}.png?v=134`)),
+          loadImage(assetUrl(`game/crabby/looks/${color}/${hat}/walk-${paint}-${i}.png?v=135`)),
         ),
       ]),
     ),

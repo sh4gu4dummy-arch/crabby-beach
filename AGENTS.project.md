@@ -3,7 +3,7 @@
 **Other Grok bots and humans: read this.**  
 Root `AGENTS.md` in some sandboxes is **platform-only** (gitignored). Do **not** copy App Builder preview / port / `startup.sh` rules into this repo.
 
-Current product: see `VERSION` and `src/lib/version.ts` (now **v.134**).
+Current product: see `VERSION` and `src/lib/version.ts` (now **v.135**).
 Handoff from Grok Build → other bots: [`GROK-BUILDER-NOTES.md`](GROK-BUILDER-NOTES.md).
 
 ---
@@ -51,6 +51,7 @@ Repo: `github.com/sh4gu4dummy-arch/crabby-beach` (private).
 | `public/game/cinema/` | Cartoon shorts + `series.json` |
 | `public/voice/crabby/canon.json` | Crabby's voice bible |
 | `scripts/crab-canon.md` | Brush-in-claw gate |
+| `scripts/loadout-brush.md` | One sprite per paint. Never copy one hat across all colors. |
 | `scripts/imagine-save.md` | How to get Imagine files onto disk |
 | `scripts/imagine-image.py` / `imagine-video.py` | HTTP Imagine → `public/` this turn |
 | `export-naming.md` | Download filename rules |

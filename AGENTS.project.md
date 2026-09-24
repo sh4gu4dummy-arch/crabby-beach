@@ -3,7 +3,7 @@
 **Other Grok bots and humans: read this.**  
 Root `AGENTS.md` in some sandboxes is **platform-only** (gitignored). Do **not** copy App Builder preview / port / `startup.sh` rules into this repo.
 
-Current product: see `VERSION` and `src/lib/version.ts` (now **v.140**).
+Current product: see `VERSION` and `src/lib/version.ts` (now **v.141**).
 Handoff from Grok Build → other bots: [`GROK-BUILDER-NOTES.md`](GROK-BUILDER-NOTES.md).
 
 ---

@@ -17,13 +17,13 @@ Do **not** put App Builder preview / port / `startup.sh` contracts in `AGENTS.pr
 
 ---
 
-## Current (v.140)
+## Current (v.141)
 
 | | |
 | --- | --- |
-| Product | **v.140** |
+| Product | **v.141** |
 | GitHub | `github.com/sh4gu4dummy-arch/crabby-beach` private, branch `master` |
-| Last APK on disk | **v.126** — do not label it v.140 |
+| Last APK on disk | **v.126** — do not label it v.141 |
 | Last zips on disk | **v.090** codebase / portable / android (zips/apks may be untracked now — rebuild when asked) |
 | Code-only `.md` | rebuilt every version |
 | User | ash aug (`dummySh4Gu4`). Other humans/bots will work this repo. |
@@ -79,8 +79,8 @@ Git: push **every** product version. Zip/APK **only when asked**.
 
 ### Clock splices
 - Ash says "N ok" = confirm hour N, move it into the game, and cut N+1 into `clock-splices/` for review.
-- Confirmed: `public/game/clock/2.mp4`. Plays once when 2 o'clock starts. `HOUR_INTRO_READY` in `GameCanvas.tsx`.
-- Waiting: `clock-splices/3-oclock.mp4` (4.82s–7.75s). `clock-splices/1-oclock.mp4` is not confirmed.
+- Confirmed: `public/game/clock/1.mp4` and `2.mp4`. `HOUR_INTRO_READY` is 1 and 2.
+- Waiting: `clock-splices/3-oclock.mp4` (4.82s–7.75s).
 
 ## Open / next (as of 2026-09-24)
 

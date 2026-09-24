@@ -1,9 +1,9 @@
-Review splices. Not in the game.
+Review splices. Not in the game until Ash confirms that file.
 
-1-oclock.mp4
-Cut from public/game/cinema/clock-1-6.mp4
-Time range 0.48s to 1.72s (first spoken line only).
+When Ash confirms a clip:
+1. Move it out of this folder.
+2. Put it in public/game/clock/<hour>.mp4 (1.mp4 = 1 o'clock).
+3. Play it once as a short intro when that hour starts. Then the level plays as usual.
 
-2-oclock.mp4
-Cut from public/game/cinema/clock-1-6.mp4
-Time range 1.70s to 4.82s (second spoken line).
+1-oclock.mp4 — waiting. Cut 0.48s–1.72s of clock-1-6.mp4.
+2-oclock.mp4 — waiting. Cut 1.70s–4.82s of clock-1-6.mp4.

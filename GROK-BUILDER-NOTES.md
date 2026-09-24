@@ -17,13 +17,13 @@ Do **not** put App Builder preview / port / `startup.sh` contracts in `AGENTS.pr
 
 ---
 
-## Current (v.138)
+## Current (v.139)
 
 | | |
 | --- | --- |
-| Product | **v.138** |
+| Product | **v.139** |
 | GitHub | `github.com/sh4gu4dummy-arch/crabby-beach` private, branch `master` |
-| Last APK on disk | **v.126** — do not label it v.138 |
+| Last APK on disk | **v.126** — do not label it v.139 |
 | Last zips on disk | **v.090** codebase / portable / android (zips/apks may be untracked now — rebuild when asked) |
 | Code-only `.md` | rebuilt every version |
 | User | ash aug (`dummySh4Gu4`). Other humans/bots will work this repo. |
@@ -78,9 +78,10 @@ Git: push **every** product version. Zip/APK **only when asked**.
 - v.136: yellow bow / bucket / sailor also have one Imagine still per brush. Hats stay on the shell.
 
 ### Clock splices (v.137)
-- Review folder, not in the game: `clock-splices/1-oclock.mp4`
-- `clock-splices/2-oclock.mp4` cut 1.70s–4.82s. User said the 1 o'clock cut was good enough.
-- Wall clock in the picture does not change with the hour. Audio is the splice.
+- Review folder only: `clock-splices/`. Not in the game until Ash confirms that file.
+- On confirm: move it to `public/game/clock/<hour>.mp4` and play it once as a short intro when that hour starts.
+- `1-oclock.mp4` cut 0.48s–1.72s. Ash said good enough. Still waiting on an explicit confirm before moving.
+- `2-oclock.mp4` cut 1.70s–4.82s. Not confirmed.
 
 ## Open / next (as of 2026-09-24)
 

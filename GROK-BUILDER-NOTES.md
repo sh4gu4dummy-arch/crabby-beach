@@ -17,13 +17,13 @@ Do **not** put App Builder preview / port / `startup.sh` contracts in `AGENTS.pr
 
 ---
 
-## Current (v.153)
+## Current (v.154)
 
 | | |
 | --- | --- |
-| Product | **v.153** |
+| Product | **v.154** |
 | GitHub | `github.com/sh4gu4dummy-arch/crabby-beach` private, branch `master` |
-| Last APK on disk | **v.126** — do not label it v.153 |
+| Last APK on disk | **v.126** — do not label it v.154 |
 | Last zips on disk | **v.090** codebase / portable / android (zips/apks may be untracked now — rebuild when asked) |
 | Code-only `.md` | rebuilt every version |
 | User | ash aug (`dummySh4Gu4`). Other humans/bots will work this repo. |
@@ -82,8 +82,8 @@ Git: push **every** product version. Zip/APK **only when asked**.
 - Confirmed: `public/game/clock/1.mp4` through `9.mp4`. `HOUR_INTRO_READY` is 1–9.
 - Confirmed: `public/game/clock/1.mp4` through `9.mp4` and `12.mp4`. `HOUR_INTRO_READY` is 1–9 and 12. Not 10 or 11.
 - Old 10 and 11 lines were rejected. The 15s review copies were deleted from `clock-splices/`. Cinema masters in `public/game/cinema/` were not deleted.
-- New 6s Imagine take: `clock-splices/clock-10-11-bed.mp4`. Top-down red crab, green brush. First take was a side view and was discarded.
-- Waiting, not in the game: `10-oclock.mp4`, `11-oclock.mp4`, `time-for-bed.mp4`. Whisper: "It's ten o'clock." / "It's eleven o'clock." / "It's time for bed." I did not hear them.
+- The v.153 6s take was scrapped. It added a pointed orange bump on the shell. Files deleted: `clock-10-11-bed.mp4`, `10-oclock.mp4`, `11-oclock.mp4`, `time-for-bed.mp4`. Do not restore them.
+- 10 and 11 still have no intro. Do not generate a replacement until Ash asks.
 
 ## Open / next (as of 2026-09-24)
 

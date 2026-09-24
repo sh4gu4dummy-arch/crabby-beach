@@ -17,13 +17,13 @@ Do **not** put App Builder preview / port / `startup.sh` contracts in `AGENTS.pr
 
 ---
 
-## Current (v.137)
+## Current (v.138)
 
 | | |
 | --- | --- |
-| Product | **v.137** |
+| Product | **v.138** |
 | GitHub | `github.com/sh4gu4dummy-arch/crabby-beach` private, branch `master` |
-| Last APK on disk | **v.126** — do not label it v.137 |
+| Last APK on disk | **v.126** — do not label it v.138 |
 | Last zips on disk | **v.090** codebase / portable / android (zips/apks may be untracked now — rebuild when asked) |
 | Code-only `.md` | rebuilt every version |
 | User | ash aug (`dummySh4Gu4`). Other humans/bots will work this repo. |
@@ -79,7 +79,7 @@ Git: push **every** product version. Zip/APK **only when asked**.
 
 ### Clock splices (v.137)
 - Review folder, not in the game: `clock-splices/1-oclock.mp4`
-- Cut from `public/game/cinema/clock-1-6.mp4` at 0.48s–1.72s (first spoken line).
+- `clock-splices/2-oclock.mp4` cut 1.70s–4.82s. User said the 1 o'clock cut was good enough.
 - Wall clock in the picture does not change with the hour. Audio is the splice.
 
 ## Open / next (as of 2026-09-24)

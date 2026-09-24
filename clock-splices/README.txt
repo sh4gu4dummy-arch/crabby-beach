@@ -3,20 +3,12 @@ Review splices. Not in the game until Ash confirms that file.
 When Ash says "N ok":
 1. That clip is confirmed. Move it to public/game/clock/N.mp4.
 2. Add N to HOUR_INTRO_READY in src/game/GameCanvas.tsx.
-3. It plays once when that hour starts. Skip closes it. The level is already running underneath.
-4. Cut hour N+1 into this folder for review.
+3. It plays once when that hour starts. Skip closes it.
 
-1 — moved to public/game/clock/1.mp4. Plays at 1 o'clock.
-2 — moved to public/game/clock/2.mp4. Plays at 2 o'clock.
-3 — moved to public/game/clock/3.mp4. Plays at 3 o'clock.
-4 — moved to public/game/clock/4.mp4. Plays at 4 o'clock.
-5 — moved to public/game/clock/5.mp4. Plays at 5 o'clock.
-6 — moved to public/game/clock/6.mp4. Plays at 6 o'clock.
-7 — moved to public/game/clock/7.mp4. Plays at 7 o'clock.
-8 — moved to public/game/clock/8.mp4. Plays at 8 o'clock.
-9 — moved to public/game/clock/9.mp4. Plays at 9 o'clock.
-10 and 11 — rejected. Do not put them in the game.
-12-oclock.mp4 — waiting. Cut 12.60s–15.05s of clock-7-12.mp4. "It's twelve o'clock" only.
-clock-7-12-original.mp4 — the full 15s source for 7 through 12. Not a splice. Same file as public/game/cinema/clock-7-12.mp4.
-clock-1-6-original.mp4 — the full 15s source. Not a splice.
+1–9 and 12 are in public/game/clock/. 10 and 11 from the old source were rejected.
+Long 15s originals were removed from this folder.
 
+New 6s Imagine take (top-down red crab, green brush): clock-10-11-bed.mp4
+10-oclock.mp4 — 0.00s–2.50s. "It's ten o'clock." Waiting.
+11-oclock.mp4 — 2.70s–4.70s. "It's eleven o'clock." Waiting.
+time-for-bed.mp4 — 4.75s–6.04s. "It's time for bed." Waiting. Not wired to a level yet.

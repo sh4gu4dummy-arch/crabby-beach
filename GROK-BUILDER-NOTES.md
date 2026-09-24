@@ -17,13 +17,13 @@ Do **not** put App Builder preview / port / `startup.sh` contracts in `AGENTS.pr
 
 ---
 
-## Current (v.152)
+## Current (v.153)
 
 | | |
 | --- | --- |
-| Product | **v.152** |
+| Product | **v.153** |
 | GitHub | `github.com/sh4gu4dummy-arch/crabby-beach` private, branch `master` |
-| Last APK on disk | **v.126** — do not label it v.152 |
+| Last APK on disk | **v.126** — do not label it v.153 |
 | Last zips on disk | **v.090** codebase / portable / android (zips/apks may be untracked now — rebuild when asked) |
 | Code-only `.md` | rebuilt every version |
 | User | ash aug (`dummySh4Gu4`). Other humans/bots will work this repo. |
@@ -80,10 +80,10 @@ Git: push **every** product version. Zip/APK **only when asked**.
 ### Clock splices
 - Ash says "N ok" = confirm hour N, move it into the game, and cut N+1 into `clock-splices/` for review.
 - Confirmed: `public/game/clock/1.mp4` through `9.mp4`. `HOUR_INTRO_READY` is 1–9.
-- 10 and 11 are rejected. Do not add them to `HOUR_INTRO_READY`.
-- Waiting: `clock-splices/12-oclock.mp4` (12.60s–15.05s of clock-7-12). Transcript: "It's twelve o'clock!" only.
-- Full 7–12 source for review: `clock-splices/clock-7-12-original.mp4`.
-- Full source for review: `clock-splices/clock-1-6-original.mp4`.
+- Confirmed: `public/game/clock/1.mp4` through `9.mp4` and `12.mp4`. `HOUR_INTRO_READY` is 1–9 and 12. Not 10 or 11.
+- Old 10 and 11 lines were rejected. The 15s review copies were deleted from `clock-splices/`. Cinema masters in `public/game/cinema/` were not deleted.
+- New 6s Imagine take: `clock-splices/clock-10-11-bed.mp4`. Top-down red crab, green brush. First take was a side view and was discarded.
+- Waiting, not in the game: `10-oclock.mp4`, `11-oclock.mp4`, `time-for-bed.mp4`. Whisper: "It's ten o'clock." / "It's eleven o'clock." / "It's time for bed." I did not hear them.
 
 ## Open / next (as of 2026-09-24)
 

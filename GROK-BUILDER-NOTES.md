@@ -17,13 +17,13 @@ Do **not** put App Builder preview / port / `startup.sh` contracts in `AGENTS.pr
 
 ---
 
-## Current (v.151)
+## Current (v.152)
 
 | | |
 | --- | --- |
-| Product | **v.151** |
+| Product | **v.152** |
 | GitHub | `github.com/sh4gu4dummy-arch/crabby-beach` private, branch `master` |
-| Last APK on disk | **v.126** — do not label it v.151 |
+| Last APK on disk | **v.126** — do not label it v.152 |
 | Last zips on disk | **v.090** codebase / portable / android (zips/apks may be untracked now — rebuild when asked) |
 | Code-only `.md` | rebuilt every version |
 | User | ash aug (`dummySh4Gu4`). Other humans/bots will work this repo. |
@@ -80,7 +80,8 @@ Git: push **every** product version. Zip/APK **only when asked**.
 ### Clock splices
 - Ash says "N ok" = confirm hour N, move it into the game, and cut N+1 into `clock-splices/` for review.
 - Confirmed: `public/game/clock/1.mp4` through `9.mp4`. `HOUR_INTRO_READY` is 1–9.
-- Waiting: `clock-splices/10-oclock.mp4`. Not a clean line. Ash is checking the full 7–12 source.
+- 10 and 11 are rejected. Do not add them to `HOUR_INTRO_READY`.
+- Waiting: `clock-splices/12-oclock.mp4` (12.60s–15.05s of clock-7-12). Transcript: "It's twelve o'clock!" only.
 - Full 7–12 source for review: `clock-splices/clock-7-12-original.mp4`.
 - Full source for review: `clock-splices/clock-1-6-original.mp4`.
 

@@ -11,6 +11,7 @@ When Ash says "N ok":
 3 — moved to public/game/clock/3.mp4. Plays at 3 o'clock.
 4 — moved to public/game/clock/4.mp4. Plays at 4 o'clock.
 5 — moved to public/game/clock/5.mp4. Plays at 5 o'clock.
-6-oclock.mp4 — waiting. Cut 11.55s–13.70s of clock-1-6.mp4. "It's six o'clock" only.
+6 — moved to public/game/clock/6.mp4. Plays at 6 o'clock.
+7-oclock.mp4 — waiting. Cut 0.00s–2.20s of clock-7-12.mp4. "It's seven o'clock" only.
 clock-1-6-original.mp4 — the full 15s source. Not a splice.
 

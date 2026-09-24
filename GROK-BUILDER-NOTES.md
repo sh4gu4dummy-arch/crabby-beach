@@ -17,13 +17,13 @@ Do **not** put App Builder preview / port / `startup.sh` contracts in `AGENTS.pr
 
 ---
 
-## Current (v.133)
+## Current (v.134)
 
 | | |
 | --- | --- |
-| Product | **v.133** |
+| Product | **v.134** |
 | GitHub | `github.com/sh4gu4dummy-arch/crabby-beach` private, branch `master` |
-| Last APK on disk | **v.126** — do not label it v.133 |
+| Last APK on disk | **v.126** — do not label it v.134 |
 | Last zips on disk | **v.090** codebase / portable / android (zips/apks may be untracked now — rebuild when asked) |
 | Code-only `.md` | rebuilt every version |
 | User | ash aug (`dummySh4Gu4`). Other humans/bots will work this repo. |
@@ -71,7 +71,10 @@ Git: push **every** product version. Zip/APK **only when asked**.
 
 ---
 
-## Open / next (as of 2026-09-18)
+### Red hats (v.134)
+- Bow, bucket, and sailor now sit **on** the same top-down red crab (`looks/red/{hat}/idle-0.png` and paint copies). They were floating above a different drawing.
+
+## Open / next (as of 2026-09-24)
 
 - Green no-hat brushes: Imagine swap is in. Hats / blue / yellow no-hat still may be old tint or mixed art — check before claiming they work.
 - APK not rebuilt since v.126. Zips not rebuilt since v.090.

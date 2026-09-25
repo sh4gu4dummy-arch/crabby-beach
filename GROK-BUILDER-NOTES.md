@@ -102,7 +102,7 @@ When you finish a turn that another bot will continue:
 2. Do not delete old “tell them” items until they are done or the user dropped them.
 3. Bump product version if you change the game or these tracked docs.
 
-## Local viewer (Ash’s machine)
+## Local viewer (Ash’s machine — Windows)
 - Port **8154** — does not fight other games on 8080. Sandbox/`startup.sh` still use 8080.
-- Double-click in the repo folder: `Open Crabby Beach.command` (Mac), `.bat` (Windows), or `.sh` (Linux).
+- Double-click in the repo folder: `Open Crabby Beach.bat`
 - Or: `npm run local` → http://127.0.0.1:8154

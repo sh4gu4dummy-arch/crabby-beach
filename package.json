@@ -17,7 +17,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "build:pages:github": "node scripts/build-pages.mjs github",
-    "build:pages:cloudflare": "node scripts/build-pages.mjs cloudflare"
+    "build:pages:cloudflare": "node scripts/build-pages.mjs cloudflare",
+    "local": "vite dev --host 127.0.0.1 --port 8154 --open"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.4",
